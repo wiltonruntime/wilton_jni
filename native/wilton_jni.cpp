@@ -13,13 +13,13 @@
 #include <string>
 
 #include "staticlib/config.hpp"
-#include "staticlib/utils.hpp"
 
 #include "wilton/wilton_c.h"
 
 // todo: compile time check
 #define WILTON_JNI_CLASS net_wiltonwebtoolkit_HttpServerJni
-#define WILTON_JNI_GATEWAY_INTERFACE net/wiltonwebtoolkit/HttpGateway
+#define WILTON_JNI_GATEWAY_INTERFACE "net/wiltonwebtoolkit/HttpGateway"
+#define WILTON_JNI_EXCEPTION_CLASS "net/wiltonwebtoolkit/HttpException"
 
 #define WILTON_JNI_PASTER(x,y) Java_ ## x ## _ ## y
 #define WILTON_JNI_EVALUATOR(x,y) WILTON_JNI_PASTER(x,y)
@@ -28,42 +28,41 @@
 namespace { // namespace
 
 namespace sc = staticlib::config;
-namespace su = staticlib::utils;
 
 JavaVM* JAVA_VM; 
 
-void throwException(JNIEnv* env, char* message) {
-    jclass exClass = env->FindClass("java/lang/RuntimeException");
-    env->ThrowNew(exClass, TRACEMSG(std::string() + message + "\nC API Error");
-//    wilton_free_errmsg(message);
+void throwException(JNIEnv* env, const char* message) {
+    jclass exClass = env->FindClass(WILTON_JNI_EXCEPTION_CLASS);
+    std::string msg = TRACEMSG(std::string() + message + "\nC API Error");
+    env->ThrowNew(exClass, msg.c_str());
 }
 
-wilton_Server* serverFromHandle(JNIEnv* env, jlong handle) {
+wilton_Server* serverFromHandle(JNIEnv*, jlong handle) {
     return reinterpret_cast<wilton_Server*> (handle);
 }
 
-wilton_Request* requestFromHandle(JNIEnv* env, jlong requestHandle) {
-    return reinterpret_cast<wilton_Request*> (handle);
+wilton_Request* requestFromHandle(JNIEnv*, jlong requestHandle) {
+    return reinterpret_cast<wilton_Request*> (requestHandle);
 }
 
 void callGateway(jobject gateway, jlong requestHandle) {
     JNIEnv* env;
-    auto err = vm->AttachCurrentThread(reinterpret_cast<void**>(std::addressof(env)), nullptr);
+    auto err = JAVA_VM->AttachCurrentThread(std::addressof(env), nullptr);
     if (JNI_OK != err) { return; } // cannot report error here
     jclass clazz = env->FindClass(WILTON_JNI_GATEWAY_INTERFACE);
-    if (nullptr == clazz) { throwException(TRACEMSG("Gateway interface not found: [" + WILTON_JNI_GATEWAY_INTERFACE + "]")) }
+    if (nullptr == clazz) { throwException(env, TRACEMSG(std::string() + "Gateway interface not found: [" + WILTON_JNI_GATEWAY_INTERFACE + "]").c_str()); }
     jmethodID method = env->GetMethodID(clazz, "gatewayCallback", "(J)V");
-    // todo: report calss name
-    if (nullptr == clazz) { throwException(TRACEMSG("Gateway callback method not found: [gatewayCallback]")) }
+    // todo: report class name
+    if (nullptr == clazz) { throwException(env, TRACEMSG(std::string() + "Gateway callback method not found: [gatewayCallback]").c_str()); }
     env->CallVoidMethod(gateway, method, requestHandle);
-    vm->DetachCurrentThread();
+    JAVA_VM->DetachCurrentThread();
 }
 
 } // namespace
 
 extern "C" {
 
-JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {    
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {    
     JNIEnv* env;
     auto err = vm->GetEnv(reinterpret_cast<void**> (std::addressof(env)), JNI_VERSION_1_6);
     if (JNI_OK != err) { return -1; }
@@ -75,12 +74,10 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     return JNI_VERSION_1_6;
 }
 
-// TODO: attach thread
-// TODO: exception in cb
 JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(createServer)
 (JNIEnv* env, jclass, jobject gateway, jstring conf) {
-    if (nullptr == gateway) { throwWiltonExc(env, "Null 'gateway' parameter specified"); return; }
-    if (nullptr == conf) { throwWiltonExc(env, "Null 'conf' parameter specified"); return; }
+    if (nullptr == gateway) { throwException(env, "Null 'gateway' parameter specified"); return 0; }
+    if (nullptr == conf) { throwException(env, "Null 'conf' parameter specified"); return 0; }
     
     wilton_Server* server_impl;
     const char* conf_cstr = env->GetStringUTFChars(conf, 0);
@@ -94,13 +91,12 @@ JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(createServer)
     env->ReleaseStringUTFChars(conf, conf_cstr);
 
     if (nullptr == err) {
-        JniServer* server = new JniServer(server_impl);
-        jlong handle = reinterpret_cast<jlong> (server);
-        VALID_SERVER_HANDLES.insert(handle);
+        jlong handle = reinterpret_cast<jlong> (server_impl);
         return handle;
     } else {
         throwException(env, err);
         wilton_free_errmsg(err);
+        return 0;
     }
 }
 

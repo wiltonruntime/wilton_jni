@@ -14,66 +14,53 @@
 
 cmake_minimum_required ( VERSION 2.8.12 )
 
+# dependencies
+if ( NOT DEFINED WILTON_DEPS_DIRECTORY )
+    set ( WILTON_DEPS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../.. )
+endif ( )
+# toolchain setup
+set ( STATICLIB_TOOLCHAIN linux_amd64_gcc CACHE STRING "toolchain triplet" )
+if ( NOT DEFINED STATICLIB_CMAKE )
+    set ( STATICLIB_CMAKE ${CMAKE_CURRENT_LIST_DIR}/../../cmake CACHE INTERNAL "" )    
+endif ( )
+set ( CMAKE_TOOLCHAIN_FILE ${STATICLIB_CMAKE}/toolchains/${STATICLIB_TOOLCHAIN}.cmake CACHE INTERNAL "" )
+
 # project
 project ( wilton_jni CXX )
 set ( ${PROJECT_NAME}_STATICLIB_VERSION 1.0 )
 set ( ${PROJECT_NAME}_DESCRIPTION "Wilton Web Toolkit JNI library" )
-set ( ${PROJECT_NAME}_URL https://github.com/wilton-web-toolkit/wilton_jni )
+set ( ${PROJECT_NAME}_URL https://github.com/wilton-web-toolkit/wilton-jni )
+include ( ${STATICLIB_CMAKE}/staticlibs_common.cmake )
+staticlib_enable_deplibs_cache ( )
 
-# enhanced version of pkg_check_modules macro with PKG_CONFIG_PATH logic
-# PKG_CONFIG_PATH handling through CMAKE_PREFIX_PATH was added in newer versions of CMake
-macro ( ${PROJECT_NAME}_pkg_check_modules _out_var_name _modifier _modules_list_var_name )
-    find_package ( PkgConfig )
-    if ( WIN32 )
-        set ( PATHENV_SEPARATOR ";" )
-    else ( )
-        set ( PATHENV_SEPARATOR ":" )
-    endif ( )
-    set (_pkgconfig_path $ENV{PKG_CONFIG_PATH} )
-    if ( STATICLIB_USE_DEPLIBS_CACHE )
-        set ( ENV{PKG_CONFIG_PATH} "${STATICLIB_DEPLIBS_CACHE_DIR}/pkgconfig${PATHENV_SEPARATOR}$ENV{PKG_CONFIG_PATH}" )
-    endif ( )
-    set ( ENV{PKG_CONFIG_PATH} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pkgconfig${PATHENV_SEPARATOR}$ENV{PKG_CONFIG_PATH}" )
-    pkg_check_modules ( ${_out_var_name} ${_modifier} ${${_modules_list_var_name}} )
-    set ( ENV{PKG_CONFIG_PATH} ${_pkgconfig_path} )
-endmacro ( )
-
-# standalone build
-if ( NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY )
-    set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
-endif ( )
-if ( NOT DEFINED STATICLIB_TOOLCHAIN )
-    staticlib_cbindhttp_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_config )
-    staticlib_cbindhttp_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_utils )
-    staticlib_cbindhttp_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_httpserver )
-    staticlib_cbindhttp_add_subdirectory ( ${CMAKE_CURRENT_LIST_DIR}/../staticlib_serialization )
-endif ( )
+staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_jni )
+staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_config )
+staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_io )
+staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_ranges )
+staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_httpserver )
+staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_utils )
+staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_serialization )
+staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/wilton_c )
 
 # dependencies
-set ( ${PROJECT_NAME}_DEPS
-        jansson
+set ( ${PROJECT_NAME}_DEPS_PUBLIC
+        staticlib_jni
         staticlib_config
-        staticlib_utils
+        wilton_c )
+staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PUBLIC_PC REQUIRED ${PROJECT_NAME}_DEPS_PUBLIC )
+set ( ${PROJECT_NAME}_DEPS_PRIVATE
+        jansson
+        staticlib_io
+        staticlib_ranges
         staticlib_httpserver
+        staticlib_utils
         staticlib_serialization )
-wilton_c_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PC REQUIRED ${PROJECT_NAME}_DEPS )
+staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PRIVATE_PC REQUIRED ${PROJECT_NAME}_DEPS_PRIVATE )
 
 # build steps
-file ( GLOB_RECURSE ${PROJECT_NAME}_SRC ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp )
-set ( ${PROJECT_NAME}_HEADERS ${CMAKE_CURRENT_LIST_DIR}/include/wilton/wilton_c.h )
-file ( GLOB_RECURSE ${PROJECT_NAME}_HEADERS_PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/*.hpp )
-add_library ( ${PROJECT_NAME} STATIC 
-        ${${PROJECT_NAME}_SRC} 
-        ${${PROJECT_NAME}_HEADERS}
-        ${${PROJECT_NAME}_HEADERS_PRIVATE} )
-
-source_group ( "src" FILES ${${PROJECT_NAME}_SRC} )
-source_group ( "include" FILES ${${PROJECT_NAME}_HEADERS} )
-source_group ( "include_private" FILES ${${PROJECT_NAME}_HEADERS_PRIVATE} )
-target_include_directories ( ${PROJECT_NAME} BEFORE PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}/src/
-        ${CMAKE_CURRENT_LIST_DIR}/include
-        ${${PROJECT_NAME}_DEPS_PC_INCLUDE_DIRS} )
-target_compile_options ( ${PROJECT_NAME} PRIVATE ${${PROJECT_NAME}_DEPS_PC_CFLAGS_OTHER} )
-target_link_libraries ( ${PROJECT_NAME} ${${PROJECT_NAME}_DEPS_PC_LIBRARIES} )
-
+add_library ( ${PROJECT_NAME} SHARED ${CMAKE_CURRENT_LIST_DIR}/wilton_jni.cpp )
+target_include_directories ( ${PROJECT_NAME} BEFORE PRIVATE ${${PROJECT_NAME}_DEPS_PUBLIC_PC_INCLUDE_DIRS} )
+target_compile_options ( ${PROJECT_NAME} PRIVATE ${${PROJECT_NAME}_DEPS_PUBLIC_PC_CFLAGS_OTHER} )
+target_link_libraries ( ${PROJECT_NAME} 
+        ${${PROJECT_NAME}_DEPS_PUBLIC_PC_LIBRARIES}
+        ${${PROJECT_NAME}_DEPS_PRIVATE_PC_LIBRARIES} )

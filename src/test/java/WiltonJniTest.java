@@ -14,45 +14,27 @@
  * limitations under the License.
  */
 
-interface WiltonJniTestGateway {
-    void gatewayCallback(long requestHandle);
-}
+import net.wiltonwebtoolkit.HttpGateway;
+import static net.wiltonwebtoolkit.HttpServerJni.createServer;
+import static net.wiltonwebtoolkit.HttpServerJni.sendResponse;
+import static net.wiltonwebtoolkit.HttpServerJni.stopServer;
+import org.junit.Test;
 
 class WiltonJniTest {
 
-    static {
-        System.loadLibrary("wilton_c");
-        System.loadLibrary("wilton_jni");
-    }
-
-    private static class TestGateway implements WiltonJniTestGateway {
-
+    private static class TestGateway implements HttpGateway {
         @Override
         public void gatewayCallback(long requestHandle) {
             sendResponse(requestHandle, "Hello Java!\n");
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    @Test
+    public void test() {
         TestGateway gateway = new TestGateway();
         long handle = createServer(gateway, "{\"tcpPort\": 8080}");
-        System.console().readLine();
+//        System.console().readLine();
         stopServer(handle);
     }
-
-    private static native long createServer(Object gateway, String conf);
-
-    private static native void stopServer(long serverHandle);
-
-    private static native String getRequestMetadata(long requestHandle);
-
-    private static native String getRequestData(long requestHandle);
-
-    private static native void setResponseMetadata(long requestHandle, String conf);
-
-    private static native void sendResponse(long requestHandle, String data);
-
-//    TODO
-//    private static native void sendResponseChunked(long requestHandle, Object readable);
 
 }

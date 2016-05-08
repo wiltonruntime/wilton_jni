@@ -15,24 +15,20 @@
  */
 package net.wiltonwebtoolkit;
 
-public class HttpServerJni {
+/**
+ *
+ * @author alex
+ */
+public class HttpException extends RuntimeException {
 
-    static {
-        System.loadLibrary("wilton_jni");
+    private static final long serialVersionUID = 6684578317996404101L;
+
+    /**
+     * Constructor
+     *
+     * @param message error message
+     */
+    public HttpException(String message) {
+        super(message);
     }
-
-    public static native long createServer(Object gateway, String conf);
-
-    public static native void stopServer(long serverHandle);
-
-    public static native String getRequestMetadata(long requestHandle);
-
-    public static native String getRequestData(long requestHandle);
-
-    public static native void setResponseMetadata(long requestHandle, String conf);
-
-    public static native void sendResponse(long requestHandle, String data);
-
-//    TODO
-//    private static native void sendResponseChunked(long requestHandle, Object readable);
 }
