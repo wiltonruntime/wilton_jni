@@ -14,27 +14,74 @@
  * limitations under the License.
  */
 
+import com.google.gson.Gson;
+import java.io.Closeable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import net.wiltonwebtoolkit.HttpGateway;
-import static net.wiltonwebtoolkit.HttpServerJni.createServer;
-import static net.wiltonwebtoolkit.HttpServerJni.sendResponse;
-import static net.wiltonwebtoolkit.HttpServerJni.stopServer;
+import static net.wiltonwebtoolkit.HttpServerJni.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
-class WiltonJniTest {
+public class WiltonJniTest {
+    
+    private static Gson GSON = new Gson();
+    private static int TCP_PORT = 8080;
+    private static String ROOT_URL = "http://127.0.0.1:" + TCP_PORT + "/";
+    private static String ROOT_RESP = "Hello Java!\n";
+    
+    private CloseableHttpClient http = HttpClients.createDefault();
 
     private static class TestGateway implements HttpGateway {
         @Override
         public void gatewayCallback(long requestHandle) {
-            sendResponse(requestHandle, "Hello Java!\n");
+//            System.out.println(getRequestMetadata(requestHandle));
+            sendResponse(requestHandle, ROOT_RESP);
         }
     }
-
+    
     @Test
-    public void test() {
-        TestGateway gateway = new TestGateway();
-        long handle = createServer(gateway, "{\"tcpPort\": 8080}");
-//        System.console().readLine();
-        stopServer(handle);
+    public void test() throws Exception {
+        long handle = 0;
+        try {
+            createServer(new TestGateway(), serverConfig());
+            assertEquals(ROOT_URL, ROOT_RESP, httpGet(ROOT_URL));
+        } finally {
+            stopServer(handle);
+        }
+    }
+    
+    private String serverConfig() {
+        Map<String, Object> config = new LinkedHashMap<String, Object>();
+        config.put("tcpPort", TCP_PORT);
+        return GSON.toJson(config);
+    }
+    
+    private String httpGet(String url) throws Exception {
+        CloseableHttpResponse resp = null;
+        try {
+            HttpGet httpGet = new HttpGet(url);
+            resp = http.execute(httpGet);
+            return EntityUtils.toString(resp.getEntity(), "UTF-8");
+        } finally {
+            closeQuietly(resp);
+        }
+    }
+    
+    static void closeQuietly(Closeable closeable) {
+        if (null == closeable) {
+            return;
+        }
+        try {
+            closeable.close();
+        } catch (Exception e) {
+            // ignore
+        }
     }
 
 }

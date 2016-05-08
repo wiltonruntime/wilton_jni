@@ -9,7 +9,6 @@
 #include "jni.h"
 
 #include <cstring>
-
 #include <string>
 
 #include "staticlib/config.hpp"
@@ -53,7 +52,7 @@ void callGateway(jobject gateway, jlong requestHandle) {
     if (nullptr == clazz) { throwException(env, TRACEMSG(std::string() + "Gateway interface not found: [" + WILTON_JNI_GATEWAY_INTERFACE + "]").c_str()); }
     jmethodID method = env->GetMethodID(clazz, "gatewayCallback", "(J)V");
     // todo: report class name
-    if (nullptr == clazz) { throwException(env, TRACEMSG(std::string() + "Gateway callback method not found: [gatewayCallback]").c_str()); }
+    if (nullptr == method) { throwException(env, TRACEMSG(std::string() + "Gateway callback method not found: [gatewayCallback]").c_str()); }
     env->CallVoidMethod(gateway, method, requestHandle);
     JAVA_VM->DetachCurrentThread();
 }
@@ -74,10 +73,13 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {
     return JNI_VERSION_1_6;
 }
 
+// todo: GlobalRef for gateway
 JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(createServer)
 (JNIEnv* env, jclass, jobject gateway, jstring conf) {
     if (nullptr == gateway) { throwException(env, "Null 'gateway' parameter specified"); return 0; }
     if (nullptr == conf) { throwException(env, "Null 'conf' parameter specified"); return 0; }
+    // todo: fixme - delete
+    gateway = env->NewGlobalRef(gateway);
     
     wilton_Server* server_impl;
     const char* conf_cstr = env->GetStringUTFChars(conf, 0);
