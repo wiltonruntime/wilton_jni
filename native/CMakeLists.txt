@@ -33,6 +33,9 @@ set ( ${PROJECT_NAME}_URL https://github.com/wilton-web-toolkit/wilton-jni )
 include ( ${STATICLIB_CMAKE}/staticlibs_common.cmake )
 staticlib_enable_deplibs_cache ( )
 
+if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )    
+    staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/external_jansson )
+endif ( )
 staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_jni )
 staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_config )
 staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_io )
@@ -58,6 +61,7 @@ set ( ${PROJECT_NAME}_DEPS_PRIVATE
 staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PRIVATE_PC REQUIRED ${PROJECT_NAME}_DEPS_PRIVATE )
 
 # build steps
+set_property ( GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE )
 add_library ( ${PROJECT_NAME} SHARED ${CMAKE_CURRENT_LIST_DIR}/wilton_jni.cpp )
 target_include_directories ( ${PROJECT_NAME} BEFORE PRIVATE ${${PROJECT_NAME}_DEPS_PUBLIC_PC_INCLUDE_DIRS} )
 target_compile_options ( ${PROJECT_NAME} PRIVATE ${${PROJECT_NAME}_DEPS_PUBLIC_PC_CFLAGS_OTHER} )

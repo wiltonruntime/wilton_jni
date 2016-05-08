@@ -8,7 +8,6 @@
 
 #include "jni.h"
 
-#include <cstring>
 #include <string>
 
 #include "staticlib/config.hpp"
@@ -44,16 +43,24 @@ wilton_Request* requestFromHandle(JNIEnv*, jlong requestHandle) {
     return reinterpret_cast<wilton_Request*> (requestHandle);
 }
 
+// TODO: error reporting 
+//    if (nullptr == clazz) { throwException(env, TRACEMSG(std::string() + "Gateway interface not found: [" + WILTON_JNI_GATEWAY_INTERFACE + "]").c_str()); }
+//    if (nullptr == method) { throwException(env, TRACEMSG(std::string() + "Gateway callback method not found: [gatewayCallback]").c_str()); }
 void callGateway(jobject gateway, jlong requestHandle) {
     JNIEnv* env;
     auto err = JAVA_VM->AttachCurrentThread(std::addressof(env), nullptr);
     if (JNI_OK != err) { return; } // cannot report error here
     jclass clazz = env->FindClass(WILTON_JNI_GATEWAY_INTERFACE);
-    if (nullptr == clazz) { throwException(env, TRACEMSG(std::string() + "Gateway interface not found: [" + WILTON_JNI_GATEWAY_INTERFACE + "]").c_str()); }
-    jmethodID method = env->GetMethodID(clazz, "gatewayCallback", "(J)V");
-    // todo: report class name
-    if (nullptr == method) { throwException(env, TRACEMSG(std::string() + "Gateway callback method not found: [gatewayCallback]").c_str()); }
-    env->CallVoidMethod(gateway, method, requestHandle);
+    if (nullptr != clazz) { 
+        jmethodID method = env->GetMethodID(clazz, "gatewayCallback", "(J)V");
+        if (nullptr != method) {
+            env->CallVoidMethod(gateway, method, requestHandle);
+            jthrowable exc = env->ExceptionOccurred();
+            if (nullptr != exc) {
+                env->ExceptionClear();
+            }
+        }
+    }
     JAVA_VM->DetachCurrentThread();
 }
 
@@ -83,13 +90,14 @@ JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(createServer)
     
     wilton_Server* server_impl;
     const char* conf_cstr = env->GetStringUTFChars(conf, 0);
+    int conf_len = static_cast<int> (env->GetStringUTFLength(conf));
     char* err = wilton_Server_create(std::addressof(server_impl),
             gateway,
             [](void* gateway_ctx, wilton_Request* request) {
                 jobject gateway = static_cast<jobject>(gateway_ctx);
                 jlong requestHandle = reinterpret_cast<jlong> (request);
                 callGateway(gateway, requestHandle);
-            }, conf_cstr, strlen(conf_cstr));
+            }, conf_cstr, conf_len);
     env->ReleaseStringUTFChars(conf, conf_cstr);
 
     if (nullptr == err) {
@@ -97,7 +105,7 @@ JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(createServer)
         return handle;
     } else {
         throwException(env, err);
-        wilton_free_errmsg(err);
+        wilton_free(err);
         return 0;
     }
 }
@@ -109,43 +117,75 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(stopServer)
     char* err = wilton_Server_stop_server(server);
     if (nullptr != err) {
         throwException(env, err);
-        wilton_free_errmsg(err);
+        wilton_free(err);
     }
 }
 
-/*
 jstring JNICALL WILTON_JNI_FUNCTION(getRequestMetadata)
 (JNIEnv* env, jclass, jlong requestHandle) {
     wilton_Request* request = requestFromHandle(env, requestHandle);
-    if (nullptr == request) { return; }    
-    char* err = wilton_Server_stop_server(server);
-    if (nullptr != err) {
+    if (nullptr == request) { return nullptr; }
+    char* metadata;
+    int metadata_len;
+    char* err = wilton_Request_get_request_metadata(request, 
+            std::addressof(metadata), std::addressof(metadata_len));    
+    if (nullptr == err) {
+        // consider it nul-terminated
+        jstring res = env->NewStringUTF(metadata);
+        wilton_free(metadata);
+        return res;
+    } else {
         throwException(env, err);
+        wilton_free(err);
+        return nullptr;
     }
 }
 
 jstring JNICALL WILTON_JNI_FUNCTION(getRequestData)
 (JNIEnv* env, jclass, jlong requestHandle) {
-    
+    wilton_Request* request = requestFromHandle(env, requestHandle);
+    if (nullptr == request) { return nullptr; }
+    char* data;
+    int data_len;
+    char* err = wilton_Request_get_request_data(request,
+            std::addressof(data), std::addressof(data_len));
+    if (nullptr == err) {
+        // consider it nul-terminated
+        jstring res = env->NewStringUTF(data);
+        wilton_free(data);
+        return res;
+    } else {
+        throwException(env, err);
+        wilton_free(err);
+        return nullptr;
+    }
 }
- * 
 
 void JNICALL WILTON_JNI_FUNCTION(setResponseMetadata)
 (JNIEnv* env, jclass, jlong requestHandle, jstring conf) {
-    
+    wilton_Request* request = requestFromHandle(env, requestHandle);
+    if (nullptr == request) { return; }
+    const char* conf_cstr = env->GetStringUTFChars(conf, 0);
+    int conf_len = static_cast<int>(env->GetStringUTFLength(conf));
+    char* err = wilton_Request_set_response_metadata(request, conf_cstr, conf_len);
+    env->ReleaseStringUTFChars(conf, conf_cstr);
+    if (nullptr != err) {
+        throwException(env, err);
+        wilton_free(err);
+    }
 }
- * */
 
 JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendResponse)
 (JNIEnv* env, jclass, jlong requestHandle, jstring data) {
     wilton_Request* request = requestFromHandle(env, requestHandle);
     if (nullptr == request) { return; }
     const char* data_cstr = env->GetStringUTFChars(data, 0);
-    char* err = wilton_Request_send_response(request, data_cstr, strlen(data_cstr));
+    int data_len = static_cast<int> (env->GetStringUTFLength(data));
+    char* err = wilton_Request_send_response(request, data_cstr, data_len);
     env->ReleaseStringUTFChars(data, data_cstr);
     if (nullptr != err) {
         throwException(env, err);
-        wilton_free_errmsg(err);
+        wilton_free(err);
     }
 }
 
