@@ -5,7 +5,8 @@
  * Created on May 1, 2016, 12:08 AM
  */
 
-#include "wilton/wilton_jni.h"
+
+#include "jni.h"
 
 #include <cstring>
 
@@ -15,6 +16,14 @@
 #include "staticlib/utils.hpp"
 
 #include "wilton/wilton_c.h"
+
+// todo: compile time check
+#define WILTON_JNI_CLASS net_wiltonwebtoolkit_HttpServerJni
+#define WILTON_JNI_GATEWAY_INTERFACE net/wiltonwebtoolkit/HttpGateway
+
+#define WILTON_JNI_PASTER(x,y) Java_ ## x ## _ ## y
+#define WILTON_JNI_EVALUATOR(x,y) WILTON_JNI_PASTER(x,y)
+#define WILTON_JNI_FUNCTION(fun) WILTON_JNI_EVALUATOR(WILTON_JNI_CLASS, fun)
 
 namespace { // namespace
 
@@ -52,7 +61,9 @@ void callGateway(jobject gateway, jlong requestHandle) {
 
 } // namespace
 
-jint JNI_OnLoad(JavaVM* vm, void* reserved) {    
+extern "C" {
+
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {    
     JNIEnv* env;
     auto err = vm->GetEnv(reinterpret_cast<void**> (std::addressof(env)), JNI_VERSION_1_6);
     if (JNI_OK != err) { return -1; }
@@ -66,7 +77,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 
 // TODO: attach thread
 // TODO: exception in cb
-jlong JNICALL WILTON_JNI_FUNCTION(createServer)
+JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(createServer)
 (JNIEnv* env, jclass, jobject gateway, jstring conf) {
     if (nullptr == gateway) { throwWiltonExc(env, "Null 'gateway' parameter specified"); return; }
     if (nullptr == conf) { throwWiltonExc(env, "Null 'conf' parameter specified"); return; }
@@ -82,23 +93,25 @@ jlong JNICALL WILTON_JNI_FUNCTION(createServer)
             }, conf_cstr, strlen(conf_cstr));
     env->ReleaseStringUTFChars(conf, conf_cstr);
 
-    if (!err) {
+    if (nullptr == err) {
         JniServer* server = new JniServer(server_impl);
         jlong handle = reinterpret_cast<jlong> (server);
         VALID_SERVER_HANDLES.insert(handle);
         return handle;
     } else {
         throwException(env, err);
+        wilton_free_errmsg(err);
     }
 }
 
-void JNICALL WILTON_JNI_FUNCTION(stopServer)
+JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(stopServer)
 (JNIEnv* env, jclass, jlong serverHandle) {
     wilton_Server* server = serverFromHandle(env, serverHandle);
     if (nullptr == server) { return; }
     char* err = wilton_Server_stop_server(server);
     if (nullptr != err) {
         throwException(env, err);
+        wilton_free_errmsg(err);
     }
 }
 
@@ -125,7 +138,7 @@ void JNICALL WILTON_JNI_FUNCTION(setResponseMetadata)
 }
  * */
 
-void JNICALL WILTON_JNI_FUNCTION(sendResponse)
+JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendResponse)
 (JNIEnv* env, jclass, jlong requestHandle, jstring data) {
     wilton_Request* request = requestFromHandle(env, requestHandle);
     if (nullptr == request) { return; }
@@ -134,5 +147,8 @@ void JNICALL WILTON_JNI_FUNCTION(sendResponse)
     env->ReleaseStringUTFChars(data, data_cstr);
     if (nullptr != err) {
         throwException(env, err);
+        wilton_free_errmsg(err);
     }
 }
+
+} // C
