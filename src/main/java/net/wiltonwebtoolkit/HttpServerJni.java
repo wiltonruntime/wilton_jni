@@ -19,6 +19,12 @@ public class HttpServerJni {
 
     static {
         System.loadLibrary("wilton_jni");
+        try {
+            Class.forName("net.wiltonwebtoolkit.HttpException");
+            Class.forName("net.wiltonwebtoolkit.HttpGateway");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static native long createServer(Object gateway, String conf);

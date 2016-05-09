@@ -52,12 +52,12 @@ set ( ${PROJECT_NAME}_DEPS_PUBLIC
         wilton_c )
 staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PUBLIC_PC REQUIRED ${PROJECT_NAME}_DEPS_PUBLIC )
 set ( ${PROJECT_NAME}_DEPS_PRIVATE
-        jansson
         staticlib_io
         staticlib_ranges
         staticlib_httpserver
+        staticlib_serialization
         staticlib_utils
-        staticlib_serialization )
+        jansson )
 staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PRIVATE_PC REQUIRED ${PROJECT_NAME}_DEPS_PRIVATE )
 
 # build steps
