@@ -27,7 +27,12 @@ namespace { // namespace
 
 namespace sc = staticlib::config;
 
-JavaVM* JAVA_VM; 
+// globals
+
+JavaVM* JAVA_VM;
+jclass GATEWAY_INTERFACE_CLASS;
+jmethodID GATEWAY_CALLBACK_METHOD;
+
 
 void throwException(JNIEnv* env, const char* message) {
     jclass exClass = env->FindClass(WILTON_JNI_EXCEPTION_CLASS);
@@ -43,25 +48,29 @@ wilton_Request* requestFromHandle(JNIEnv*, jlong requestHandle) {
     return reinterpret_cast<wilton_Request*> (requestHandle);
 }
 
-// TODO: error reporting 
-//    if (nullptr == clazz) { throwException(env, TRACEMSG(std::string() + "Gateway interface not found: [" + WILTON_JNI_GATEWAY_INTERFACE + "]").c_str()); }
-//    if (nullptr == method) { throwException(env, TRACEMSG(std::string() + "Gateway callback method not found: [gatewayCallback]").c_str()); }
 void callGateway(jobject gateway, jlong requestHandle) {
+    // todo: fixme line
+    wilton_Request* request = requestFromHandle(nullptr, requestHandle);
     JNIEnv* env;
-    auto err = JAVA_VM->AttachCurrentThread(std::addressof(env), nullptr);
-    if (JNI_OK != err) { return; } // cannot report error here
-    jclass clazz = env->FindClass(WILTON_JNI_GATEWAY_INTERFACE);
-    if (nullptr != clazz) { 
-        jmethodID method = env->GetMethodID(clazz, "gatewayCallback", "(J)V");
-        if (nullptr != method) {
-            env->CallVoidMethod(gateway, method, requestHandle);
-            jthrowable exc = env->ExceptionOccurred();
-            if (nullptr != exc) {
-                env->ExceptionClear();
-            }
+    auto getenv_err = JAVA_VM->GetEnv(reinterpret_cast<void**>(std::addressof(env)), JNI_VERSION_1_6);
+    switch (getenv_err) {
+    case JNI_OK:
+        break;
+    case JNI_EDETACHED:
+        if (JNI_OK == JAVA_VM->AttachCurrentThread(std::addressof(env), nullptr)) { 
+            break; 
         }
+        // fall-through to report error to client
+    default:
+        std::string conf{R"({"statusCode": 500, "statusMessage": "Server Error"})"};
+        wilton_Request_set_response_metadata(request, conf.c_str(), conf.length());
+        std::string errmsg{TRACEMSG("System error")};
+        wilton_Request_send_response(request, errmsg.c_str(), errmsg.length());
     }
-    JAVA_VM->DetachCurrentThread();
+    env->CallVoidMethod(gateway, GATEWAY_CALLBACK_METHOD, requestHandle);
+    env->ExceptionClear();
+    // https://groups.google.com/forum/#!topic/android-ndk/2H8z5grNqjo
+//    JAVA_VM->DetachCurrentThread();
 }
 
 } // namespace
@@ -70,13 +79,13 @@ extern "C" {
 
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {    
     JNIEnv* env;
-    auto err = vm->GetEnv(reinterpret_cast<void**> (std::addressof(env)), JNI_VERSION_1_6);
+    auto err = vm->GetEnv(reinterpret_cast<void**>(std::addressof(env)), JNI_VERSION_1_6);
     if (JNI_OK != err) { return -1; }
-    
     JAVA_VM = vm;
-    
-    // Get jclass with env->FindClass.
-    // Register methods with env->RegisterNatives.
+    GATEWAY_INTERFACE_CLASS = env->FindClass(WILTON_JNI_GATEWAY_INTERFACE);
+    if (nullptr == GATEWAY_INTERFACE_CLASS) { return -1; }
+    GATEWAY_CALLBACK_METHOD = env->GetMethodID(GATEWAY_INTERFACE_CLASS, "gatewayCallback", "(J)V");
+    if (nullptr == GATEWAY_CALLBACK_METHOD) { return -1; }
     return JNI_VERSION_1_6;
 }
 
@@ -187,6 +196,14 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendResponse)
         throwException(env, err);
         wilton_free(err);
     }
+}
+
+JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(appendLog)
+(JNIEnv* env, jclass, jint level, jstring logger, jstring message) {
+    (void) env;
+    (void) level;
+    (void) logger;
+    (void) message;
 }
 
 } // C

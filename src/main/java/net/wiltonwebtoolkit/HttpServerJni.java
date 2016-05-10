@@ -41,4 +41,6 @@ public class HttpServerJni {
 
 //    TODO
 //    private static native void sendResponseChunked(long requestHandle, Object readable);
+
+    public static native void appendLog(int level, String logger, String message);
 }

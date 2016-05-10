@@ -14,7 +14,6 @@
 
 cmake_minimum_required ( VERSION 2.8.12 )
 
-# dependencies
 if ( NOT DEFINED WILTON_DEPS_DIRECTORY )
     set ( WILTON_DEPS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../.. )
 endif ( )
@@ -33,8 +32,13 @@ set ( ${PROJECT_NAME}_URL https://github.com/wilton-web-toolkit/wilton-jni )
 include ( ${STATICLIB_CMAKE}/staticlibs_common.cmake )
 staticlib_enable_deplibs_cache ( )
 
+# options
+set ( staticlib_httpserver_USE_LOG4CPLUS ON CACHE BOOL "Use log4cplus lib for logging" )
+
+# dependencies
 if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )    
     staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/external_jansson )
+    staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/external_log4cplus )
 endif ( )
 staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_jni )
 staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_config )
@@ -57,6 +61,7 @@ set ( ${PROJECT_NAME}_DEPS_PRIVATE
         staticlib_httpserver
         staticlib_serialization
         staticlib_utils
+        log4cplus
         jansson )
 staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PRIVATE_PC REQUIRED ${PROJECT_NAME}_DEPS_PRIVATE )
 
