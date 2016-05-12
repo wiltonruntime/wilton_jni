@@ -14,15 +14,26 @@
  * limitations under the License.
  */
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 import com.google.gson.Gson;
+
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
+import java.io.File;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import com.google.gson.reflect.TypeToken;
 import net.wiltonwebtoolkit.HttpGateway;
+
 import static net.wiltonwebtoolkit.HttpServerJni.*;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -30,6 +41,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -41,6 +53,9 @@ public class WiltonJniTest {
     private static final String ROOT_URL = "http://127.0.0.1:" + TCP_PORT + "/";
     private static final String ROOT_RESP = "Hello Java!\n";
     private static final String NOT_FOUND_RESP = "Not found\n";
+    private static final String LOG_DATA = "Please append me to log";
+    private static final String STATIC_FILE_DATA = "I am data from static file";
+    private static final String STATIC_ZIP_DATA = "I am data from ZIP file";
 
     private CloseableHttpClient http = HttpClients.createDefault();
 
@@ -58,6 +73,10 @@ public class WiltonJniTest {
                     resp = String.valueOf(metaMap.get("headers"));
                 } else if ("/postmirror".equalsIgnoreCase(path)) {
                     resp = getRequestData(requestHandle);
+                } else if ("/logger".equalsIgnoreCase(path)) {
+                    String data = getRequestData(requestHandle);
+                    appendLog("INFO", WiltonJniTest.class.getName(), data);
+                    resp = "";
                 } else {
                     Map<String, Object> map = new LinkedHashMap<String, Object>();
                     map.put("statusCode", 404);
@@ -74,10 +93,12 @@ public class WiltonJniTest {
     }
     
     @Test
-    public void test() throws Exception {
+    public void testSimple() throws Exception {
         long handle = 0;
         try {
-            handle = createServer(new TestGateway(), serverConfig());
+            handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
+                    .put("tcpPort", TCP_PORT)
+                    .build()));
             assertEquals(ROOT_RESP, httpGet(ROOT_URL));
             assertEquals("foo", httpPost(ROOT_URL + "postmirror", "foo"));
             assertEquals(NOT_FOUND_RESP, httpGet(ROOT_URL + "foo"));
@@ -86,11 +107,77 @@ public class WiltonJniTest {
             stopServer(handle);
         }
     }
-    
-    private String serverConfig() {
-        Map<String, Object> config = new LinkedHashMap<String, Object>();
-        config.put("tcpPort", TCP_PORT);
-        return GSON.toJson(config);
+
+    @Test
+    public void testLogging() throws Exception {
+        File dir = null;
+        long handle = 0;
+        try {
+            dir = Files.createTempDir();
+            File logfile = new File(dir, "test.log");
+            handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
+                    .put("tcpPort", TCP_PORT)
+                    .put("logging", ImmutableMap.builder()
+                            .put("appenders", ImmutableList.builder()
+                                    .add(ImmutableMap.builder()
+                                            .put("appenderType", "FILE")
+                                            .put("thresholdLevel", "DEBUG")
+                                            .put("filePath", logfile.getAbsolutePath())
+                                            .put("layout", "%m")
+                                            .build())
+                                    .build())
+                            .put("loggers", ImmutableList.builder()
+                                    .add(ImmutableMap.builder()
+                                            .put("name", "staticlib.httpserver")
+                                            .put("level", "WARN")
+                                            .build())
+                                    .build())
+                            .build())
+                    .build()));
+            assertEquals(ROOT_RESP, httpGet(ROOT_URL));
+            httpPost(ROOT_URL + "logger", LOG_DATA);
+            assertEquals(LOG_DATA, FileUtils.readFileToString(logfile, "UTF-8"));
+        } finally {
+            stopServer(handle);
+            FileUtils.deleteDirectory(dir);
+        }
+    }
+
+    @Test
+    public void testDocumentRoot() throws Exception {
+        File dir = null;
+        long handle = 0;
+        try {
+            dir = Files.createTempDir();
+            // prepare data
+            FileUtils.writeStringToFile(new File(dir, "test.txt"), STATIC_FILE_DATA);
+            File zipFile = new File(dir, "test.zip");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ZipOutputStream zipper = new ZipOutputStream(baos);
+            zipper.putNextEntry(new ZipEntry("test/zipped.txt"));
+            zipper.write(STATIC_ZIP_DATA.getBytes("UTF-8"));
+            zipper.close();
+            FileUtils.writeByteArrayToFile(zipFile, baos.toByteArray());
+            handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
+                    .put("tcpPort", TCP_PORT)
+                    .put("documentRoots", ImmutableList.builder()
+                            .add(ImmutableMap.builder()
+                                    .put("resource", "/static/files/")
+                                    .put("dirPath", dir.getAbsolutePath())
+                                    .build())
+                            .add(ImmutableMap.builder()
+                                    .put("resource", "/static/")
+                                    .put("zipPath", zipFile.getAbsolutePath())
+                                    .build())
+                            .build())
+                    .build()));
+            assertEquals(ROOT_RESP, httpGet(ROOT_URL));
+            assertEquals(STATIC_FILE_DATA, httpGet(ROOT_URL + "static/files/test.txt"));
+            assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/test/zipped.txt"));
+        } finally {
+            stopServer(handle);
+            FileUtils.deleteDirectory(dir);
+        }
     }
     
     private String httpGet(String url) throws Exception {

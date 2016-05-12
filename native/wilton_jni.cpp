@@ -199,11 +199,21 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendResponse)
 }
 
 JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(appendLog)
-(JNIEnv* env, jclass, jint level, jstring logger, jstring message) {
-    (void) env;
-    (void) level;
-    (void) logger;
-    (void) message;
+(JNIEnv* env, jclass, jstring level, jstring logger, jstring message) {
+    const char* level_cstr = env->GetStringUTFChars(level, 0);
+    int level_len = static_cast<int> (env->GetStringUTFLength(level));
+    const char* logger_cstr = env->GetStringUTFChars(logger, 0);
+    int logger_len = static_cast<int> (env->GetStringUTFLength(logger));
+    const char* message_cstr = env->GetStringUTFChars(message, 0);
+    int message_len = static_cast<int> (env->GetStringUTFLength(message));
+    char* err = wilton_log(level_cstr, level_len, logger_cstr, logger_len, message_cstr, message_len);
+    env->ReleaseStringUTFChars(level, level_cstr);
+    env->ReleaseStringUTFChars(logger, logger_cstr);
+    env->ReleaseStringUTFChars(message, message_cstr);
+    if (nullptr != err) {
+        throwException(env, err);
+        wilton_free(err);
+    }
 }
 
 } // C

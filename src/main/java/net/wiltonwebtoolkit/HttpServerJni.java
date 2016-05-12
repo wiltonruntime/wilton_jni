@@ -27,20 +27,20 @@ public class HttpServerJni {
         }
     }
 
-    public static native long createServer(Object gateway, String conf);
+    public static native long createServer(Object gateway, String conf) throws HttpException;
 
-    public static native void stopServer(long serverHandle);
+    public static native void stopServer(long serverHandle) throws HttpException;
 
-    public static native String getRequestMetadata(long requestHandle);
+    public static native String getRequestMetadata(long requestHandle) throws HttpException;
 
-    public static native String getRequestData(long requestHandle);
+    public static native String getRequestData(long requestHandle) throws HttpException;
 
-    public static native void setResponseMetadata(long requestHandle, String conf);
+    public static native void setResponseMetadata(long requestHandle, String conf) throws HttpException;
 
-    public static native void sendResponse(long requestHandle, String data);
+    public static native void sendResponse(long requestHandle, String data) throws HttpException;
 
 //    TODO
 //    private static native void sendResponseChunked(long requestHandle, Object readable);
 
-    public static native void appendLog(int level, String logger, String message);
+    public static native void appendLog(String level, String logger, String message) throws HttpException;
 }

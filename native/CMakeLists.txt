@@ -37,6 +37,7 @@ set ( staticlib_httpserver_USE_LOG4CPLUS ON CACHE BOOL "Use log4cplus lib for lo
 
 # dependencies
 if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )    
+    staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/external_zlib )
     staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/external_jansson )
     staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/external_log4cplus )
 endif ( )
@@ -44,9 +45,12 @@ staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_jni )
 staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_config )
 staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_io )
 staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_ranges )
+staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_endian )
 staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_httpserver )
 staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_utils )
 staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_serialization )
+staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_pimpl )
+staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_unzip )
 staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/wilton_c )
 
 # dependencies
@@ -62,7 +66,10 @@ set ( ${PROJECT_NAME}_DEPS_PRIVATE
         staticlib_serialization
         staticlib_utils
         log4cplus
-        jansson )
+        jansson
+        staticlib_unzip
+        staticlib_pimpl
+        zlib )
 staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PRIVATE_PC REQUIRED ${PROJECT_NAME}_DEPS_PRIVATE )
 
 # build steps
