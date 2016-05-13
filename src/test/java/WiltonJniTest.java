@@ -28,12 +28,14 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import net.wiltonwebtoolkit.HttpGateway;
 
 import static net.wiltonwebtoolkit.HttpServerJni.*;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.http.Header;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -43,12 +45,15 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
 
 public class WiltonJniTest {
     
-    private static final Gson GSON = new Gson();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Type MAP_TYPE = new TypeToken<LinkedHashMap<String, Object>>() {}.getType();
+    private static final Type STRING_MAP_TYPE = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
     private static final int TCP_PORT = 8080;
     private static final String ROOT_URL = "http://127.0.0.1:" + TCP_PORT + "/";
     private static final String ROOT_RESP = "Hello Java!\n";
@@ -60,6 +65,7 @@ public class WiltonJniTest {
     private CloseableHttpClient http = HttpClients.createDefault();
 
     private static class TestGateway implements HttpGateway {
+
         @Override
         public void gatewayCallback(long requestHandle) {
             try {
@@ -70,7 +76,14 @@ public class WiltonJniTest {
                 if ("/".equalsIgnoreCase(path)) {
                     resp = ROOT_RESP;
                 } else if ("/headers".equalsIgnoreCase(path)) {
-                    resp = String.valueOf(metaMap.get("headers"));
+                    String json = GSON.toJson(ImmutableMap.builder()
+                            .put("headers", ImmutableMap.builder()
+                                    .put("X-Server-H1", "foo")
+                                    .put("X-Server-H2", "bar")
+                                    .build())
+                            .build());
+                    setResponseMetadata(requestHandle, json);
+                    resp = GSON.toJson(metaMap.get("headers"));
                 } else if ("/postmirror".equalsIgnoreCase(path)) {
                     resp = getRequestData(requestHandle);
                 } else if ("/logger".equalsIgnoreCase(path)) {
@@ -78,10 +91,11 @@ public class WiltonJniTest {
                     appendLog("INFO", WiltonJniTest.class.getName(), data);
                     resp = "";
                 } else {
-                    Map<String, Object> map = new LinkedHashMap<String, Object>();
-                    map.put("statusCode", 404);
-                    map.put("statusMessage", "Not Found");
-                    setResponseMetadata(requestHandle, GSON.toJson(map));
+                    String json = GSON.toJson(ImmutableMap.builder()
+                            .put("statusCode", 404)
+                            .put("statusMessage", "Not Found")
+                            .build());
+                    setResponseMetadata(requestHandle, json);
                     resp = NOT_FOUND_RESP;
                 }
                 sendResponse(requestHandle, resp);
@@ -177,6 +191,54 @@ public class WiltonJniTest {
         } finally {
             stopServer(handle);
             FileUtils.deleteDirectory(dir);
+        }
+    }
+
+    // Duplicates in raw headers are handled in the following ways, depending on the header name:
+    // Duplicates of age, authorization, content-length, content-type, etag, expires,
+    // from, host, if-modified-since, if-unmodified-since, last-modified, location,
+    // max-forwards, proxy-authorization, referer, retry-after, or user-agent are discarded.
+    // For all other headers, the values are joined together with ', '.
+    @Test
+    public void testHeaders() throws Exception {
+        long handle = 0;
+        try {
+            handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
+                    .put("tcpPort", TCP_PORT)
+                    .build()));
+            assertEquals(ROOT_RESP, httpGet(ROOT_URL));
+            CloseableHttpResponse resp = null;
+            String output;
+            Map<String, String> serverHeaders = new LinkedHashMap<String, String>();
+            try {
+                HttpGet get = new HttpGet(ROOT_URL + "headers");
+                get.addHeader("X-Dupl-H", "foo");
+                get.addHeader("X-Dupl-H", "bar");
+                get.addHeader("Referer", "foo");
+                get.addHeader("referer", "bar");
+                resp = http.execute(get);
+                for (Header he : resp.getAllHeaders()) {
+                    serverHeaders.put(he.getName(), he.getValue());
+                }
+                output = EntityUtils.toString(resp.getEntity(), "UTF-8");
+            } finally {
+                closeQuietly(resp);
+            }
+            Map<String, String> clientHeaders = GSON.fromJson(output, STRING_MAP_TYPE);
+            assertTrue(clientHeaders.containsKey("X-Dupl-H"));
+            assertTrue(clientHeaders.get("X-Dupl-H").contains("foo"));
+            assertTrue(clientHeaders.get("X-Dupl-H").contains("bar"));
+            assertTrue(clientHeaders.get("X-Dupl-H").contains(","));
+            assertTrue(clientHeaders.containsKey("referer") || clientHeaders.containsKey("Referer"));
+            if (clientHeaders.containsKey("referer")) {
+                assertEquals("bar", clientHeaders.get("referer"));
+            } else {
+                assertEquals("foo", clientHeaders.get("Referer"));
+            }
+            assertEquals("foo", serverHeaders.get("X-Server-H1"));
+            assertEquals("bar", serverHeaders.get("X-Server-H2"));
+        } finally {
+            stopServer(handle);
         }
     }
     
