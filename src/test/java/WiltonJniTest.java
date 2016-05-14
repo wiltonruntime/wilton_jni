@@ -33,6 +33,7 @@ import com.google.gson.reflect.TypeToken;
 import net.wiltonwebtoolkit.HttpGateway;
 
 import static net.wiltonwebtoolkit.HttpServerJni.*;
+import static org.junit.Assert.*;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;
@@ -43,9 +44,6 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -90,6 +88,10 @@ public class WiltonJniTest {
                     String data = getRequestData(requestHandle);
                     appendLog("INFO", WiltonJniTest.class.getName(), data);
                     resp = "";
+                } else if ("/sendfile".equalsIgnoreCase(path)) {
+                    String filename = getRequestData(requestHandle);
+                    sendFile(requestHandle, filename);
+                    resp = null;
                 } else {
                     String json = GSON.toJson(ImmutableMap.builder()
                             .put("statusCode", 404)
@@ -98,7 +100,9 @@ public class WiltonJniTest {
                     setResponseMetadata(requestHandle, json);
                     resp = NOT_FOUND_RESP;
                 }
-                sendResponse(requestHandle, resp);
+                if (null != resp) { // sendfile case
+                    sendResponse(requestHandle, resp);
+                }
             } catch (Throwable e) {
                 e.printStackTrace();
                 sendResponse(requestHandle, e.getMessage());
@@ -239,6 +243,29 @@ public class WiltonJniTest {
             assertEquals("bar", serverHeaders.get("X-Server-H2"));
         } finally {
             stopServer(handle);
+        }
+    }
+
+    @Test
+    public void testSendFile() throws Exception {
+        long handle = 0;
+        File dir = null;
+        try {
+            dir = Files.createTempDir();
+            File file = new File(dir, "test.txt");
+            FileUtils.writeStringToFile(file, STATIC_FILE_DATA);
+            handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
+                    .put("tcpPort", TCP_PORT)
+                    .build()));
+            assertEquals(ROOT_RESP, httpGet(ROOT_URL));
+            assertTrue(file.exists());
+            String contents = httpPost(ROOT_URL + "sendfile", file.getAbsolutePath());
+            assertEquals(STATIC_FILE_DATA, contents);
+            Thread.sleep(200);
+            assertFalse(file.exists());
+        } finally {
+            stopServer(handle);
+            FileUtils.deleteDirectory(dir);
         }
     }
     

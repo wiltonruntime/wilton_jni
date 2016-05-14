@@ -28,16 +28,24 @@ namespace { // namespace
 namespace sc = staticlib::config;
 
 // globals
-
 JavaVM* JAVA_VM;
 jclass GATEWAY_INTERFACE_CLASS;
 jmethodID GATEWAY_CALLBACK_METHOD;
-
+jclass FILE_CLASS;
+jmethodID FILE_CONSTRUCTOR_METHOD;
+jmethodID FILE_DELETE_METHOD;
 
 void throwException(JNIEnv* env, const char* message) {
     jclass exClass = env->FindClass(WILTON_JNI_EXCEPTION_CLASS);
     std::string msg = TRACEMSG(std::string() + message + "\nC API Error");
     env->ThrowNew(exClass, msg.c_str());
+}
+
+void log_error(const std::string& message) {
+    static std::string error_level{"ERROR"};
+    static std::string logger_name{"net.wiltonwebtoolkit.HttpServerJni"};
+    wilton_log(error_level.c_str(), error_level.length(), logger_name.c_str(), logger_name.length(),
+            message.c_str(), message.length());
 }
 
 wilton_Server* serverFromHandle(JNIEnv*, jlong handle) {
@@ -73,6 +81,35 @@ void callGateway(jobject gateway, jlong requestHandle) {
 //    JAVA_VM->DetachCurrentThread();
 }
 
+// todo: file name logging
+void deleteFile(jstring filePath) {
+    JNIEnv* env;
+    auto getenv_err = JAVA_VM->GetEnv(reinterpret_cast<void**> (std::addressof(env)), JNI_VERSION_1_6);
+    switch (getenv_err) {
+    case JNI_OK:
+        break;
+    case JNI_EDETACHED:
+        if (JNI_OK == JAVA_VM->AttachCurrentThread(std::addressof(env), nullptr)) {
+            break;
+        }
+        // fall-through to report error to client
+    default:
+        log_error("System error occured during setting up environment for 'send_file' 'File.delete()' finalizer call");
+        return;
+    }
+    jobject file = env->NewObject(FILE_CLASS, FILE_CONSTRUCTOR_METHOD, filePath);
+    if (!env->ExceptionOccurred()) {
+        env->CallVoidMethod(file, FILE_DELETE_METHOD);
+        if (env->ExceptionOccurred()) {
+            log_error("System error during 'File.delete()' finalizer call for 'send_file'");
+        }
+    } else {
+        log_error("System error during 'File.<init>()' finalizer call for 'send_file'");
+    }
+    env->ExceptionClear();
+    env->DeleteGlobalRef(filePath);
+}
+
 } // namespace
 
 extern "C" {
@@ -82,10 +119,22 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {
     auto err = vm->GetEnv(reinterpret_cast<void**>(std::addressof(env)), JNI_VERSION_1_6);
     if (JNI_OK != err) { return -1; }
     JAVA_VM = vm;
-    GATEWAY_INTERFACE_CLASS = env->FindClass(WILTON_JNI_GATEWAY_INTERFACE);
+    // gateway
+    jclass gatewayCLass = env->FindClass(WILTON_JNI_GATEWAY_INTERFACE);
+    if (nullptr == gatewayCLass) { return -1; }
+    GATEWAY_INTERFACE_CLASS = reinterpret_cast<jclass> (env->NewGlobalRef(gatewayCLass));
     if (nullptr == GATEWAY_INTERFACE_CLASS) { return -1; }
     GATEWAY_CALLBACK_METHOD = env->GetMethodID(GATEWAY_INTERFACE_CLASS, "gatewayCallback", "(J)V");
     if (nullptr == GATEWAY_CALLBACK_METHOD) { return -1; }
+    // file
+    jclass fileClass = env->FindClass("java/io/File");
+    if (nullptr == fileClass) { return -1; }
+    FILE_CLASS = reinterpret_cast<jclass> (env->NewGlobalRef(fileClass));
+    if (nullptr == FILE_CLASS) { return -1; }
+    FILE_CONSTRUCTOR_METHOD = env->GetMethodID(FILE_CLASS, "<init>", "(Ljava/lang/String;)V");
+    if (nullptr == FILE_CONSTRUCTOR_METHOD) { return -1; }
+    FILE_DELETE_METHOD = env->GetMethodID(FILE_CLASS, "delete", "()Z");
+    if (nullptr == FILE_DELETE_METHOD) { return -1; }    
     return JNI_VERSION_1_6;
 }
 
@@ -192,6 +241,25 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendResponse)
     int data_len = static_cast<int> (env->GetStringUTFLength(data));
     char* err = wilton_Request_send_response(request, data_cstr, data_len);
     env->ReleaseStringUTFChars(data, data_cstr);
+    if (nullptr != err) {
+        throwException(env, err);
+        wilton_free(err);
+    }
+}
+
+JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendFile)
+(JNIEnv* env, jclass, jlong requestHandle, jstring file_path) {
+    wilton_Request* request = requestFromHandle(env, requestHandle);
+    if (nullptr == request) { return; }
+    file_path = reinterpret_cast<jstring>(env->NewGlobalRef(file_path));
+    const char* file_path_cstr = env->GetStringUTFChars(file_path, 0);
+    int file_path_len = static_cast<int> (env->GetStringUTFLength(file_path));    
+    char* err = wilton_Request_send_file(request, file_path_cstr, file_path_len, file_path, 
+            [](void* ctx, bool) {
+                jstring file_path_passed = reinterpret_cast<jstring>(ctx);
+                deleteFile(file_path_passed);                
+            });    
+    env->ReleaseStringUTFChars(file_path, file_path_cstr);
     if (nullptr != err) {
         throwException(env, err);
         wilton_free(err);
