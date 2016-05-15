@@ -14,13 +14,16 @@
 
 cmake_minimum_required ( VERSION 2.8.12 )
 
-if ( NOT DEFINED WILTON_DEPS_DIRECTORY )
-    set ( WILTON_DEPS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../.. )
-endif ( )
 # toolchain setup
+if ( NOT DEFINED STATICLIB_DEPS )
+    set ( STATICLIB_DEPS ${CMAKE_CURRENT_LIST_DIR}/../../../staticlibs CACHE INTERNAL "" )    
+endif ( )
+if ( NOT DEFINED WILTON_DEPS )
+    set ( WILTON_DEPS ${CMAKE_CURRENT_LIST_DIR}/../.. CACHE INTERNAL "" )
+endif ( )
 set ( STATICLIB_TOOLCHAIN linux_amd64_gcc CACHE STRING "toolchain triplet" )
 if ( NOT DEFINED STATICLIB_CMAKE )
-    set ( STATICLIB_CMAKE ${CMAKE_CURRENT_LIST_DIR}/../../cmake CACHE INTERNAL "" )    
+    set ( STATICLIB_CMAKE ${STATICLIB_DEPS}/cmake CACHE INTERNAL "" )    
 endif ( )
 set ( CMAKE_TOOLCHAIN_FILE ${STATICLIB_CMAKE}/toolchains/${STATICLIB_TOOLCHAIN}.cmake CACHE INTERNAL "" )
 
@@ -28,7 +31,7 @@ set ( CMAKE_TOOLCHAIN_FILE ${STATICLIB_CMAKE}/toolchains/${STATICLIB_TOOLCHAIN}.
 project ( wilton_jni CXX )
 set ( ${PROJECT_NAME}_STATICLIB_VERSION 1.0 )
 set ( ${PROJECT_NAME}_DESCRIPTION "Wilton Web Toolkit JNI library" )
-set ( ${PROJECT_NAME}_URL https://github.com/wilton-web-toolkit/wilton-jni )
+set ( ${PROJECT_NAME}_URL https://github.com/wilton-web-toolkit/wilton.js )
 include ( ${STATICLIB_CMAKE}/staticlibs_common.cmake )
 staticlib_enable_deplibs_cache ( )
 
@@ -37,27 +40,27 @@ set ( staticlib_httpserver_USE_LOG4CPLUS ON CACHE BOOL "Use log4cplus lib for lo
 
 # dependencies
 if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )    
-    staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/external_zlib )
-    staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/external_jansson )
-    staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/external_log4cplus )
+    staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_zlib )
+    staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_jansson )
+    staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_log4cplus )
 endif ( )
-staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_jni )
-staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_config )
-staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_io )
-staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_ranges )
-staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_endian )
-staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_httpserver )
-staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_utils )
-staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_serialization )
-staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_pimpl )
-staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/staticlib_unzip )
-staticlib_add_subdirectory ( ${WILTON_DEPS_DIRECTORY}/wilton_c )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_jni )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_config )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_io )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_ranges )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_endian )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_httpserver )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_utils )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_serialization )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_pimpl )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_unzip )
+add_subdirectory ( ${WILTON_DEPS}/libwilton ${CMAKE_BINARY_DIR}/libwilton )
 
 # dependencies
 set ( ${PROJECT_NAME}_DEPS_PUBLIC
         staticlib_jni
         staticlib_config
-        wilton_c )
+        wilton )
 staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PUBLIC_PC REQUIRED ${PROJECT_NAME}_DEPS_PUBLIC )
 set ( ${PROJECT_NAME}_DEPS_PRIVATE
         staticlib_io

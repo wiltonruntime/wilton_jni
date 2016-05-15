@@ -2,8 +2,10 @@
 /build
 /target
 /nbproject
-/native/nbproject
+/jni/nbproject
+/js/nbproject
 /.idea
 /*.iml
 /pom.xml.releaseBackup
 /release.properties
+/js/wilton/nbproject/private/

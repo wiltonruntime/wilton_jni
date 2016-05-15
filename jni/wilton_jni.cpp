@@ -12,7 +12,7 @@
 
 #include "staticlib/config.hpp"
 
-#include "wilton/wilton_c.h"
+#include "wilton/wilton.h"
 
 // todo: compile time check
 #define WILTON_JNI_CLASS net_wiltonwebtoolkit_HttpServerJni
@@ -255,7 +255,7 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendFile)
     const char* file_path_cstr = env->GetStringUTFChars(file_path, 0);
     int file_path_len = static_cast<int> (env->GetStringUTFLength(file_path));    
     char* err = wilton_Request_send_file(request, file_path_cstr, file_path_len, file_path, 
-            [](void* ctx, bool) {
+            [](void* ctx, int) {
                 jstring file_path_passed = reinterpret_cast<jstring>(ctx);
                 deleteFile(file_path_passed);                
             });    

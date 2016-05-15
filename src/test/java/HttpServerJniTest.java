@@ -47,7 +47,7 @@ import org.apache.http.util.EntityUtils;
 
 import org.junit.Test;
 
-public class WiltonJniTest {
+public class HttpServerJniTest {
     
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Type MAP_TYPE = new TypeToken<LinkedHashMap<String, Object>>() {}.getType();
@@ -86,7 +86,7 @@ public class WiltonJniTest {
                     resp = getRequestData(requestHandle);
                 } else if ("/logger".equalsIgnoreCase(path)) {
                     String data = getRequestData(requestHandle);
-                    appendLog("INFO", WiltonJniTest.class.getName(), data);
+                    appendLog("INFO", HttpServerJniTest.class.getName(), data);
                     resp = "";
                 } else if ("/sendfile".equalsIgnoreCase(path)) {
                     String filename = getRequestData(requestHandle);
@@ -190,7 +190,12 @@ public class WiltonJniTest {
                             .build())
                     .build()));
             assertEquals(ROOT_RESP, httpGet(ROOT_URL));
+            // deliberated repeated requests
             assertEquals(STATIC_FILE_DATA, httpGet(ROOT_URL + "static/files/test.txt"));
+            assertEquals(STATIC_FILE_DATA, httpGet(ROOT_URL + "static/files/test.txt"));
+            assertEquals(STATIC_FILE_DATA, httpGet(ROOT_URL + "static/files/test.txt"));
+            assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/test/zipped.txt"));
+            assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/test/zipped.txt"));
             assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/test/zipped.txt"));
         } finally {
             stopServer(handle);
