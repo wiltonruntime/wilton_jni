@@ -1,7 +1,7 @@
 import org.junit.Test;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.tools.shell.Global;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,20 +13,20 @@ import static org.apache.commons.io.IOUtils.closeQuietly;
  * User: alexkasko
  * Date: 5/15/16
  */
-public class WiltonRhinoTest {
-
+public class WiltonNashornTest {
     @Test
     public void test() throws Exception {
-        Context cx = Context.enter();
-        cx.setOptimizationLevel(-1);
-        Global gl = new Global();
-        gl.init(cx);
+        ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+        if (null == engine) {
+            System.out.println("ERROR: Nashorn is not available, probably running in jdk7, skipping test");
+            return;
+        }
         {
             InputStream is = null;
             try {
                 is = new FileInputStream("js/wilton.js");
                 Reader re = new InputStreamReader(is, "UTF-8");
-                cx.evaluateReader(gl, re, "wilton.js", -1, null);
+                engine.eval(re);
             } finally {
                 closeQuietly(is);
             }
@@ -36,7 +36,7 @@ public class WiltonRhinoTest {
             try {
                 is = WiltonRhinoTest.class.getResourceAsStream("/wilton_test.js");
                 Reader re = new InputStreamReader(is, "UTF-8");
-                cx.evaluateReader(gl, re, "wilton_test.js", -1, null);
+                engine.eval(re);
             } finally {
                 closeQuietly(is);
             }

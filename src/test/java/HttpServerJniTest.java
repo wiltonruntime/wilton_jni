@@ -20,7 +20,6 @@ import com.google.common.io.Files;
 import com.google.gson.Gson;
 
 import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
@@ -33,14 +32,16 @@ import com.google.gson.reflect.TypeToken;
 import net.wiltonwebtoolkit.HttpGateway;
 
 import static net.wiltonwebtoolkit.HttpServerJni.*;
+import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.junit.Assert.*;
+import static utils.TestUtils.httpGet;
+import static utils.TestUtils.httpGetCode;
+import static utils.TestUtils.httpPost;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -271,51 +272,6 @@ public class HttpServerJniTest {
         } finally {
             stopServer(handle);
             FileUtils.deleteDirectory(dir);
-        }
-    }
-    
-    private String httpGet(String url) throws Exception {
-        CloseableHttpResponse resp = null;
-        try {
-            HttpGet get = new HttpGet(url);
-            resp = http.execute(get);
-            return EntityUtils.toString(resp.getEntity(), "UTF-8");
-        } finally {
-            closeQuietly(resp);
-        }
-    }
-
-    private int httpGetCode(String url) throws Exception {
-        CloseableHttpResponse resp = null;
-        try {
-            HttpGet get = new HttpGet(url);
-            resp = http.execute(get);
-            return resp.getStatusLine().getStatusCode();
-        } finally {
-            closeQuietly(resp);
-        }
-    }
-
-    private String httpPost(String url, String data) throws Exception {
-        CloseableHttpResponse resp = null;
-        try {
-            HttpPost post = new HttpPost(url);
-            post.setEntity(new ByteArrayEntity(data.getBytes("UTF-8")));
-            resp = http.execute(post);
-            return EntityUtils.toString(resp.getEntity(), "UTF-8");
-        } finally {
-            closeQuietly(resp);
-        }
-    }
-    
-    static void closeQuietly(Closeable closeable) {
-        if (null == closeable) {
-            return;
-        }
-        try {
-            closeable.close();
-        } catch (Exception e) {
-            // ignore
         }
     }
 
