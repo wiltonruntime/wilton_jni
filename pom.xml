@@ -21,6 +21,12 @@
     </scm>
 
     <dependencies>
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <version>3.7.1.201504261725-r</version>
+            <optional>true</optional>
+        </dependency>
         <!-- test -->
         <dependency>
             <groupId>junit</groupId>
