@@ -7,6 +7,17 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.tools.shell.Global;
+
+//import java.lang.RuntimeExcetion;
+
+import javax.script.ScriptEngine;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
@@ -62,4 +73,60 @@ public class TestUtils {
             closeQuietly(resp);
         }
     }
+
+    public static void runRhinoFs(Context cx, Global gl, File file) {
+        InputStream is = null;
+        try {
+            is = new FileInputStream(file.getAbsolutePath());
+            Reader re = new InputStreamReader(is, "UTF-8");
+            cx.evaluateReader(gl, re, file.getName(), -1, null);
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            closeQuietly(is);
+        }
+    }
+
+    public static void runRhinoClasspath(Context cx, Global gl, String path) {
+        InputStream is = null;
+        try {
+            is = TestUtils.class.getResourceAsStream(path);
+            Reader re = new InputStreamReader(is, "UTF-8");
+            cx.evaluateReader(gl, re, path, -1, null);
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            closeQuietly(is);
+        }
+    }
+
+    public static void runNashornFs(ScriptEngine engine, File file) {
+        InputStream is = null;
+        try {
+            is = new FileInputStream(file.getAbsolutePath());
+            Reader re = new InputStreamReader(is, "UTF-8");
+            engine.eval(re);
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            closeQuietly(is);
+        }
+    }
+
+    public static void runNashornClasspath(ScriptEngine engine, String path) {
+        InputStream is = null;
+        try {
+            is = TestUtils.class.getResourceAsStream(path);
+            Reader re = new InputStreamReader(is, "UTF-8");
+            engine.eval(re);
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            closeQuietly(is);
+        }
+    }
+
+
+
+
 }

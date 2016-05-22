@@ -2,12 +2,9 @@ import org.junit.Test;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 
-import static org.apache.commons.io.IOUtils.closeQuietly;
+import static utils.TestUtils.*;
 
 /**
  * User: alexkasko
@@ -18,28 +15,22 @@ public class WiltonNashornTest {
     public void test() throws Exception {
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
         if (null == engine) {
-            System.out.println("ERROR: Nashorn is not available, probably running in jdk7, skipping test");
+            System.out.println("ERROR: Nashorn is not available, probably running on jdk7, skipping test");
             return;
         }
-        {
-            InputStream is = null;
-            try {
-                is = new FileInputStream("js/wilton.js");
-                Reader re = new InputStreamReader(is, "UTF-8");
-                engine.eval(re);
-            } finally {
-                closeQuietly(is);
-            }
+        runNashornFs(engine, new File("js/wilton.js"));
+        runNashornClasspath(engine, "/wilton_test.js");
+    }
+
+    @Test
+    public void testRequire() throws Exception {
+        ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+        if (null == engine) {
+            System.out.println("ERROR: Nashorn is not available, probably running on jdk7, skipping test");
+            return;
         }
-        {
-            InputStream is = null;
-            try {
-                is = WiltonRhinoTest.class.getResourceAsStream("/wilton_test.js");
-                Reader re = new InputStreamReader(is, "UTF-8");
-                engine.eval(re);
-            } finally {
-                closeQuietly(is);
-            }
-        }
+        engine.eval("requirejs = {config: {baseUrl: 'js/'}}");
+        runNashornFs(engine, new File("js/wilton-require.js"));
+        runNashornClasspath(engine, "/wilton-require_test.js");
     }
 }

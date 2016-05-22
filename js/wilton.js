@@ -8,7 +8,8 @@ if ("undefined" === typeof (Packages)) {
     console.log("Error: wilton.js requires Nashorn or Rhino JVM environment");
 }
 
-// can be used without r.js as a global 'wilton' object
+// can be used without require() as a global 'wilton' object
+
 if ("undefined" === typeof (define) && "undefined" === typeof (wilton)) {
     wilton = {};
     
@@ -44,9 +45,9 @@ define(function () {
                 }
                 this.jni.appendLog(level, this.name, message);
             } catch (e) {
-                Packages.java.lang.System.out.println("===LOGGER ERROR:");
-                Packages.java.lang.System.out.println(e.toString() + "\n" + e.stack);
-                Packages.java.lang.System.out.println("===LOGGER ERROR END:");
+                print("===LOGGER ERROR:");
+                print(e.toString() + "\n" + e.stack);
+                print("===LOGGER ERROR END:");
             }
         },
         log: function (message) {
