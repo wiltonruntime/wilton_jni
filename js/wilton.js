@@ -8,190 +8,212 @@ if ("undefined" === typeof (Packages)) {
     console.log("Error: wilton.js requires Nashorn or Rhino JVM environment");
 }
 
-if ("undefined" === typeof (wilton)) {
+// can be used without r.js as a global 'wilton' object
+if ("undefined" === typeof (define) && "undefined" === typeof (wilton)) {
     wilton = {};
+    
+    define = function(declaration) {
+        wilton = declaration();
+    };
 }
 
 
-// console
+// definition
 
-wilton.Console = function() {
-    this.jni = Packages.net.wiltonwebtoolkit.HttpServerJni;
-};
+define(function () {
 
-wilton.Console.prototype.append = function(level, logger, message) {
-    try {
-        if (message instanceof Error) {
-            message = message.toString() + "\n" + message.stack;
-        } else if ("string" !== typeof (message)) {
-            try {
-                message = JSON.stringify(message);
-            } catch (e) {
-                message = "" + message;
-            }
-        }
-        this.jni.appendLog(level, logger, message);
-    } catch (e) {
-        Packages.java.lang.System.out.println("===LOGGER ERROR:");
-        Packages.java.lang.System.out.println(e.toString() + "\n" + e.stack);
-        Packages.java.lang.System.out.println("===LOGGER ERROR END:");
-    }
-};
+    // Logger
 
-wilton.Console.prototype.log = function (message) {
-    this.append("DEBUG", "wilton", message);
-};
-
-wilton.Console.prototype.info = function (message) {
-    this.append("INFO", "wilton", message);
-};
-
-wilton.Console.prototype.warn = function (message) {
-    this.append("WARN", "wilton", message);
-};
-
-wilton.Console.prototype.error = function(message) {
-    this.append("ERROR", "wilton", message);
-};
-
-if ("undefined" === typeof (console)) {
-    console = new wilton.Console();
-}
-
-
-// Server
-
-wilton.Server = function(conf, onSuccess, onError) {
-    try {
+    var Logger = function (name) {
         this.jni = Packages.net.wiltonwebtoolkit.HttpServerJni;
-        this.gateway = new wilton.Gateway({
-            jni: this.jni,
-            gateway: conf.gateway,
-            callbacks: conf.callbacks
-        });
-        var self = this;
-        var gatewayPass = new Packages.net.wiltonwebtoolkit.HttpGateway({
-            gatewayCallback: function (requestHandle) {
-                self.gateway.gatewayCallback(requestHandle);
+        this.name = "string" === typeof (name) ? name : "wilton";
+    };
+
+    Logger.prototype = {
+        append: function (level, message) {
+            try {
+                if (message instanceof Error) {
+                    message = message.toString() + "\n" + message.stack;
+                } else if ("string" !== typeof (message)) {
+                    message = String(message);
+                    try {
+                        message = JSON.stringify(message);
+                    } catch (e) {
+                        // log as-is
+                    }
+                }
+                this.jni.appendLog(level, this.name, message);
+            } catch (e) {
+                Packages.java.lang.System.out.println("===LOGGER ERROR:");
+                Packages.java.lang.System.out.println(e.toString() + "\n" + e.stack);
+                Packages.java.lang.System.out.println("===LOGGER ERROR END:");
             }
-        });
-        delete conf.callbacks;
-        var confJson = JSON.stringify(conf);
-        this.handle = this.jni.createServer(gatewayPass, confJson);
-        if ("function" === typeof (onSuccess)) {
-            onSuccess();
+        },
+        log: function (message) {
+            this.append("DEBUG", message);
+        },
+        info: function (message) {
+            this.append("INFO", message);
+        },
+        warn: function (message) {
+            this.append("WARN", message);
+        },
+        error: function (message) {
+            this.append("ERROR", message);
         }
-    } catch (e) {
-        if ("function" === typeof (onError)) {
-            onError(e);
-        }
-    }
-};
+    };
+    
+    
+    // Response
 
-wilton.Server.prototype.stop = function(onSuccess, onError) {
-    try {
-        this.jni.stopServer(this.handle);
-        if ("function" === typeof (onSuccess)) {
-            onSuccess();
-        }
-    } catch (e) {
-        if ("function" === typeof (onError)) {
-            onError(e);
-        }
-    }
-};
+    var Response = function (server, jni, handle) {
+        this.server = server;
+        this.jni = jni;
+        this.handle = handle;
+    };
 
-
-// Response
-
-wilton.Response = function(jni, handle) {
-    this.jni = jni;
-    this.handle = handle;
-};
-
-wilton.Response.prototype.send = function (data, metadata, onSuccess, onError) {
-    try {
-        if ("object" === typeof (metadata)) {
-            var json = JSON.stringify(metadata);
-            this.jni.setResponseMetadata(this.handle, json);
+    Response.prototype = {
+        send: function (data, metadata, onSuccess, onError) {
+            try {
+                if ("object" === typeof (metadata)) {
+                    var json = JSON.stringify(metadata);
+                    this.jni.setResponseMetadata(this.handle, json);
+                }
+                if ("undefined" === typeof (data) || null === data) {
+                    data = "";
+                } else if ("string" !== typeof (data)) {
+                    data = JSON.stringify(data);
+                }
+                this.jni.sendResponse(this.handle, data);
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess();
+                }
+            } catch (e) {
+                if ("function" === typeof (onError)) {
+                    onError(e);
+                }
+            }
+        },
+        sendFile: function (filePath, metadata, onSuccess, onError) {
+            try {
+                if ("object" === typeof (metadata)) {
+                    var json = JSON.stringify(metadata);
+                    this.jni.setResponseMetadata(this.handle, json);
+                }
+                this.jni.sendFile(this.handle, filePath);
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess();
+                }
+            } catch (e) {
+                if ("function" === typeof (onError)) {
+                    onError(e);
+                }
+            }
         }
-        if ("undefined" === typeof (data) || null === data) {
-            data = "";
-        } else if ("string" !== typeof (data)) {
-            data = JSON.stringify(data);
-        }
-        this.jni.sendResponse(this.handle, data);
-        if ("function" === typeof (onSuccess)) {
-            onSuccess();
-        }
-    } catch (e) {
-        if ("function" === typeof (onError)) {
-            onError(e);
-        }
-    }
-};
-
-wilton.Response.prototype.sendFile = function (filePath, metadata, onSuccess, onError) {
-    try {
-        if ("object" === typeof (metadata)) {
-            var json = JSON.stringify(metadata);
-            this.jni.setResponseMetadata(this.handle, json);
-        }
-        this.jni.sendFile(this.handle, filePath);
-        if ("function" === typeof (onSuccess)) {
-            onSuccess();
-        }
-    } catch (e) {
-        if ("function" === typeof (onError)) {
-            onError(e);
-        }
-    }
-};
+    };
 
 
-// Gateway
+    // Gateway
 
-wilton.Gateway = function(conf) {
-    this.jni = conf.jni;
-    this.gateway = conf.gateway;
-    this.callbacks = conf.callbacks;
-};
+    var Gateway = function (conf) {
+        this.server = conf.server;
+        this.jni = conf.jni;
+        this.gateway = conf.gateway;
+        this.callbacks = conf.callbacks;
+    };
 
-wilton.Gateway.prototype.gatewayCallback = function(requestHandle) {            
-    try {
-        var json = this.jni.getRequestMetadata(requestHandle);
-        var req = JSON.parse(json);
-        var cb = null;
-        if ("function" === typeof (this.gateway)) {
-            cb = gateway;
-        } else {
-            cb = this.callbacks[req.pathname];
-            if ("undefined" === typeof (cb)) {
+    Gateway.prototype = {
+        gatewayCallback: function (requestHandle) {
+            try {
+                var json = this.jni.getRequestMetadata(requestHandle);
+                var req = JSON.parse(json);
+                var cb = null;
+                if ("function" === typeof (this.gateway)) {
+                    cb = gateway;
+                } else {
+                    cb = this.callbacks[req.pathname];
+                    if ("undefined" === typeof (cb)) {
+                        var rm = JSON.stringify({
+                            statusCode: 404,
+                            statusMessage: "Not Found"
+                        });
+                        this.jni.setResponseMetadata(requestHandle, rm);
+                        this.jni.sendResponse(requestHandle, "404: Not Found: [" + req.pathname + "]");
+                        return;
+                    }
+                }
+                req.data = "";
+                if ("POST" === req.method || "PUT" === req.method) {
+                    var bdata = this.jni.getRequestData(requestHandle);
+                    req.data = "" + bdata;
+                }
+                var resp = new Response(this.server, this.jni, requestHandle);
+                cb(req, resp);
+            } catch (e) {
+                this.server.logger.error(e);
                 var rm = JSON.stringify({
-                    statusCode: 404,
-                    statusMessage: "Not Found"
-                });            
+                    statusCode: 500,
+                    statusMessage: "Server Error"
+                });
                 this.jni.setResponseMetadata(requestHandle, rm);
-                this.jni.sendResponse(requestHandle, "404: Not Found: [" + req.pathname + "]");
-                return;
+                this.jni.sendResponse(requestHandle, "500: Server Error");
             }
         }
-        req.data = "";
-        if ("POST" === req.method || "PUT" === req.method) {
-            var bdata = this.jni.getRequestData(requestHandle);
-            req.data = "" + bdata   ;
+    };
+
+
+    // Server
+
+    var Server = function (conf, onSuccess, onError) {
+        try {
+            this.jni = Packages.net.wiltonwebtoolkit.HttpServerJni;
+            this.logger = new Logger("wilton.server");
+            this.gateway = new Gateway({
+                server: this,
+                jni: this.jni,
+                gateway: conf.gateway,
+                callbacks: conf.callbacks
+            });
+            var self = this;
+            var gatewayPass = new Packages.net.wiltonwebtoolkit.HttpGateway({
+                gatewayCallback: function (requestHandle) {
+                    self.gateway.gatewayCallback(requestHandle);
+                }
+            });
+            delete conf.callbacks;
+            var confJson = JSON.stringify(conf);
+            this.handle = this.jni.createServer(gatewayPass, confJson);
+            if ("function" === typeof (onSuccess)) {
+                onSuccess();
+            }
+        } catch (e) {
+            if ("function" === typeof (onError)) {
+                onError(e);
+            }
         }
-        var resp = new wilton.Response(this.jni, requestHandle);        
-        cb(req, resp);
-    } catch (e) {
-        console.error(e);
-        var rm = JSON.stringify({
-            statusCode: 500,
-            statusMessage: "Server Error"
-        });
-        this.jni.setResponseMetadata(requestHandle, rm);
-        this.jni.sendResponse(requestHandle, "500: Server Error");        
-    }
-};
+    };
 
+    Server.prototype = {
+        stop: function (onSuccess, onError) {
+            try {
+                this.jni.stopServer(this.handle);
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess();
+                }
+            } catch (e) {
+                if ("function" === typeof (onError)) {
+                    onError(e);
+                }
+            }
+        }
+    };
 
+    
+    // export
+    
+    return {
+        Loggger: Logger,
+        Server: Server
+    };
+    
+});
