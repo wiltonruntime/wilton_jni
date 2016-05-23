@@ -30,8 +30,8 @@ public class WiltonRhinoTest {
         cx.setOptimizationLevel(-1);
         Global gl = new Global();
         gl.init(cx);
-        cx.evaluateString(gl, "requirejs = {config: {baseUrl: 'js'}}", "", -1, null);
-        runRhinoFs(cx, gl, new File("js/wilton-require.js"));
+        runRhinoFs(cx, gl, new File("js/require.js"));
+        runRhinoFs(cx, gl, new File("js/rhino.js"));
         runRhinoClasspath(cx, gl, "/wilton-require_test.js");
         Context.exit();
     }

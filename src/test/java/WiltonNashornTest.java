@@ -29,8 +29,8 @@ public class WiltonNashornTest {
             System.out.println("ERROR: Nashorn is not available, probably running on jdk7, skipping test");
             return;
         }
-        engine.eval("requirejs = {config: {baseUrl: 'js/'}}");
-        runNashornFs(engine, new File("js/wilton-require.js"));
+        runNashornFs(engine, new File("js/require.js"));
+        runNashornFs(engine, new File("js/rhino.js"));
         runNashornClasspath(engine, "/wilton-require_test.js");
     }
 }
