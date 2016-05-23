@@ -11,10 +11,12 @@ if ("undefined" === typeof (Packages)) {
 // can be used without require() as a global 'wilton' object
 
 if ("undefined" === typeof (define) && "undefined" === typeof (wilton)) {
-    wilton = {};
+    wilton = null;
     
     define = function(declaration) {
-        wilton = declaration();
+        if (null ===  wilton) {
+            wilton = declaration();
+        }
     };
 }
 
