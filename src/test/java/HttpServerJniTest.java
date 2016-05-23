@@ -34,9 +34,7 @@ import net.wiltonwebtoolkit.HttpGateway;
 import static net.wiltonwebtoolkit.HttpServerJni.*;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.junit.Assert.*;
-import static utils.TestUtils.httpGet;
-import static utils.TestUtils.httpGetCode;
-import static utils.TestUtils.httpPost;
+import static utils.TestUtils.*;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;
@@ -170,6 +168,7 @@ public class HttpServerJniTest {
             dir = Files.createTempDir();
             // prepare data
             FileUtils.writeStringToFile(new File(dir, "test.txt"), STATIC_FILE_DATA);
+            FileUtils.writeStringToFile(new File(dir, "foo.boo"), STATIC_FILE_DATA);
             File zipFile = new File(dir, "test.zip");
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ZipOutputStream zipper = new ZipOutputStream(baos);
@@ -183,6 +182,12 @@ public class HttpServerJniTest {
                             .add(ImmutableMap.builder()
                                     .put("resource", "/static/files/")
                                     .put("dirPath", dir.getAbsolutePath())
+                                    .put("mimeTypes", ImmutableList.builder()
+                                            .add(ImmutableMap.builder()
+                                                    .put("extension", "boo")
+                                                    .put("mime", "text/x-boo")
+                                                    .build())
+                                            .build())
                                     .build())
                             .add(ImmutableMap.builder()
                                     .put("resource", "/static/")
@@ -195,6 +200,9 @@ public class HttpServerJniTest {
             assertEquals(STATIC_FILE_DATA, httpGet(ROOT_URL + "static/files/test.txt"));
             assertEquals(STATIC_FILE_DATA, httpGet(ROOT_URL + "static/files/test.txt"));
             assertEquals(STATIC_FILE_DATA, httpGet(ROOT_URL + "static/files/test.txt"));
+            assertEquals("text/plain", httpGetHeader(ROOT_URL + "static/files/test.txt", "Content-Type"));
+            assertEquals(STATIC_FILE_DATA, httpGet(ROOT_URL + "static/files/foo.boo"));
+            assertEquals("text/x-boo", httpGetHeader(ROOT_URL + "static/files/foo.boo", "Content-Type"));
             assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/test/zipped.txt"));
             assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/test/zipped.txt"));
             assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/test/zipped.txt"));
