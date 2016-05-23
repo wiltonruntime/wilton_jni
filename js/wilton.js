@@ -215,7 +215,7 @@ define(function () {
     // export
     
     return {
-        Loggger: Logger,
+        Logger: Logger,
         Server: Server
     };
     
