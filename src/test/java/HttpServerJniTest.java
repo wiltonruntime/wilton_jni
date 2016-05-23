@@ -77,6 +77,7 @@ public class HttpServerJniTest {
                             .put("headers", ImmutableMap.builder()
                                     .put("X-Server-H1", "foo")
                                     .put("X-Server-H2", "bar")
+                                    .put("X-Proto", metaMap.get("protocol"))
                                     .build())
                             .build());
                     setResponseMetadata(requestHandle, json);
@@ -192,6 +193,7 @@ public class HttpServerJniTest {
                             .add(ImmutableMap.builder()
                                     .put("resource", "/static/")
                                     .put("zipPath", zipFile.getAbsolutePath())
+                                    .put("zipInnerPrefix", "test/")
                                     .build())
                             .build())
                     .build()));
@@ -203,9 +205,9 @@ public class HttpServerJniTest {
             assertEquals("text/plain", httpGetHeader(ROOT_URL + "static/files/test.txt", "Content-Type"));
             assertEquals(STATIC_FILE_DATA, httpGet(ROOT_URL + "static/files/foo.boo"));
             assertEquals("text/x-boo", httpGetHeader(ROOT_URL + "static/files/foo.boo", "Content-Type"));
-            assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/test/zipped.txt"));
-            assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/test/zipped.txt"));
-            assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/test/zipped.txt"));
+            assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/zipped.txt"));
+            assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/zipped.txt"));
+            assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/zipped.txt"));
         } finally {
             stopServer(handle);
             FileUtils.deleteDirectory(dir);
@@ -255,6 +257,7 @@ public class HttpServerJniTest {
             }
             assertEquals("foo", serverHeaders.get("X-Server-H1"));
             assertEquals("bar", serverHeaders.get("X-Server-H2"));
+            assertTrue(serverHeaders.get("X-Proto").equals("http"));
         } finally {
             stopServer(handle);
         }
