@@ -40,6 +40,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -63,6 +65,7 @@ public class HttpServerJniTest {
 
     private static class TestGateway implements HttpGateway {
 
+        @SuppressWarnings("unchecked") // headers access
         @Override
         public void gatewayCallback(long requestHandle) {
             try {
@@ -91,6 +94,12 @@ public class HttpServerJniTest {
                 } else if ("/sendfile".equalsIgnoreCase(path)) {
                     String filename = getRequestData(requestHandle);
                     sendTempFile(requestHandle, filename);
+                    resp = null;
+                } else if ("/mustache".equalsIgnoreCase(path)) {
+                    Map<String, String> headers = (Map<String, String>) metaMap.get("headers");
+                    String mustacheFile = headers.get("X-Mustache-File");
+                    String values = getRequestData(requestHandle);
+                    sendMustache(requestHandle, mustacheFile, values);
                     resp = null;
                 } else {
                     String json = GSON.toJson(ImmutableMap.builder()
@@ -281,6 +290,42 @@ public class HttpServerJniTest {
             Thread.sleep(200);
             assertFalse(file.exists());
         } finally {
+            stopServer(handle);
+            FileUtils.deleteDirectory(dir);
+        }
+    }
+
+    @Test
+    public void testMustache() throws Exception {
+        long handle = 0;
+        File dir = null;
+        CloseableHttpResponse resp = null;
+        try {
+            dir = Files.createTempDir();
+            File file = new File(dir, "test.mustache");
+            FileUtils.writeStringToFile(file, "{{#names}}Hi {{name}}!\n{{/names}}");
+            handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
+                    .put("tcpPort", TCP_PORT)
+                    .build()));
+            assertEquals(ROOT_RESP, httpGet(ROOT_URL));
+            assertTrue(file.exists());
+            HttpPost post = new HttpPost(ROOT_URL + "mustache");
+            post.setEntity(new StringEntity(GSON.toJson(ImmutableMap.builder()
+                    .put("names", ImmutableList.builder()
+                            .add(ImmutableMap.builder().put("name", "Chris").build())
+                            .add(ImmutableMap.builder().put("name", "Mark").build())
+                            .add(ImmutableMap.builder().put("name", "Scott").build())
+                            .build())
+                    .build())));
+            post.addHeader("X-Mustache-File", file.getAbsolutePath());
+            resp = http.execute(post);
+            assertEquals(200, resp.getStatusLine().getStatusCode());
+            String contents = EntityUtils.toString(resp.getEntity(), "UTF-8");
+            assertEquals("Hi Chris!\nHi Mark!\nHi Scott!\n", contents);
+            Thread.sleep(200);
+            assertTrue(file.exists());
+        } finally {
+            closeQuietly(resp);
             stopServer(handle);
             FileUtils.deleteDirectory(dir);
         }

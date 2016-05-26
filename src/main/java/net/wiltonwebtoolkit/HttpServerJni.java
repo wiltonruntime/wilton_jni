@@ -41,5 +41,7 @@ public class HttpServerJni {
 
     public static native void sendTempFile(long requestHandle, String filePath);
 
+    public static native void sendMustache(long requestHandle, String mustacheFilePath, String valuesJson);
+
     public static native void appendLog(String level, String logger, String message) throws HttpException;
 }

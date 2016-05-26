@@ -266,6 +266,24 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendTempFile)
     }
 }
 
+JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendMustache)
+(JNIEnv* env, jclass, jlong requestHandle, jstring mustache_file_path, jstring values_json) {
+    wilton_Request* request = requestFromHandle(env, requestHandle);
+    if (nullptr == request) { return; }
+    const char* mustache_file_path_cstr = env->GetStringUTFChars(mustache_file_path, 0);
+    int mustache_file_path_len = static_cast<int> (env->GetStringUTFLength(mustache_file_path));
+    const char* values_json_cstr = env->GetStringUTFChars(values_json, 0);
+    int values_json_len = static_cast<int> (env->GetStringUTFLength(values_json));    
+    char* err = wilton_Request_send_mustache(request, mustache_file_path_cstr, mustache_file_path_len, 
+            values_json_cstr, values_json_len);
+    env->ReleaseStringUTFChars(mustache_file_path, mustache_file_path_cstr);
+    env->ReleaseStringUTFChars(values_json, values_json_cstr);
+    if (nullptr != err) {
+        throwException(env, err);
+        wilton_free(err);
+    }
+}
+
 JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(appendLog)
 (JNIEnv* env, jclass, jstring level, jstring logger, jstring message) {
     const char* level_cstr = env->GetStringUTFChars(level, 0);
