@@ -57,7 +57,7 @@ define(function () {
         },
         debug: function (message) {
             this.append("DEBUG", message);
-        },
+        },        
         info: function (message) {
             this.append("INFO", message);
         },
@@ -115,7 +115,28 @@ define(function () {
                     onError(e);
                 }
             }
-        }
+        },
+        sendMustache: function (filePath, data, metadata, onSuccess, onError) {
+            try {
+                if ("object" === typeof (metadata)) {
+                    var json = JSON.stringify(metadata);
+                    this.jni.setResponseMetadata(this.handle, json);
+                }
+                if ("undefined" === typeof (data) || null === data) {
+                    data = "{}";
+                } else if ("string" !== typeof (data)) {
+                    data = JSON.stringify(data);
+                }
+                this.jni.sendMustache(this.handle, filePath, data);
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess();
+                }
+            } catch (e) {
+                if ("function" === typeof (onError)) {
+                    onError(e);
+                }
+            }
+        }        
     };
 
 
