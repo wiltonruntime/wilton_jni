@@ -55,6 +55,9 @@ define(function () {
         log: function (message) {
             this.append("DEBUG", message);
         },
+        debug: function (message) {
+            this.append("DEBUG", message);
+        },
         info: function (message) {
             this.append("INFO", message);
         },
