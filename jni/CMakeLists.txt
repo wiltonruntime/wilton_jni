@@ -44,6 +44,7 @@ if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_jansson )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_log4cplus )
 endif ( )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_mstch )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_jni )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_config )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_io )
@@ -69,6 +70,7 @@ set ( ${PROJECT_NAME}_DEPS_PRIVATE
         staticlib_serialization
         staticlib_utils
         log4cplus
+        mstch
         jansson
         staticlib_unzip
         staticlib_pimpl

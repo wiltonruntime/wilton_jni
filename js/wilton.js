@@ -100,13 +100,13 @@ define(function () {
                 }
             }
         },
-        sendFile: function (filePath, metadata, onSuccess, onError) {
+        sendTempFile: function (filePath, metadata, onSuccess, onError) {
             try {
                 if ("object" === typeof (metadata)) {
                     var json = JSON.stringify(metadata);
                     this.jni.setResponseMetadata(this.handle, json);
                 }
-                this.jni.sendFile(this.handle, filePath);
+                this.jni.sendTempFile(this.handle, filePath);
                 if ("function" === typeof (onSuccess)) {
                     onSuccess();
                 }

@@ -247,7 +247,7 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendResponse)
     }
 }
 
-JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendFile)
+JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendTempFile)
 (JNIEnv* env, jclass, jlong requestHandle, jstring file_path) {
     wilton_Request* request = requestFromHandle(env, requestHandle);
     if (nullptr == request) { return; }

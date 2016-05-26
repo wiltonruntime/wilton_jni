@@ -39,7 +39,7 @@ public class HttpServerJni {
 
     public static native void sendResponse(long requestHandle, String data) throws HttpException;
 
-    public static native void sendFile(long requestHandle, String filePath);
+    public static native void sendTempFile(long requestHandle, String filePath);
 
     public static native void appendLog(String level, String logger, String message) throws HttpException;
 }

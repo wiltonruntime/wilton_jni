@@ -90,7 +90,7 @@ public class HttpServerJniTest {
                     resp = "";
                 } else if ("/sendfile".equalsIgnoreCase(path)) {
                     String filename = getRequestData(requestHandle);
-                    sendFile(requestHandle, filename);
+                    sendTempFile(requestHandle, filename);
                     resp = null;
                 } else {
                     String json = GSON.toJson(ImmutableMap.builder()
