@@ -44,4 +44,6 @@ public class HttpServerJni {
     public static native void sendMustache(long requestHandle, String mustacheFilePath, String valuesJson);
 
     public static native void appendLog(String level, String logger, String message) throws HttpException;
+
+    public static native String processMustache(String template, String valuesJson);
 }

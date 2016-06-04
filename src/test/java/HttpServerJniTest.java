@@ -297,31 +297,40 @@ public class HttpServerJniTest {
 
     @Test
     public void testMustache() throws Exception {
+        String template = "{{#names}}Hi {{name}}!\n{{/names}}";
+        String valuesJson = GSON.toJson(ImmutableMap.builder()
+                .put("names", ImmutableList.builder()
+                        .add(ImmutableMap.builder().put("name", "Chris").build())
+                        .add(ImmutableMap.builder().put("name", "Mark").build())
+                        .add(ImmutableMap.builder().put("name", "Scott").build())
+                        .build())
+                .build());
+        String expected = "Hi Chris!\nHi Mark!\nHi Scott!\n";
+
+        // test mustache direct processing
+        String processed = processMustache(template, valuesJson);
+        assertEquals(expected, processed);
+
+        // test file processing
         long handle = 0;
         File dir = null;
         CloseableHttpResponse resp = null;
         try {
             dir = Files.createTempDir();
             File file = new File(dir, "test.mustache");
-            FileUtils.writeStringToFile(file, "{{#names}}Hi {{name}}!\n{{/names}}");
+            FileUtils.writeStringToFile(file, template);
             handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
                     .put("tcpPort", TCP_PORT)
                     .build()));
             assertEquals(ROOT_RESP, httpGet(ROOT_URL));
             assertTrue(file.exists());
             HttpPost post = new HttpPost(ROOT_URL + "mustache");
-            post.setEntity(new StringEntity(GSON.toJson(ImmutableMap.builder()
-                    .put("names", ImmutableList.builder()
-                            .add(ImmutableMap.builder().put("name", "Chris").build())
-                            .add(ImmutableMap.builder().put("name", "Mark").build())
-                            .add(ImmutableMap.builder().put("name", "Scott").build())
-                            .build())
-                    .build())));
+            post.setEntity(new StringEntity(valuesJson));
             post.addHeader("X-Mustache-File", file.getAbsolutePath());
             resp = http.execute(post);
             assertEquals(200, resp.getStatusLine().getStatusCode());
             String contents = EntityUtils.toString(resp.getEntity(), "UTF-8");
-            assertEquals("Hi Chris!\nHi Mark!\nHi Scott!\n", contents);
+            assertEquals(expected, contents);
             Thread.sleep(200);
             assertTrue(file.exists());
         } finally {

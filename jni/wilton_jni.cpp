@@ -23,7 +23,7 @@
 #define WILTON_JNI_EVALUATOR(x,y) WILTON_JNI_PASTER(x,y)
 #define WILTON_JNI_FUNCTION(fun) WILTON_JNI_EVALUATOR(WILTON_JNI_CLASS, fun)
 
-namespace { // namespace
+namespace { // anonymous
 
 namespace sc = staticlib::config;
 
@@ -299,6 +299,30 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(appendLog)
     if (nullptr != err) {
         throwException(env, err);
         wilton_free(err);
+    }
+}
+
+JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(processMustache)
+(JNIEnv* env, jclass, jstring templateText, jstring valuesJson) {
+    const char* templateText_cstr = env->GetStringUTFChars(templateText, 0);
+    int templateText_len = static_cast<int> (env->GetStringUTFLength(templateText));
+    const char* valuesJson_cstr = env->GetStringUTFChars(valuesJson, 0);
+    int valuesJson_len = static_cast<int> (env->GetStringUTFLength(valuesJson));
+    char* data;
+    int data_len;
+    char* err = wilton_process_mustache(templateText_cstr, templateText_len, valuesJson_cstr, valuesJson_len,
+            std::addressof(data), std::addressof(data_len));
+    env->ReleaseStringUTFChars(templateText, templateText_cstr);
+    env->ReleaseStringUTFChars(valuesJson, valuesJson_cstr);
+    if (nullptr == err) {
+        // consider it nul-terminated
+        jstring res = env->NewStringUTF(data);
+        wilton_free(data);
+        return res;
+    } else {
+        throwException(env, err);
+        wilton_free(err);
+        return nullptr;
     }
 }
 

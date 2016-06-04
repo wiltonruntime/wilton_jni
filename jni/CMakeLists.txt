@@ -43,8 +43,10 @@ if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_zlib )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_jansson )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_log4cplus )
+    staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_sqlite )
 endif ( )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_mstch )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_soci )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_jni )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_config )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_io )
@@ -54,6 +56,7 @@ staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_httpserver )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_utils )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_serialization )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_pimpl )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_orm )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_unzip )
 add_subdirectory ( ${WILTON_DEPS}/libwilton ${CMAKE_BINARY_DIR}/libwilton )
 
@@ -67,14 +70,17 @@ set ( ${PROJECT_NAME}_DEPS_PRIVATE
         staticlib_io
         staticlib_ranges
         staticlib_httpserver
+        staticlib_unzip
+        staticlib_orm
+        staticlib_pimpl
         staticlib_serialization
         staticlib_utils
         log4cplus
         mstch
+        soci
         jansson
-        staticlib_unzip
-        staticlib_pimpl
-        zlib )
+        zlib 
+        sqlite3 )
 staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PRIVATE_PC REQUIRED ${PROJECT_NAME}_DEPS_PRIVATE )
 
 # build steps
