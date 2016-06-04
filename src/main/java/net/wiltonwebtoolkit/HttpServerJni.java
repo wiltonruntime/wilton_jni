@@ -27,6 +27,8 @@ public class HttpServerJni {
         }
     }
 
+    // server
+
     public static native long createServer(Object gateway, String conf) throws HttpException;
 
     public static native void stopServer(long serverHandle) throws HttpException;
@@ -43,7 +45,27 @@ public class HttpServerJni {
 
     public static native void sendMustache(long requestHandle, String mustacheFilePath, String valuesJson);
 
+    // log
+
     public static native void appendLog(String level, String logger, String message) throws HttpException;
 
+    // mustache
+
     public static native String processMustache(String template, String valuesJson);
+
+    // DB
+
+    public static native long openDbConnection(String url);
+
+    public static native String dbQuery(long connectionHandle, String sql, String paramsJson);
+
+    public static native void dbExecute(long connectionHandle, String sql, String paramsJson);
+
+    public static native void closeDbConnection(long connectionHandle);
+
+    public static native long startDbTransaction(long connectionHandle);
+
+    public static native long commitDbTransaction(long transactionHandle);
+
+    public static native long rollbackDbTransaction(long transactionHandle);
 }
