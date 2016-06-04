@@ -22,7 +22,9 @@ import com.google.gson.Gson;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -34,6 +36,7 @@ import net.wiltonwebtoolkit.HttpGateway;
 import static net.wiltonwebtoolkit.HttpServerJni.*;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static utils.TestUtils.*;
 
 import org.apache.commons.io.FileUtils;
@@ -53,6 +56,7 @@ public class HttpServerJniTest {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Type MAP_TYPE = new TypeToken<LinkedHashMap<String, Object>>() {}.getType();
     private static final Type STRING_MAP_TYPE = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
+    private static final Type LIST_MAP_TYPE = new TypeToken<ArrayList<LinkedHashMap<String, String>>>() {}.getType();
     private static final int TCP_PORT = 8080;
     private static final String ROOT_URL = "http://127.0.0.1:" + TCP_PORT + "/";
     private static final String ROOT_RESP = "Hello Java!\n";
@@ -340,4 +344,85 @@ public class HttpServerJniTest {
         }
     }
 
+    @Test
+    public void testDb() throws Exception {
+        File dir = null;
+        try {
+            dir = Files.createTempDir();
+            long connectionHandle = openDbConnection("sqlite://" + dir.getAbsolutePath() + "/test.db");
+            dbExecute(connectionHandle, "drop table if exists t1", null);
+            dbExecute(connectionHandle, "create table t1 (foo varchar, bar int)", null);
+            // insert
+            dbExecute(connectionHandle, "insert into t1 values('aaa', 41)", null);
+            // named params
+            dbExecute(connectionHandle, "insert into t1 values(:foo, :bar)", GSON.toJson(ImmutableMap.builder()
+                    .put("foo", "bbb")
+                    .put("bar", 42)
+                    .build()));
+            // positional params
+            dbExecute(connectionHandle, "insert into t1 values(?, ?)", GSON.toJson(ImmutableList.builder()
+                    .add("ccc")
+                    .add(43)
+                    .build()));
+            // select
+            String json = dbQuery(connectionHandle, "select foo, bar from t1 where foo = :foo or bar = :bar order by bar",
+                    GSON.toJson(ImmutableMap.builder()
+                            .put("foo", "ccc")
+                            .put("bar", 42)
+                            .build()));
+            List<LinkedHashMap<String, Object>> rs = GSON.fromJson(json, LIST_MAP_TYPE);
+            assertEquals(2, rs.size());
+            assertEquals("bbb", rs.get(0).get("foo"));
+            assertEquals(42, rs.get(0).get("bar"));
+            assertEquals("ccc", rs.get(1).get("foo"));
+            assertEquals(43, rs.get(1).get("bar"));
+            closeDbConnection(connectionHandle);
+        } finally {
+            FileUtils.deleteDirectory(dir);
+        }
+    }
+
+    @Test
+    public void testDbTran() throws Exception {
+        File dir = null;
+        try {
+            // init
+            dir = Files.createTempDir();
+            long connectionHandle = openDbConnection("sqlite://" + dir.getAbsolutePath() + "/test.db");
+            dbExecute(connectionHandle, "drop table if exists t1", null);
+            dbExecute(connectionHandle, "create table t1 (foo varchar, bar int)", null);
+
+            // rollback
+            long tran1Handle = startDbTransaction(connectionHandle);
+            dbExecute(connectionHandle, "insert into t1 values(:foo, :bar)", GSON.toJson(ImmutableMap.builder()
+                    .put("foo", "aaa")
+                    .put("bar", 41)
+                    .build()));
+            rollbackDbTransaction(tran1Handle);
+            // check not inserted
+            String rs1Json = dbQuery(connectionHandle, "select count(*) as cc from t1", null);
+            List<LinkedHashMap<String, Object>> rs1 = GSON.fromJson(rs1Json, LIST_MAP_TYPE);
+            assertEquals(1, rs1.size());
+            // sqlite dynamic type
+            assertEquals(0, Integer.parseInt((String) rs1.get(0).get("cc")));
+
+            // commit
+            long tran2Handle = startDbTransaction(connectionHandle);
+            dbExecute(connectionHandle, "insert into t1 values(:foo, :bar)", GSON.toJson(ImmutableMap.builder()
+                    .put("foo", "aaa")
+                    .put("bar", 41)
+                    .build()));
+            commitDbTransaction(tran2Handle);
+            // check inserted
+            String rs2Json = dbQuery(connectionHandle, "select count(*) as cc from t1", null);
+            List<LinkedHashMap<String, Object>> rs2 = GSON.fromJson(rs2Json, LIST_MAP_TYPE);
+            assertEquals(1, rs2.size());
+            // sqlite dynamic type
+            assertEquals(1, Integer.parseInt((String) rs2.get(0).get("cc")));
+
+            closeDbConnection(connectionHandle);
+        } finally {
+            FileUtils.deleteDirectory(dir);
+        }
+    }
 }
