@@ -211,7 +211,7 @@ define(function () {
             var confJson = JSON.stringify(conf);
             this.handle = this.jni.createServer(gatewayPass, confJson);
             if ("function" === typeof (onSuccess)) {
-                onSuccess();
+                onSuccess(this);
             }
         } catch (e) {
             if ("function" === typeof (onError)) {
@@ -265,9 +265,125 @@ define(function () {
         }
     };
     
+    // Database
+    
+    var DBConnection = function (conf, onSuccess, onError) {
+        try {
+            this.jni = Packages.net.wiltonwebtoolkit.HttpServerJni;
+            this.url = conf.url;
+            this.handle = this.jni.openDbConnection(this.url);
+            if ("function" === typeof (onSuccess)) {
+                onSuccess(this);
+            }
+        } catch (e) {
+            if ("function" === typeof (onError)) {
+                onError(e);
+            }
+        }
+    };
+    
+    DBConnection.prototype = {
+        execute: function(sql, params, onSuccess, onError) {
+            try {
+                if ("string" !== typeof (sql)) {
+                    sql = String(sql);
+                }
+                if ("undefined" === typeof (params) || null === params) {
+                    params = "";
+                } else if ("string" !== typeof (params)) {
+                    params = JSON.stringify(params);
+                }
+                this.jni.dbExecute(this.handle, sql, params);
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess();
+                }
+            } catch (e) {
+                if ("function" === typeof (onError)) {
+                    onError(e);
+                }
+            }
+        },
+        
+        queryList: function(sql, params, onSuccess, onError) {
+            try {
+                if ("string" !== typeof (sql)) {
+                    sql = String(sql);
+                }
+                if ("undefined" === typeof (params) || null === params) {
+                    params = "";
+                } else if ("string" !== typeof (params)) {
+                    params = JSON.stringify(params);
+                }
+                var json = this.jni.dbQuery(this.handle, sql, params);
+                var res = JSON.parse(json);
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess(res);
+                }
+                return res;
+            } catch (e) {
+                if ("function" === typeof (onError)) {
+                    onError(e);
+                }
+            }
+        },
+        
+        query: function(sql, params, onSuccess, onError) {
+            var list = this.queryList(sql, params, null, onError);
+            if (list instanceof Array) {
+                var res = null;
+                if (list.length > 1) {
+                    return list;
+                } else if (1 === list.length) {
+                    res = list[0];
+                }
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess(res);
+                }
+                return res;
+            }
+            // else error happened
+        },
+        
+        doInTransaction: function (callback, onSuccess, onError) {
+            try {
+                var tran = this.jni.startDbTransaction(this.handle);
+                try {
+                    callback();
+                    this.jni.commitDbTransaction(tran);
+                } catch (e) {
+                    this.jni.rollbackDbTransaction(tran);
+                    if ("function" === typeof (onError)) {
+                        onError(e);
+                    }
+                }
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess();
+                }
+            } catch (e) {
+                if ("function" === typeof (onError)) {
+                    onError(e);
+                }
+            }
+        },
+        
+        close: function(onSuccess, onError) {
+            try {
+                this.jni.closeDbConnection(this.handle);
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess();
+                }
+            } catch (e) {
+                if ("function" === typeof (onError)) {
+                    onError(e);
+                }
+            }
+        }
+    };
+    
     // export
     
     return {
+        DBConnection: DBConnection,
         Logger: Logger,
         Mustache: Mustache,
         Server: Server

@@ -73,3 +73,38 @@ server.stop(null, errorCb);
 var mustache = new wilton.Mustache();
 assertEquals("Hi Chris!\nHi Mark!\nHi Scott!\n", mustache.render("{{#names}}Hi {{name}}!\n{{/names}}", 
     {names: [{name: "Chris"}, {name: "Mark"}, {name: "Scott"}]}, null, errorCb));
+
+// DBConnection
+
+var conn = new wilton.DBConnection({url: "sqlite://target/test.db"}, null, errorCb);
+conn.execute("drop table if exists t1", null, null, errorCb);
+// insert
+conn.execute("create table t1 (foo varchar, bar int)", null, null, errorCb);
+conn.execute("insert into t1 values('aaa', 41)", null, null, errorCb);
+// named params
+conn.execute("insert into t1 values(:foo, :bar)", {
+    foo: "bbb",
+    bar: 42
+}, null, errorCb);
+conn.execute("insert into t1 values(?, ?)", ["ccc", 43], null, errorCb);
+// select
+var rs = conn.query("select foo, bar from t1 where foo = :foo or bar = :bar order by bar", {
+    foo: "ccc",
+    bar: 42
+});
+// Junit float compare fail
+assertEquals("2", String(rs.length));
+assertEquals("bbb", rs[0].foo);
+assertEquals("42", String(rs[0].bar));
+assertEquals("ccc", rs[1].foo);
+assertEquals("43", String(rs[1].bar));
+var el = conn.query("select foo, bar from t1 where foo = :foo or bar = :bar order by bar", {
+    foo: "bbb",
+    bar: 42
+});
+assertEquals("bbb", el.foo);
+assertEquals("42", String(el.bar));
+
+conn.doInTransaction(function() {/* some db actions */}, null, errorCb);
+
+conn.close();
