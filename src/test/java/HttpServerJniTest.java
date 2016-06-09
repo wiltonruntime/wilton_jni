@@ -312,7 +312,7 @@ public class HttpServerJniTest {
         String expected = "Hi Chris!\nHi Mark!\nHi Scott!\n";
 
         // test mustache direct processing
-        String processed = processMustache(template, valuesJson);
+        String processed = renderMustache(template, valuesJson);
         assertEquals(expected, processed);
 
         // test file processing

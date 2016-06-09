@@ -320,7 +320,7 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(appendLog)
     }
 }
 
-JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(processMustache)
+JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(renderMustache)
 (JNIEnv* env, jclass, jstring templateText, jstring valuesJson) {
     if (nullptr == templateText) { throwException(env, "Null 'templateText' parameter specified"); return nullptr; }    
     if (nullptr == valuesJson) { throwException(env, "Null 'valuesJson' parameter specified"); return nullptr; }
@@ -330,7 +330,7 @@ JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(processMustache)
     int valuesJson_len = static_cast<int> (env->GetStringUTFLength(valuesJson));
     char* data;
     int data_len;
-    char* err = wilton_process_mustache(templateText_cstr, templateText_len, valuesJson_cstr, valuesJson_len,
+    char* err = wilton_render_mustache(templateText_cstr, templateText_len, valuesJson_cstr, valuesJson_len,
             std::addressof(data), std::addressof(data_len));
     env->ReleaseStringUTFChars(templateText, templateText_cstr);
     env->ReleaseStringUTFChars(valuesJson, valuesJson_cstr);

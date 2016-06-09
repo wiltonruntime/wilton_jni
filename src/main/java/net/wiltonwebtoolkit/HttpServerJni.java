@@ -51,7 +51,7 @@ public class HttpServerJni {
 
     // mustache
 
-    public static native String processMustache(String template, String valuesJson);
+    public static native String renderMustache(String template, String valuesJson);
 
     // DB
 
