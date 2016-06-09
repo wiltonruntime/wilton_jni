@@ -9,6 +9,8 @@ var errorCb = function (e) {
     throw e;
 };
 
+// Server
+
 var server = new wilton.Server({
     tcpPort: 8080,
     logging: {
@@ -65,3 +67,9 @@ assertEquals("foo", httpGetHeader(prefix + "/resp/xfoo/header", "X-Foo"));
 assertEquals("foobar", httpPost(prefix + "/postmirror", "foobar"));
 
 server.stop(null, errorCb);
+
+// Mustache
+
+var mustache = new wilton.Mustache();
+assertEquals("Hi Chris!\nHi Mark!\nHi Scott!\n", mustache.render("{{#names}}Hi {{name}}!\n{{/names}}", 
+    {names: [{name: "Chris"}, {name: "Mark"}, {name: "Scott"}]}, null, errorCb));

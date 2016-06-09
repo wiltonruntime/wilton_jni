@@ -237,11 +237,39 @@ define(function () {
     
     // Mustache
 
+    var Mustache = function () {
+        this.jni = Packages.net.wiltonwebtoolkit.HttpServerJni;
+    };
+    
+    Mustache.prototype = {
+        render: function(template, values, onSuccess, onError) {
+            try {
+                if ("string" !== typeof (template)) {
+                    template = String(template);
+                }
+                if ("undefined" === typeof (values) || null === values) {
+                    values = "{}";
+                } else if ("string" !== typeof (values)) {
+                    values = JSON.stringify(values);
+                }
+                var res = this.jni.renderMustache(template, values);
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess(res);
+                }
+                return res;
+            } catch (e) {
+                if ("function" === typeof (onError)) {
+                    onError(e);
+                }
+            }
+        }
+    };
     
     // export
     
     return {
         Logger: Logger,
+        Mustache: Mustache,
         Server: Server
     };
     
