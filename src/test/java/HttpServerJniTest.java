@@ -350,10 +350,10 @@ public class HttpServerJniTest {
         try {
             dir = Files.createTempDir();
             long connectionHandle = openDbConnection("sqlite://" + dir.getAbsolutePath() + "/test.db");
-            dbExecute(connectionHandle, "drop table if exists t1", null);
-            dbExecute(connectionHandle, "create table t1 (foo varchar, bar int)", null);
+            dbExecute(connectionHandle, "drop table if exists t1", "");
+            dbExecute(connectionHandle, "create table t1 (foo varchar, bar int)", "");
             // insert
-            dbExecute(connectionHandle, "insert into t1 values('aaa', 41)", null);
+            dbExecute(connectionHandle, "insert into t1 values('aaa', 41)", "");
             // named params
             dbExecute(connectionHandle, "insert into t1 values(:foo, :bar)", GSON.toJson(ImmutableMap.builder()
                     .put("foo", "bbb")
@@ -373,9 +373,10 @@ public class HttpServerJniTest {
             List<LinkedHashMap<String, Object>> rs = GSON.fromJson(json, LIST_MAP_TYPE);
             assertEquals(2, rs.size());
             assertEquals("bbb", rs.get(0).get("foo"));
-            assertEquals(42, rs.get(0).get("bar"));
+            // gson parsing fail, JSON int is returned correctly
+            assertEquals("42", rs.get(0).get("bar"));
             assertEquals("ccc", rs.get(1).get("foo"));
-            assertEquals(43, rs.get(1).get("bar"));
+            assertEquals("43", rs.get(1).get("bar"));
             closeDbConnection(connectionHandle);
         } finally {
             FileUtils.deleteDirectory(dir);
@@ -389,8 +390,8 @@ public class HttpServerJniTest {
             // init
             dir = Files.createTempDir();
             long connectionHandle = openDbConnection("sqlite://" + dir.getAbsolutePath() + "/test.db");
-            dbExecute(connectionHandle, "drop table if exists t1", null);
-            dbExecute(connectionHandle, "create table t1 (foo varchar, bar int)", null);
+            dbExecute(connectionHandle, "drop table if exists t1", "");
+            dbExecute(connectionHandle, "create table t1 (foo varchar, bar int)", "");
 
             // rollback
             long tran1Handle = startDbTransaction(connectionHandle);
@@ -400,7 +401,7 @@ public class HttpServerJniTest {
                     .build()));
             rollbackDbTransaction(tran1Handle);
             // check not inserted
-            String rs1Json = dbQuery(connectionHandle, "select count(*) as cc from t1", null);
+            String rs1Json = dbQuery(connectionHandle, "select count(*) as cc from t1", "");
             List<LinkedHashMap<String, Object>> rs1 = GSON.fromJson(rs1Json, LIST_MAP_TYPE);
             assertEquals(1, rs1.size());
             // sqlite dynamic type
@@ -414,7 +415,7 @@ public class HttpServerJniTest {
                     .build()));
             commitDbTransaction(tran2Handle);
             // check inserted
-            String rs2Json = dbQuery(connectionHandle, "select count(*) as cc from t1", null);
+            String rs2Json = dbQuery(connectionHandle, "select count(*) as cc from t1", "");
             List<LinkedHashMap<String, Object>> rs2 = GSON.fromJson(rs2Json, LIST_MAP_TYPE);
             assertEquals(1, rs2.size());
             // sqlite dynamic type

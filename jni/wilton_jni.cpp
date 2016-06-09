@@ -48,12 +48,22 @@ void log_error(const std::string& message) {
             message.c_str(), message.length());
 }
 
+// handles validation may be added here later
+
 wilton_Server* serverFromHandle(JNIEnv*, jlong handle) {
     return reinterpret_cast<wilton_Server*> (handle);
 }
 
 wilton_Request* requestFromHandle(JNIEnv*, jlong requestHandle) {
     return reinterpret_cast<wilton_Request*> (requestHandle);
+}
+
+wilton_DBConnection* connectionFromHandle(JNIEnv*, jlong connectionHandle) {
+    return reinterpret_cast<wilton_DBConnection*> (connectionHandle);
+}
+
+wilton_DBTransaction* transactionFromHandle(JNIEnv*, jlong transactionHandle) {
+    return reinterpret_cast<wilton_DBTransaction*> (transactionHandle);
 }
 
 void callGateway(jobject gateway, jlong requestHandle) {
@@ -221,6 +231,7 @@ jstring JNICALL WILTON_JNI_FUNCTION(getRequestData)
 
 void JNICALL WILTON_JNI_FUNCTION(setResponseMetadata)
 (JNIEnv* env, jclass, jlong requestHandle, jstring conf) {
+    if (nullptr == conf) { throwException(env, "Null 'conf' parameter specified"); return; }
     wilton_Request* request = requestFromHandle(env, requestHandle);
     if (nullptr == request) { return; }
     const char* conf_cstr = env->GetStringUTFChars(conf, 0);
@@ -235,6 +246,7 @@ void JNICALL WILTON_JNI_FUNCTION(setResponseMetadata)
 
 JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendResponse)
 (JNIEnv* env, jclass, jlong requestHandle, jstring data) {
+    if (nullptr == data) { throwException(env, "Null 'data' parameter specified"); return; }
     wilton_Request* request = requestFromHandle(env, requestHandle);
     if (nullptr == request) { return; }
     const char* data_cstr = env->GetStringUTFChars(data, 0);
@@ -249,6 +261,7 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendResponse)
 
 JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendTempFile)
 (JNIEnv* env, jclass, jlong requestHandle, jstring file_path) {
+    if (nullptr == file_path) { throwException(env, "Null 'file_path' parameter specified"); return; } 
     wilton_Request* request = requestFromHandle(env, requestHandle);
     if (nullptr == request) { return; }
     file_path = reinterpret_cast<jstring>(env->NewGlobalRef(file_path));
@@ -268,6 +281,8 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendTempFile)
 
 JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendMustache)
 (JNIEnv* env, jclass, jlong requestHandle, jstring mustache_file_path, jstring values_json) {
+    if (nullptr == mustache_file_path) { throwException(env, "Null 'mustache_file_path' parameter specified"); return; }
+    if (nullptr == values_json) { throwException(env, "Null 'values_json' parameter specified"); return; }
     wilton_Request* request = requestFromHandle(env, requestHandle);
     if (nullptr == request) { return; }
     const char* mustache_file_path_cstr = env->GetStringUTFChars(mustache_file_path, 0);
@@ -286,6 +301,9 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendMustache)
 
 JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(appendLog)
 (JNIEnv* env, jclass, jstring level, jstring logger, jstring message) {
+    if (nullptr == level) { throwException(env, "Null 'level' parameter specified"); return; }    
+    if (nullptr == logger) { throwException(env, "Null 'logger' parameter specified"); return; }    
+    if (nullptr == message) { throwException(env, "Null 'message' parameter specified"); return; }
     const char* level_cstr = env->GetStringUTFChars(level, 0);
     int level_len = static_cast<int> (env->GetStringUTFLength(level));
     const char* logger_cstr = env->GetStringUTFChars(logger, 0);
@@ -304,6 +322,8 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(appendLog)
 
 JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(processMustache)
 (JNIEnv* env, jclass, jstring templateText, jstring valuesJson) {
+    if (nullptr == templateText) { throwException(env, "Null 'templateText' parameter specified"); return nullptr; }    
+    if (nullptr == valuesJson) { throwException(env, "Null 'valuesJson' parameter specified"); return nullptr; }
     const char* templateText_cstr = env->GetStringUTFChars(templateText, 0);
     int templateText_len = static_cast<int> (env->GetStringUTFLength(templateText));
     const char* valuesJson_cstr = env->GetStringUTFChars(valuesJson, 0);
@@ -325,5 +345,114 @@ JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(processMustache)
         return nullptr;
     }
 }
+
+JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(openDbConnection)
+(JNIEnv* env, jclass, jstring url) {
+    if (nullptr == url) { throwException(env, "Null 'url' parameter specified"); return 0; }
+    wilton_DBConnection* conn_impl;
+    const char* url_cstr = env->GetStringUTFChars(url, 0);
+    int url_len = static_cast<int> (env->GetStringUTFLength(url));
+    char* err = wilton_DBConnection_open(std::addressof(conn_impl), url_cstr, url_len);
+    env->ReleaseStringUTFChars(url, url_cstr);
+    if (nullptr == err) {
+        jlong handle = reinterpret_cast<jlong> (conn_impl);
+        return handle;
+    } else {
+        throwException(env, err);
+        wilton_free(err);
+        return 0;
+    }
+}
+
+JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(dbQuery)
+(JNIEnv* env, jclass, jlong connectionHandle, jstring sql, jstring paramsJson) {
+    if (nullptr == sql) { throwException(env, "Null 'sql' parameter specified"); return nullptr; }
+    if (nullptr == paramsJson) { throwException(env, "Null 'paramsJson' parameter specified"); return nullptr; }
+    wilton_DBConnection* conn = connectionFromHandle(env, connectionHandle);
+    const char* sql_cstr = env->GetStringUTFChars(sql, 0);
+    int sql_len = static_cast<int> (env->GetStringUTFLength(sql));
+    const char* paramsJson_cstr = env->GetStringUTFChars(paramsJson, 0);
+    int paramsJson_len = static_cast<int> (env->GetStringUTFLength(paramsJson));
+    char* data;
+    int data_len;
+    char* err = wilton_DBConnection_query(conn, sql_cstr, sql_len, paramsJson_cstr, paramsJson_len, 
+            std::addressof(data), std::addressof(data_len));
+    env->ReleaseStringUTFChars(sql, sql_cstr);
+    env->ReleaseStringUTFChars(paramsJson, paramsJson_cstr);
+    if (nullptr == err) {
+        // consider it nul-terminated
+        jstring res = env->NewStringUTF(data);
+        wilton_free(data);
+        return res;
+    } else {
+        throwException(env, err);
+        wilton_free(err);
+        return nullptr;
+    }
+}
+
+JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(dbExecute)
+(JNIEnv* env, jclass, jlong connectionHandle, jstring sql, jstring paramsJson) {
+    if (nullptr == sql) { throwException(env, "Null 'sql' parameter specified"); return; }
+    if (nullptr == paramsJson) { throwException(env, "Null 'paramsJson' parameter specified"); return; }
+    wilton_DBConnection* conn = connectionFromHandle(env, connectionHandle);
+    const char* sql_cstr = env->GetStringUTFChars(sql, 0);
+    int sql_len = static_cast<int> (env->GetStringUTFLength(sql));
+    const char* paramsJson_cstr = env->GetStringUTFChars(paramsJson, 0);
+    int paramsJson_len = static_cast<int> (env->GetStringUTFLength(paramsJson));
+    char* err = wilton_DBConnection_execute(conn, sql_cstr, sql_len, paramsJson_cstr, paramsJson_len);
+    env->ReleaseStringUTFChars(sql, sql_cstr);
+    env->ReleaseStringUTFChars(paramsJson, paramsJson_cstr);
+    if (nullptr != err) {
+        throwException(env, err);
+        wilton_free(err);
+    }
+}
+
+JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(closeDbConnection)
+(JNIEnv* env, jclass, jlong connectionHandle) {
+    wilton_DBConnection* conn = connectionFromHandle(env, connectionHandle);
+    char* err = wilton_DBConnection_close(conn);
+    if (nullptr != err) {
+        throwException(env, err);
+        wilton_free(err);
+    }
+}
+
+JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(startDbTransaction)
+(JNIEnv* env, jclass, jlong connectionHandle) {
+    wilton_DBConnection* conn = connectionFromHandle(env, connectionHandle);
+    wilton_DBTransaction* tran_impl;
+    char* err = wilton_DBTransaction_start(conn, std::addressof(tran_impl));
+    if (nullptr == err) {
+        jlong handle = reinterpret_cast<jlong> (tran_impl);
+        return handle;
+    } else {
+        throwException(env, err);
+        wilton_free(err);
+        return 0;
+    }
+}
+
+JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(commitDbTransaction)
+(JNIEnv* env, jclass, jlong transactionHandle) {
+    wilton_DBTransaction* tran = transactionFromHandle(env, transactionHandle);
+    char* err = wilton_DBTransaction_commit(tran);
+    if (nullptr != err) {
+        throwException(env, err);
+        wilton_free(err);
+    }
+}
+
+JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(rollbackDbTransaction)
+(JNIEnv* env, jclass, jlong transactionHandle) {
+    wilton_DBTransaction* tran = transactionFromHandle(env, transactionHandle);
+    char* err = wilton_DBTransaction_rollback(tran);
+    if (nullptr != err) {
+        throwException(env, err);
+        wilton_free(err);
+    }
+}
+
 
 } // C

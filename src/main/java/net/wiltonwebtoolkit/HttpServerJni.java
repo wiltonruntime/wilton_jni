@@ -65,7 +65,7 @@ public class HttpServerJni {
 
     public static native long startDbTransaction(long connectionHandle);
 
-    public static native long commitDbTransaction(long transactionHandle);
+    public static native void commitDbTransaction(long transactionHandle);
 
-    public static native long rollbackDbTransaction(long transactionHandle);
+    public static native void rollbackDbTransaction(long transactionHandle);
 }
