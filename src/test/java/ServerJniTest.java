@@ -48,7 +48,9 @@ import org.junit.Test;
 public class ServerJniTest {
 
     private static final int TCP_PORT = 8080;
+    private static final int TCP_PORT_HTTPS = 8443;
     private static final String ROOT_URL = "http://127.0.0.1:" + TCP_PORT + "/";
+    private static final String ROOT_URL_HTTPS = "https://127.0.0.1:" + TCP_PORT_HTTPS + "/";
     private static final String ROOT_RESP = "Hello Java!\n";
     private static final String NOT_FOUND_RESP = "Not found\n";
     private static final String LOG_DATA = "Please append me to log";
@@ -334,5 +336,28 @@ public class ServerJniTest {
         }
     }
 
+    @Test
+    public void testHttps() throws Exception {
+        long handle = 0;
+        CloseableHttpClient https = null;
+        CloseableHttpResponse resp = null;
+        try {
+            handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
+                    .put("tcpPort", TCP_PORT_HTTPS)
+                    .put("ssl", ImmutableMap.builder()
+                            .put("keyFile", "src/test/resources/certificates/server/localhost.pem")
+                            .put("keyPassword", "test")
+                            .build())
+                    .build()));
+            https = createHttpsClient();
+            HttpGet get = new HttpGet(ROOT_URL_HTTPS);
+            resp = https.execute(get);
+            assertEquals(ROOT_RESP, EntityUtils.toString(resp.getEntity(), "UTF-8"));
+        } finally {
+            closeQuietly(resp);
+            closeQuietly(https);
+            stopServer(handle);
+        }
+    }
 
 }

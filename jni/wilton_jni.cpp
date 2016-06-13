@@ -17,7 +17,7 @@
 // todo: compile time check
 #define WILTON_JNI_CLASS net_wiltonwebtoolkit_WiltonJni
 #define WILTON_JNI_GATEWAY_INTERFACE "net/wiltonwebtoolkit/WiltonGateway"
-#define WILTON_JNI_EXCEPTION_CLASS "net/wiltonwebtoolkit/Wilton Exception"
+#define WILTON_JNI_EXCEPTION_CLASS "net/wiltonwebtoolkit/WiltonException"
 
 #define WILTON_JNI_PASTER(x,y) Java_ ## x ## _ ## y
 #define WILTON_JNI_EVALUATOR(x,y) WILTON_JNI_PASTER(x,y)
