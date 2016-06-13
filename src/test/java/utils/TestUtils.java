@@ -1,5 +1,8 @@
 package utils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -18,6 +21,9 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
@@ -28,6 +34,11 @@ import static org.apache.commons.io.IOUtils.closeQuietly;
 public class TestUtils {
 
     private static final CloseableHttpClient http = HttpClients.createDefault();
+
+    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    public static final Type MAP_TYPE = new TypeToken<LinkedHashMap<String, Object>>() {}.getType();
+    public static final Type STRING_MAP_TYPE = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
+    public static final Type LIST_MAP_TYPE = new TypeToken<ArrayList<LinkedHashMap<String, String>>>() {}.getType();
 
     public static String httpGet(String url) throws Exception {
         CloseableHttpResponse resp = null;

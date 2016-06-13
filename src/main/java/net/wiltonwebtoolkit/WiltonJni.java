@@ -15,13 +15,13 @@
  */
 package net.wiltonwebtoolkit;
 
-public class HttpServerJni {
+public class WiltonJni {
 
     static {
         System.loadLibrary("wilton_jni");
         try {
-            Class.forName("net.wiltonwebtoolkit.HttpException");
-            Class.forName("net.wiltonwebtoolkit.HttpGateway");
+            Class.forName("net.wiltonwebtoolkit.WiltonException");
+            Class.forName("net.wiltonwebtoolkit.WiltonGateway");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -29,17 +29,17 @@ public class HttpServerJni {
 
     // server
 
-    public static native long createServer(Object gateway, String conf) throws HttpException;
+    public static native long createServer(Object gateway, String conf) throws WiltonException;
 
-    public static native void stopServer(long serverHandle) throws HttpException;
+    public static native void stopServer(long serverHandle) throws WiltonException;
 
-    public static native String getRequestMetadata(long requestHandle) throws HttpException;
+    public static native String getRequestMetadata(long requestHandle) throws WiltonException;
 
-    public static native String getRequestData(long requestHandle) throws HttpException;
+    public static native String getRequestData(long requestHandle) throws WiltonException;
 
-    public static native void setResponseMetadata(long requestHandle, String conf) throws HttpException;
+    public static native void setResponseMetadata(long requestHandle, String conf) throws WiltonException;
 
-    public static native void sendResponse(long requestHandle, String data) throws HttpException;
+    public static native void sendResponse(long requestHandle, String data) throws WiltonException;
 
     public static native void sendTempFile(long requestHandle, String filePath);
 
@@ -47,7 +47,7 @@ public class HttpServerJni {
 
     // log
 
-    public static native void appendLog(String level, String logger, String message) throws HttpException;
+    public static native void appendLog(String level, String logger, String message) throws WiltonException;
 
     // mustache
 

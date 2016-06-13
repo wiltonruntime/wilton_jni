@@ -15,7 +15,20 @@
  */
 package net.wiltonwebtoolkit;
 
-public interface HttpGateway {
+/**
+ *
+ * @author alex
+ */
+public class WiltonException extends RuntimeException {
 
-    void gatewayCallback(long requestHandle);
+    private static final long serialVersionUID = 6684578317996404101L;
+
+    /**
+     * Constructor
+     *
+     * @param message error message
+     */
+    public WiltonException(String message) {
+        super(message);
+    }
 }

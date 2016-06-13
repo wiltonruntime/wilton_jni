@@ -37,12 +37,15 @@ staticlib_enable_deplibs_cache ( )
 
 # options
 set ( staticlib_httpserver_USE_LOG4CPLUS ON CACHE BOOL "Use log4cplus lib for logging" )
+set ( staticlib_httpserver_USE_OPENSSL ON CACHE BOOL "Use OpenSSL lib for https" )
 
 # dependencies
 if ( NOT STATICLIB_TOOLCHAIN MATCHES "linux_[^_]+_[^_]+" )    
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_zlib )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_jansson )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_log4cplus )
+    staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_openssl )
+    staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_curl )
     staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_sqlite )
 endif ( )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/external_mstch )
@@ -58,6 +61,7 @@ staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_serialization )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_pimpl )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_orm )
 staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_unzip )
+staticlib_add_subdirectory ( ${STATICLIB_DEPS}/staticlib_httpclient )
 add_subdirectory ( ${WILTON_DEPS}/libwilton ${CMAKE_BINARY_DIR}/libwilton )
 
 # dependencies
@@ -72,6 +76,7 @@ set ( ${PROJECT_NAME}_DEPS_PRIVATE
         staticlib_httpserver
         staticlib_unzip
         staticlib_orm
+        staticlib_httpclient
         staticlib_pimpl
         staticlib_serialization
         staticlib_utils
@@ -79,6 +84,9 @@ set ( ${PROJECT_NAME}_DEPS_PRIVATE
         mstch
         soci
         jansson
+        libcurl
+        libssl
+        libcrypto
         zlib 
         sqlite3 )
 staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PRIVATE_PC REQUIRED ${PROJECT_NAME}_DEPS_PRIVATE )

@@ -28,7 +28,7 @@ define(function () {
     // Logger
 
     var Logger = function (name) {
-        this.jni = Packages.net.wiltonwebtoolkit.HttpServerJni;
+        this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
         this.name = "string" === typeof (name) ? name : "wilton";
     };
 
@@ -193,7 +193,7 @@ define(function () {
 
     var Server = function (conf, onSuccess, onError) {
         try {
-            this.jni = Packages.net.wiltonwebtoolkit.HttpServerJni;
+            this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             this.logger = new Logger("wilton.server");
             this.gateway = new Gateway({
                 server: this,
@@ -202,7 +202,7 @@ define(function () {
                 callbacks: conf.callbacks
             });
             var self = this;
-            var gatewayPass = new Packages.net.wiltonwebtoolkit.HttpGateway({
+            var gatewayPass = new Packages.net.wiltonwebtoolkit.WiltonGateway({
                 gatewayCallback: function (requestHandle) {
                     self.gateway.gatewayCallback(requestHandle);
                 }
@@ -238,7 +238,7 @@ define(function () {
     // Mustache
 
     var Mustache = function () {
-        this.jni = Packages.net.wiltonwebtoolkit.HttpServerJni;
+        this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
     };
     
     Mustache.prototype = {
@@ -269,7 +269,7 @@ define(function () {
     
     var DBConnection = function (conf, onSuccess, onError) {
         try {
-            this.jni = Packages.net.wiltonwebtoolkit.HttpServerJni;
+            this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             this.url = conf.url;
             this.handle = this.jni.openDbConnection(this.url);
             if ("function" === typeof (onSuccess)) {
