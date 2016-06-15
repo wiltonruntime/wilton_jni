@@ -41,9 +41,9 @@ public class WiltonJni {
 
     public static native void sendResponse(long requestHandle, String data) throws WiltonException;
 
-    public static native void sendTempFile(long requestHandle, String filePath);
+    public static native void sendTempFile(long requestHandle, String filePath) throws WiltonException;
 
-    public static native void sendMustache(long requestHandle, String mustacheFilePath, String valuesJson);
+    public static native void sendMustache(long requestHandle, String mustacheFilePath, String valuesJson) throws WiltonException;
 
     // log
 
@@ -51,21 +51,31 @@ public class WiltonJni {
 
     // mustache
 
-    public static native String renderMustache(String template, String valuesJson);
+    public static native String renderMustache(String template, String valuesJson) throws WiltonException;
 
     // DB
 
-    public static native long openDbConnection(String url);
+    public static native long openDbConnection(String url) throws WiltonException;
 
-    public static native String dbQuery(long connectionHandle, String sql, String paramsJson);
+    public static native String dbQuery(long connectionHandle, String sql, String paramsJson) throws WiltonException;
 
-    public static native void dbExecute(long connectionHandle, String sql, String paramsJson);
+    public static native void dbExecute(long connectionHandle, String sql, String paramsJson) throws WiltonException;
 
-    public static native void closeDbConnection(long connectionHandle);
+    public static native void closeDbConnection(long connectionHandle) throws WiltonException;
 
-    public static native long startDbTransaction(long connectionHandle);
+    public static native long startDbTransaction(long connectionHandle) throws WiltonException;
 
-    public static native void commitDbTransaction(long transactionHandle);
+    public static native void commitDbTransaction(long transactionHandle) throws WiltonException;
 
-    public static native void rollbackDbTransaction(long transactionHandle);
+    public static native void rollbackDbTransaction(long transactionHandle) throws WiltonException;
+
+    // HttpClient
+
+    public static native long createHttpClient(String conf) throws WiltonException;
+
+    public static native void closeHttpClient(long httpClientHandle) throws WiltonException;
+
+    public static native String httpExecute(long httpClientHandle, String url, String data, String metadata) throws WiltonException;
+
+    public static native String httpSendTempFile(long httpClientHandle, String url, String filePath, String metadata) throws WiltonException;
 }

@@ -66,6 +66,20 @@ assertEquals("header set", httpGet(prefix + "/resp/xfoo/header"));
 assertEquals("foo", httpGetHeader(prefix + "/resp/xfoo/header", "X-Foo"));
 assertEquals("foobar", httpPost(prefix + "/postmirror", "foobar"));
 
+// HttpClient
+var http = new wilton.HttpClient();
+var resp = http.execute(prefix + "/hi", {
+    forceHttp10: true
+}, null, errorCb);
+assertEquals("Hi from wilton_test!", resp.data);
+assertEquals("close", resp.headers.Connection);
+var resp = http.execute(prefix + "/postmirror", {
+    data: "foobar",
+    forceHttp10: true
+}, null, errorCb);
+assertEquals("foobar", resp.data);
+http.close();
+
 server.stop(null, errorCb);
 
 // Mustache

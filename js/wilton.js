@@ -380,10 +380,110 @@ define(function () {
         }
     };
     
+    // HttpClient
+    
+    var HttpClient = function (conf, onSuccess, onError) {
+        try {
+            this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
+            if ("undefined" === typeof (conf) || null === conf) {
+                conf = "{}";
+            } else if ("string" !== typeof (conf)) {
+                conf = JSON.stringify(conf);
+            }
+            this.handle = this.jni.createHttpClient(conf);
+            if ("function" === typeof (onSuccess)) {
+                onSuccess(this);
+            }
+        } catch (e) {
+            if ("function" === typeof (onError)) {
+                onError(e);
+            }
+        }
+    };
+    
+    HttpClient.prototype = {
+        execute: function(url, payload, onSuccess, onError) {
+            try {
+                if ("undefined" === typeof (url) || null === url) {
+                    url = "";
+                } else if ("string" !== typeof (url)) {
+                    url = String(url);
+                }
+                var data = "";
+                var metadata = "{}";
+                if ("object" === typeof (payload) && null !== payload) {
+                    if ("undefined" !== typeof (payload.data)) {
+                        if (null !== payload.data) {
+                            if ("string" !== typeof (payload.data)) {
+                                data = JSON.stringify(payload.data);
+                            } else {
+                                data = payload.data;
+                            }
+                        }
+                        delete payload.data;
+                    }
+                    metadata = JSON.stringify(payload);
+                }
+                var resp_json = this.jni.httpExecute(this.handle, url, data, metadata);
+                var resp = JSON.parse(resp_json);
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess(resp);
+                }
+                return resp;
+            } catch (e) {
+                if ("function" === typeof (onError)) {
+                    onError(e);
+                }
+            }
+        },
+        sendTempFile: function(url, filePath, metadata, onSuccess, onError) {
+            try {
+                if ("undefined" === typeof (url) || null === url) {
+                    url = "";
+                } else if ("string" !== typeof (url)) {
+                    url = String(url);
+                }
+                if ("undefined" === typeof (filePath) || null === filePath) {
+                    filePath = "";
+                } else if ("string" !== typeof (filePath)) {
+                    filePath = JSON.stringify(filePath);
+                }
+                if ("undefined" === typeof (metadata) || null === metadata) {
+                    metadata = "{}";
+                } else if ("string" !== typeof (metadata)) {
+                    metadata = JSON.stringify(metadata);
+                }
+                var resp_json = this.jni.httpSendTempFile(this.handle, url, filePath, metadata);
+                var resp = JSON.parse(resp_json);
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess(resp);
+                }
+                return resp;
+            } catch (e) {
+                if ("function" === typeof (onError)) {
+                    onError(e);
+                }
+            }
+        },
+        close: function(onSuccess, onError) {
+            try {
+                this.jni.closeHttpClient(this.handle);
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess();
+                }
+            } catch (e) {
+                if ("function" === typeof (onError)) {
+                    onError(e);
+                }
+            }
+        }
+    };
+    
     // export
     
     return {
         DBConnection: DBConnection,
+        HttpClient: HttpClient,
         Logger: Logger,
         Mustache: Mustache,
         Server: Server
