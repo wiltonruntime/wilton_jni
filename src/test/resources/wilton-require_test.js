@@ -23,6 +23,8 @@ require(["wilton"], function (wilton) {
 
     assertEquals(text, httpGet("http://127.0.0.1:8080/hi"));
 
-    server.stop(null, errorCb);
+    server.stop({
+        onError: errorCb
+    });
 
 });

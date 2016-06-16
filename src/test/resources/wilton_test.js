@@ -36,8 +36,13 @@ var server = new wilton.Server({
             });
         },
         "/error/reporting": function(req, resp) {
-            resp.send("", {"foo": "bar"}, null, function () {
-                resp.send("Error triggered");
+            resp.send("", {
+                meta: {
+                    foo: "bar"
+                },
+                onError: function () {
+                    resp.send("Error triggered");
+                }
             });
         },
         "/req/header": function(req, resp) {
@@ -45,16 +50,21 @@ var server = new wilton.Server({
         },
         "/resp/xfoo/header": function (req, resp) {
             resp.send("header set", {
-                headers: {
-                    "X-Foo": "foo"
-                }
-            }, null, errorCb);
+                meta: {
+                    headers: {
+                        "X-Foo": "foo"
+                    }
+                },
+                onError: errorCb
+            });
         },
         "/postmirror": function (req, resp) {
-            resp.send(req.data, null, null, errorCb);
+            resp.send(req.data, {
+                onError: errorCb
+            });
         }
-    }
-}, null, errorCb);
+    }, onError: errorCb
+});
 
 var prefix = "http://127.0.0.1:8080";
 assertEquals("404: Not Found: [/foo]", httpGet(prefix + "/foo"));
@@ -69,38 +79,59 @@ assertEquals("foobar", httpPost(prefix + "/postmirror", "foobar"));
 // HttpClient
 var http = new wilton.HttpClient();
 var resp = http.execute(prefix + "/hi", {
-    forceHttp10: true
-}, null, errorCb);
+    forceHttp10: true,
+    onError: errorCb
+});
 assertEquals("Hi from wilton_test!", resp.data);
 assertEquals("close", resp.headers.Connection);
 var resp = http.execute(prefix + "/postmirror", {
     data: "foobar",
-    forceHttp10: true
-}, null, errorCb);
+    forceHttp10: true,
+    onError: errorCb
+});
 assertEquals("foobar", resp.data);
 http.close();
 
-server.stop(null, errorCb);
+server.stop({
+    onError: errorCb
+});
 
 // Mustache
 
 var mustache = new wilton.Mustache();
 assertEquals("Hi Chris!\nHi Mark!\nHi Scott!\n", mustache.render("{{#names}}Hi {{name}}!\n{{/names}}", 
-    {names: [{name: "Chris"}, {name: "Mark"}, {name: "Scott"}]}, null, errorCb));
+    {
+        names: [{name: "Chris"}, {name: "Mark"}, {name: "Scott"}]
+    }, {
+        onError: errorCb
+    }));
 
 // DBConnection
 
-var conn = new wilton.DBConnection({url: "sqlite://target/test.db"}, null, errorCb);
-conn.execute("drop table if exists t1", null, null, errorCb);
+var conn = new wilton.DBConnection({
+    url: "sqlite://target/test.db",
+    onError: errorCb
+});
+conn.execute("drop table if exists t1", {}, {
+    onError: errorCb
+});
 // insert
-conn.execute("create table t1 (foo varchar, bar int)", null, null, errorCb);
-conn.execute("insert into t1 values('aaa', 41)", null, null, errorCb);
+conn.execute("create table t1 (foo varchar, bar int)", {}, {
+    onError: errorCb
+});
+conn.execute("insert into t1 values('aaa', 41)", {}, {
+    onError: errorCb
+});
 // named params
 conn.execute("insert into t1 values(:foo, :bar)", {
     foo: "bbb",
     bar: 42
-}, null, errorCb);
-conn.execute("insert into t1 values(?, ?)", ["ccc", 43], null, errorCb);
+}, {
+    onError: errorCb
+});
+conn.execute("insert into t1 values(?, ?)", ["ccc", 43], {
+    onError: errorCb
+});
 // select
 var rs = conn.query("select foo, bar from t1 where foo = :foo or bar = :bar order by bar", {
     foo: "ccc",
@@ -119,6 +150,8 @@ var el = conn.query("select foo, bar from t1 where foo = :foo or bar = :bar orde
 assertEquals("bbb", el.foo);
 assertEquals("42", String(el.bar));
 
-conn.doInTransaction(function() {/* some db actions */}, null, errorCb);
+conn.doInTransaction(function() {/* some db actions */}, {
+    onError: errorCb
+});
 
 conn.close();

@@ -79,10 +79,10 @@ define(function () {
     };
 
     Response.prototype = {
-        send: function (data, metadata, onSuccess, onError) {
+        send: function (data, options) {
             try {
-                if ("object" === typeof (metadata)) {
-                    var json = JSON.stringify(metadata);
+                if ("object" === typeof (options) && null !== options && "object" === typeof (options.meta)) {
+                    var json = JSON.stringify(options.meta);
                     this.jni.setResponseMetadata(this.handle, json);
                 }
                 if ("undefined" === typeof (data) || null === data) {
@@ -91,35 +91,35 @@ define(function () {
                     data = JSON.stringify(data);
                 }
                 this.jni.sendResponse(this.handle, data);
-                if ("function" === typeof (onSuccess)) {
-                    onSuccess();
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof (onError)) {
-                    onError(e);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    options.onError(e);
                 }
             }
         },
-        sendTempFile: function (filePath, metadata, onSuccess, onError) {
+        sendTempFile: function (filePath, options) {
             try {
-                if ("object" === typeof (metadata)) {
-                    var json = JSON.stringify(metadata);
+                if ("object" === typeof (options) && null !== options && "object" === typeof (options.meta)) {
+                    var json = JSON.stringify(options.meta);
                     this.jni.setResponseMetadata(this.handle, json);
                 }
                 this.jni.sendTempFile(this.handle, filePath);
-                if ("function" === typeof (onSuccess)) {
-                    onSuccess();
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof (onError)) {
-                    onError(e);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    options.onError(e);
                 }
             }
         },
-        sendMustache: function (filePath, data, metadata, onSuccess, onError) {
+        sendMustache: function (filePath, data, options) {
             try {
-                if ("object" === typeof (metadata)) {
-                    var json = JSON.stringify(metadata);
+                if ("object" === typeof (options) && null !== options && "object" === typeof (options.meta)) {
+                    var json = JSON.stringify(options.meta);
                     this.jni.setResponseMetadata(this.handle, json);
                 }
                 if ("undefined" === typeof (data) || null === data) {
@@ -128,12 +128,12 @@ define(function () {
                     data = JSON.stringify(data);
                 }
                 this.jni.sendMustache(this.handle, filePath, data);
-                if ("function" === typeof (onSuccess)) {
-                    onSuccess();
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof (onError)) {
-                    onError(e);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    options.onError(e);
                 }
             }
         }        
@@ -191,7 +191,7 @@ define(function () {
 
     // Server
 
-    var Server = function (conf, onSuccess, onError) {
+    var Server = function (conf) {
         try {
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             this.logger = new Logger("wilton.server");
@@ -201,6 +201,10 @@ define(function () {
                 gateway: conf.gateway,
                 callbacks: conf.callbacks
             });
+            var onSuccess = conf.onSuccess;
+            var onError = conf.onError;
+            delete conf.onSuccess;
+            delete conf.onError;
             var self = this;
             var gatewayPass = new Packages.net.wiltonwebtoolkit.WiltonGateway({
                 gatewayCallback: function (requestHandle) {
@@ -221,15 +225,15 @@ define(function () {
     };
 
     Server.prototype = {
-        stop: function (onSuccess, onError) {
+        stop: function (options) {
             try {
                 this.jni.stopServer(this.handle);
-                if ("function" === typeof (onSuccess)) {
-                    onSuccess();
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof (onError)) {
-                    onError(e);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    options.onError(e);
                 }
             }
         }
@@ -242,7 +246,7 @@ define(function () {
     };
     
     Mustache.prototype = {
-        render: function(template, values, onSuccess, onError) {
+        render: function(template, values, options) {
             try {
                 if ("string" !== typeof (template)) {
                     template = String(template);
@@ -253,13 +257,13 @@ define(function () {
                     values = JSON.stringify(values);
                 }
                 var res = this.jni.renderMustache(template, values);
-                if ("function" === typeof (onSuccess)) {
-                    onSuccess(res);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess();
                 }
                 return res;
             } catch (e) {
-                if ("function" === typeof (onError)) {
-                    onError(e);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    options.onError(e);
                 }
             }
         }
@@ -267,23 +271,23 @@ define(function () {
     
     // Database
     
-    var DBConnection = function (conf, onSuccess, onError) {
+    var DBConnection = function (conf) {
         try {
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             this.url = conf.url;
             this.handle = this.jni.openDbConnection(this.url);
-            if ("function" === typeof (onSuccess)) {
-                onSuccess(this);
+            if ("function" === typeof (conf.onSuccess)) {
+                conf.onSuccess(this);
             }
         } catch (e) {
-            if ("function" === typeof (onError)) {
-                onError(e);
+            if ("function" === typeof (conf.onError)) {
+                conf.onError(e);
             }
         }
     };
     
     DBConnection.prototype = {
-        execute: function(sql, params, onSuccess, onError) {
+        execute: function(sql, params, options) {
             try {
                 if ("string" !== typeof (sql)) {
                     sql = String(sql);
@@ -294,17 +298,17 @@ define(function () {
                     params = JSON.stringify(params);
                 }
                 this.jni.dbExecute(this.handle, sql, params);
-                if ("function" === typeof (onSuccess)) {
-                    onSuccess();
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof (onError)) {
-                    onError(e);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    options.onError(e);
                 }
             }
         },
         
-        queryList: function(sql, params, onSuccess, onError) {
+        queryList: function(sql, params, options) {
             try {
                 if ("string" !== typeof (sql)) {
                     sql = String(sql);
@@ -316,19 +320,25 @@ define(function () {
                 }
                 var json = this.jni.dbQuery(this.handle, sql, params);
                 var res = JSON.parse(json);
-                if ("function" === typeof (onSuccess)) {
-                    onSuccess(res);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess(res);
                 }
                 return res;
             } catch (e) {
-                if ("function" === typeof (onError)) {
-                    onError(e);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    options.onError(e);
                 }
             }
         },
         
-        query: function(sql, params, onSuccess, onError) {
-            var list = this.queryList(sql, params, null, onError);
+        query: function(sql, params, options) {
+            var onError = null;
+            if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                onError = options.onError;
+            }
+            var list = this.queryList(sql, params, {
+                onError: onError
+            });
             if (list instanceof Array) {
                 var res = null;
                 if (list.length > 1) {
@@ -336,15 +346,15 @@ define(function () {
                 } else if (1 === list.length) {
                     res = list[0];
                 }
-                if ("function" === typeof (onSuccess)) {
-                    onSuccess(res);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess(res);
                 }
                 return res;
             }
             // else error happened
         },
         
-        doInTransaction: function (callback, onSuccess, onError) {
+        doInTransaction: function (callback, options) {
             try {
                 var tran = this.jni.startDbTransaction(this.handle);
                 try {
@@ -352,29 +362,29 @@ define(function () {
                     this.jni.commitDbTransaction(tran);
                 } catch (e) {
                     this.jni.rollbackDbTransaction(tran);
-                    if ("function" === typeof (onError)) {
-                        onError(e);
+                    if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                        options.onError(e);
                     }
                 }
-                if ("function" === typeof (onSuccess)) {
-                    onSuccess();
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof (onError)) {
-                    onError(e);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    options.onError(e);
                 }
             }
         },
         
-        close: function(onSuccess, onError) {
+        close: function(options) {
             try {
                 this.jni.closeDbConnection(this.handle);
-                if ("function" === typeof (onSuccess)) {
-                    onSuccess();
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof (onError)) {
-                    onError(e);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    options.onError(e);
                 }
             }
         }
@@ -382,15 +392,18 @@ define(function () {
     
     // HttpClient
     
-    var HttpClient = function (conf, onSuccess, onError) {
+    var HttpClient = function (conf) {
         try {
-            this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
-            if ("undefined" === typeof (conf) || null === conf) {
-                conf = "{}";
-            } else if ("string" !== typeof (conf)) {
-                conf = JSON.stringify(conf);
+            if ("object" !== typeof(conf) || null === conf) {
+                conf = {};
             }
-            this.handle = this.jni.createHttpClient(conf);
+            var onSuccess = conf.onSuccess;
+            var onError = conf.onError;
+            delete conf.onSuccess;
+            delete conf.onError;
+            this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
+            var conf_json = JSON.stringify(conf);
+            this.handle = this.jni.createHttpClient(conf_json);
             if ("function" === typeof (onSuccess)) {
                 onSuccess(this);
             }
@@ -402,7 +415,7 @@ define(function () {
     };
     
     HttpClient.prototype = {
-        execute: function(url, payload, onSuccess, onError) {
+        execute: function(url, options) {
             try {
                 if ("undefined" === typeof (url) || null === url) {
                     url = "";
@@ -411,18 +424,24 @@ define(function () {
                 }
                 var data = "";
                 var metadata = "{}";
-                if ("object" === typeof (payload) && null !== payload) {
-                    if ("undefined" !== typeof (payload.data)) {
-                        if (null !== payload.data) {
-                            if ("string" !== typeof (payload.data)) {
-                                data = JSON.stringify(payload.data);
+                var onSuccess = null;
+                var onError = null;
+                if ("object" === typeof (options) && null !== options) {
+                    onSuccess = options.onSuccess;
+                    onError = options.onError;
+                    delete options.onSuccess;
+                    delete options.onError;
+                    if ("undefined" !== typeof (options.data)) {
+                        if (null !== options.data) {
+                            if ("string" !== typeof (options.data)) {
+                                data = JSON.stringify(options.data);
                             } else {
-                                data = payload.data;
+                                data = options.data;
                             }
                         }
-                        delete payload.data;
+                        delete options.data;
                     }
-                    metadata = JSON.stringify(payload);
+                    metadata = JSON.stringify(options);
                 }
                 var resp_json = this.jni.httpExecute(this.handle, url, data, metadata);
                 var resp = JSON.parse(resp_json);
@@ -436,7 +455,8 @@ define(function () {
                 }
             }
         },
-        sendTempFile: function(url, filePath, metadata, onSuccess, onError) {
+        
+        sendTempFile: function(url, filePath, options) {
             try {
                 if ("undefined" === typeof (url) || null === url) {
                     url = "";
@@ -446,34 +466,35 @@ define(function () {
                 if ("undefined" === typeof (filePath) || null === filePath) {
                     filePath = "";
                 } else if ("string" !== typeof (filePath)) {
-                    filePath = JSON.stringify(filePath);
+                    filePath = String(filePath);
                 }
-                if ("undefined" === typeof (metadata) || null === metadata) {
-                    metadata = "{}";
-                } else if ("string" !== typeof (metadata)) {
-                    metadata = JSON.stringify(metadata);
+                var meta_json = "{}";
+                if ("object" === typeof (options) && null !== options && 
+                        "object" === typeof (options.meta) && null !== options.meta) {
+                    meta_json = JSON.stringify(options.meta);
                 }
-                var resp_json = this.jni.httpSendTempFile(this.handle, url, filePath, metadata);
+                var resp_json = this.jni.httpSendTempFile(this.handle, url, filePath, meta_json);
                 var resp = JSON.parse(resp_json);
-                if ("function" === typeof (onSuccess)) {
-                    onSuccess(resp);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess(resp);
                 }
                 return resp;
             } catch (e) {
-                if ("function" === typeof (onError)) {
-                    onError(e);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    options.onError(e);
                 }
             }
         },
-        close: function(onSuccess, onError) {
+        
+        close: function(options) {
             try {
                 this.jni.closeHttpClient(this.handle);
-                if ("function" === typeof (onSuccess)) {
-                    onSuccess();
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof (onError)) {
-                    onError(e);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    options.onError(e);
                 }
             }
         }
