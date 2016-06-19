@@ -10,6 +10,7 @@ import static net.wiltonwebtoolkit.WiltonJni.sendResponse;
 import static net.wiltonwebtoolkit.WiltonJni.setResponseMetadata;
 import static utils.TestUtils.GSON;
 import static utils.TestUtils.MAP_TYPE;
+import static utils.TestUtils.sleepQuietly;
 
 /**
  * User: alexkasko
@@ -19,6 +20,7 @@ public class TestGateway implements WiltonGateway {
 
     public static final String ROOT_RESP = "Hello Java!\n";
     public static final String NOT_FOUND_RESP = "Not found\n";
+    public static final String ASYNC_RESP = "Hello from Async\n";
     public static final int TCP_PORT = 8080;
     public static final int TCP_PORT_HTTPS = 8443;
     public static final String ROOT_URL = "http://127.0.0.1:" + TCP_PORT + "/";
@@ -62,6 +64,16 @@ public class TestGateway implements WiltonGateway {
                 String mustacheFile = headers.get("X-Mustache-File");
                 String values = getRequestData(requestHandle);
                 sendMustache(requestHandle, mustacheFile, values);
+                resp = null;
+            } else if ("/async".equalsIgnoreCase(path)) {
+                final long responseWriterHandle = sendLater(requestHandle);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        sleepQuietly(200);
+                        sendWithResponseWriter(responseWriterHandle, ASYNC_RESP);
+                    }
+                }).start();
                 resp = null;
             } else {
                 String json = GSON.toJson(ImmutableMap.builder()

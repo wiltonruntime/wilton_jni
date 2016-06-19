@@ -294,4 +294,18 @@ public class ServerJniTest {
         }
     }
 
+    @Test
+    public void testAsync() throws Exception {
+        long handle = 0;
+        try {
+            handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
+                    .put("tcpPort", TCP_PORT)
+                    .build()));
+            assertEquals(ROOT_RESP, httpGet(ROOT_URL));
+            assertEquals(ASYNC_RESP, httpGet(ROOT_URL + "async"));
+        } finally {
+            stopServer(handle);
+        }
+    }
+
 }

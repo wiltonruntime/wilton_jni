@@ -163,6 +163,14 @@ public class TestUtils {
         }
     }
 
+    public static void sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static class NonValidatingX509TrustManager implements X509TrustManager {
         @Override
         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {

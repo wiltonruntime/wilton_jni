@@ -60,6 +60,7 @@ public:
 // registries
 handle_registry<wilton_Server> REGISTRY_SERVERS;
 handle_registry<wilton_Request> REGISTRY_REQUESTS;
+handle_registry<wilton_ResponseWriter> REGISTRY_RESPONSE_WRITERS;
 handle_registry<wilton_DBConnection> REGISTRY_DBCONNS;
 handle_registry<wilton_DBTransaction> REGISTRY_DBTRANS;
 handle_registry<wilton_HttpClient> REGISTRY_HTTPCLIENTS;
@@ -192,10 +193,10 @@ JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(createServer)
     // todo: fixme - delete somehow on server stop
     gateway = env->NewGlobalRef(gateway);
     
-    wilton_Server* server_impl;
+    wilton_Server* server;
     const char* conf_cstr = env->GetStringUTFChars(conf, 0);
     int conf_len = static_cast<int> (env->GetStringUTFLength(conf));
-    char* err = wilton_Server_create(std::addressof(server_impl),
+    char* err = wilton_Server_create(std::addressof(server),
             gateway,
             [](void* gateway_ctx, wilton_Request* request) {
                 jobject gateway = static_cast<jobject>(gateway_ctx);
@@ -205,7 +206,7 @@ JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(createServer)
             }, conf_cstr, conf_len);
     env->ReleaseStringUTFChars(conf, conf_cstr);
     if (nullptr == err) {
-        return REGISTRY_SERVERS.put(server_impl);
+        return REGISTRY_SERVERS.put(server);
     } else {
         env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
         wilton_free(err);
@@ -378,6 +379,49 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendMustache)
     REGISTRY_REQUESTS.put(request);
     env->ReleaseStringUTFChars(mustache_file_path, mustache_file_path_cstr);
     env->ReleaseStringUTFChars(values_json, values_json_cstr);
+    if (nullptr != err) {
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
+        wilton_free(err);
+    }
+}
+
+JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(sendLater)
+(JNIEnv* env, jclass, jlong requestHandle) {
+    wilton_Request* request = REGISTRY_REQUESTS.remove(requestHandle);
+    if (nullptr == request) {
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Invalid 'requestHandle' parameter specified:" +
+                " [" + sc::to_string(requestHandle) + "]").c_str());
+        return 0;
+    }
+    wilton_ResponseWriter* writer;
+    char* err = wilton_Request_send_later(request, std::addressof(writer));
+    REGISTRY_REQUESTS.put(request);
+    if (nullptr == err) {
+        return REGISTRY_RESPONSE_WRITERS.put(writer);
+    } else {
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
+        wilton_free(err);
+        return 0;
+    }
+}
+
+JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendWithResponseWriter)
+(JNIEnv* env, jclass, jlong responseWriterHandle, jstring data) {
+    if (nullptr == data) {
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'data' parameter specified").c_str());
+        return;
+    }
+    // note: won't be put back - one-off operation
+    wilton_ResponseWriter* writer = REGISTRY_RESPONSE_WRITERS.remove(responseWriterHandle);
+    if (nullptr == writer) {
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Invalid 'responseWriterHandle' parameter specified:" +
+                " [" + sc::to_string(responseWriterHandle) + "]").c_str());
+        return;
+    }
+    const char* data_cstr = env->GetStringUTFChars(data, 0);
+    int data_len = static_cast<int> (env->GetStringUTFLength(data));
+    char* err = wilton_ResponseWriter_send(writer, data_cstr, data_len);
+    env->ReleaseStringUTFChars(data, data_cstr);
     if (nullptr != err) {
         env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
         wilton_free(err);
