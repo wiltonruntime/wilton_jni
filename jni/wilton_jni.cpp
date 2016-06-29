@@ -280,6 +280,31 @@ jstring JNICALL WILTON_JNI_FUNCTION(getRequestData)
     }
 }
 
+jstring JNICALL WILTON_JNI_FUNCTION(getRequestDataFilename)
+(JNIEnv* env, jclass, jlong requestHandle) {
+    wilton_Request* request = REGISTRY_REQUESTS.remove(requestHandle);
+    if (nullptr == request) {
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Invalid 'requestHandle' parameter specified:" +
+                " [" + sc::to_string(requestHandle) + "]").c_str());
+        return nullptr;
+    }
+    char* filename;
+    int filename_len;
+    char* err = wilton_Request_get_request_data_filename(request,
+            std::addressof(filename), std::addressof(filename_len));
+    REGISTRY_REQUESTS.put(request);
+    if (nullptr == err) {
+        // consider it nul-terminated
+        jstring res = env->NewStringUTF(filename);
+        wilton_free(filename);
+        return res;
+    } else {
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
+        wilton_free(err);
+        return nullptr;
+    }
+}
+
 void JNICALL WILTON_JNI_FUNCTION(setResponseMetadata)
 (JNIEnv* env, jclass, jlong requestHandle, jstring conf) {
     if (nullptr == conf) {

@@ -75,6 +75,8 @@ public class TestGateway implements WiltonGateway {
                     }
                 }).start();
                 resp = null;
+            } else if ("/reqfilename".equalsIgnoreCase(path)) {
+                resp = getRequestDataFilename(requestHandle);
             } else {
                 String json = GSON.toJson(ImmutableMap.builder()
                         .put("statusCode", 404)

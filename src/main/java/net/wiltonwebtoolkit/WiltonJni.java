@@ -37,6 +37,8 @@ public class WiltonJni {
 
     public static native String getRequestData(long requestHandle) throws WiltonException;
 
+    public static native String getRequestDataFilename(long requestHandle) throws WiltonException;
+
     public static native void setResponseMetadata(long requestHandle, String conf) throws WiltonException;
 
     public static native void sendResponse(long requestHandle, String data) throws WiltonException;

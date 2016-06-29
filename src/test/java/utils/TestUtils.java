@@ -3,6 +3,7 @@ package utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import net.wiltonwebtoolkit.WiltonJni;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -168,6 +169,16 @@ public class TestUtils {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static void stopServerQuietly(long handle) {
+        try {
+            if (0 != handle) {
+                WiltonJni.stopServer(handle);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

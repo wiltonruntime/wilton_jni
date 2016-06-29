@@ -61,7 +61,7 @@ public class ServerJniTest {
             assertEquals(NOT_FOUND_RESP, httpGet(ROOT_URL + "foo"));
             assertEquals(404, httpGetCode(ROOT_URL + "foo"));
         } finally {
-            stopServer(handle);
+            stopServerQuietly(handle);
         }
     }
 
@@ -95,7 +95,7 @@ public class ServerJniTest {
             httpPost(ROOT_URL + "logger", LOG_DATA);
             assertEquals(LOG_DATA, FileUtils.readFileToString(logfile, "UTF-8"));
         } finally {
-            stopServer(handle);
+            stopServerQuietly(handle);
             FileUtils.deleteDirectory(dir);
         }
     }
@@ -148,7 +148,7 @@ public class ServerJniTest {
             assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/zipped.txt"));
             assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/zipped.txt"));
         } finally {
-            stopServer(handle);
+            stopServerQuietly(handle);
             FileUtils.deleteDirectory(dir);
         }
     }
@@ -198,7 +198,7 @@ public class ServerJniTest {
             assertEquals("bar", serverHeaders.get("X-Server-H2"));
             assertTrue(serverHeaders.get("X-Proto").equals("http"));
         } finally {
-            stopServer(handle);
+            stopServerQuietly(handle);
         }
     }
 
@@ -220,7 +220,7 @@ public class ServerJniTest {
             Thread.sleep(200);
             assertFalse(file.exists());
         } finally {
-            stopServer(handle);
+            stopServerQuietly(handle);
             FileUtils.deleteDirectory(dir);
         }
     }
@@ -265,7 +265,7 @@ public class ServerJniTest {
             assertTrue(file.exists());
         } finally {
             closeQuietly(resp);
-            stopServer(handle);
+            stopServerQuietly(handle);
             FileUtils.deleteDirectory(dir);
         }
     }
@@ -290,7 +290,7 @@ public class ServerJniTest {
         } finally {
             closeQuietly(resp);
             closeQuietly(https);
-            stopServer(handle);
+            stopServerQuietly(handle);
         }
     }
 
@@ -304,7 +304,42 @@ public class ServerJniTest {
             assertEquals(ROOT_RESP, httpGet(ROOT_URL));
             assertEquals(ASYNC_RESP, httpGet(ROOT_URL + "async"));
         } finally {
-            stopServer(handle);
+            stopServerQuietly(handle);
+        }
+    }
+
+    @Test
+    public void testRequestDataFile() throws Exception {
+        long handle = 0;
+        File dir = null;
+        try {
+            dir = Files.createTempDir();
+            handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
+                    .put("tcpPort", TCP_PORT)
+                    .put("requestPayload", ImmutableMap.builder()
+                            .put("tmpDirPath", dir.getAbsolutePath())
+                            .put("tmpFilenameLength", 32)
+                            .put("memoryLimitBytes", 4)
+                            .build())
+                    .build()));
+            assertEquals(ROOT_RESP, httpGet(ROOT_URL));
+            { // direct writer
+                String filename = httpPost(ROOT_URL + "reqfilename", "foobar");
+                assertEquals(34, new File(filename).getName().length());
+                assertFalse(new File(filename).exists());
+                String posted = httpPost(ROOT_URL + "postmirror", "foobar");
+                assertEquals("foobar", posted);
+            }
+            { // on-demand writer
+                String filename = httpPost(ROOT_URL + "reqfilename", "foo");
+                assertEquals(34, new File(filename).getName().length());
+                assertFalse(new File(filename).exists());
+                String posted = httpPost(ROOT_URL + "postmirror", "foo");
+                assertEquals("foo", posted);
+            }
+        } finally {
+            stopServerQuietly(handle);
+            FileUtils.deleteDirectory(dir);
         }
     }
 
