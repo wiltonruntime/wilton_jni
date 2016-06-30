@@ -140,16 +140,38 @@ define(function () {
     };
 
 
-    // Gateway
+    // Server
 
-    var Gateway = function (conf) {
-        this.server = conf.server;
-        this.jni = conf.jni;
-        this.gateway = conf.gateway;
-        this.callbacks = conf.callbacks;
+    var Server = function (conf) {
+        try {
+            this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
+            this.logger = new Logger("wilton.server");
+            this.gateway = conf.gateway;
+            this.callbacks = conf.callbacks;
+            var onSuccess = conf.onSuccess;
+            var onError = conf.onError;
+            delete conf.onSuccess;
+            delete conf.onError;
+            var self = this;
+            var gatewayPass = new Packages.net.wiltonwebtoolkit.WiltonGateway({
+                gatewayCallback: function (requestHandle) {
+                    self.gatewayCallback(requestHandle);
+                }
+            });
+            delete conf.callbacks;
+            var confJson = JSON.stringify(conf);
+            this.handle = this.jni.createServer(gatewayPass, confJson);
+            if ("function" === typeof (onSuccess)) {
+                onSuccess(this);
+            }
+        } catch (e) {
+            if ("function" === typeof (onError)) {
+                onError(e);
+            }
+        }
     };
 
-    Gateway.prototype = {
+    Server.prototype = {
         gatewayCallback: function (requestHandle) {
             try {
                 var json = this.jni.getRequestMetadata(requestHandle);
@@ -185,46 +207,7 @@ define(function () {
                 this.jni.setResponseMetadata(requestHandle, rm);
                 this.jni.sendResponse(requestHandle, "500: Server Error");
             }
-        }
-    };
-
-
-    // Server
-
-    var Server = function (conf) {
-        try {
-            this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
-            this.logger = new Logger("wilton.server");
-            this.gateway = new Gateway({
-                server: this,
-                jni: this.jni,
-                gateway: conf.gateway,
-                callbacks: conf.callbacks
-            });
-            var onSuccess = conf.onSuccess;
-            var onError = conf.onError;
-            delete conf.onSuccess;
-            delete conf.onError;
-            var self = this;
-            var gatewayPass = new Packages.net.wiltonwebtoolkit.WiltonGateway({
-                gatewayCallback: function (requestHandle) {
-                    self.gateway.gatewayCallback(requestHandle);
-                }
-            });
-            delete conf.callbacks;
-            var confJson = JSON.stringify(conf);
-            this.handle = this.jni.createServer(gatewayPass, confJson);
-            if ("function" === typeof (onSuccess)) {
-                onSuccess(this);
-            }
-        } catch (e) {
-            if ("function" === typeof (onError)) {
-                onError(e);
-            }
-        }
-    };
-
-    Server.prototype = {
+        },
         stop: function (options) {
             try {
                 this.jni.stopServer(this.handle);
