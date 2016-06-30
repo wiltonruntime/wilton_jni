@@ -326,6 +326,7 @@ public class ServerJniTest {
             { // direct writer
                 String filename = httpPost(ROOT_URL + "reqfilename", "foobar");
                 assertEquals(34, new File(filename).getName().length());
+                sleepQuietly(100); // fs timeout
                 assertFalse(new File(filename).exists());
                 String posted = httpPost(ROOT_URL + "postmirror", "foobar");
                 assertEquals("foobar", posted);
@@ -333,6 +334,7 @@ public class ServerJniTest {
             { // on-demand writer
                 String filename = httpPost(ROOT_URL + "reqfilename", "foo");
                 assertEquals(34, new File(filename).getName().length());
+                sleepQuietly(100); // fs timeout
                 assertFalse(new File(filename).exists());
                 String posted = httpPost(ROOT_URL + "postmirror", "foo");
                 assertEquals("foo", posted);
