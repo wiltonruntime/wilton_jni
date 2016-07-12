@@ -68,7 +68,7 @@ handle_registry<wilton_HttpClient> REGISTRY_HTTPCLIENTS;
 void log_error(const std::string& message) {
     static std::string error_level{"ERROR"};
     static std::string logger_name{"net.wiltonwebtoolkit.WiltonJni"};
-    wilton_log(error_level.c_str(), error_level.length(), logger_name.c_str(), logger_name.length(),
+    wilton_logger_log(error_level.c_str(), error_level.length(), logger_name.c_str(), logger_name.length(),
             message.c_str(), message.length());
 }
 
@@ -222,7 +222,7 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(stopServer)
                 " [" + sc::to_string(serverHandle) + "]").c_str());
         return; 
     }
-    char* err = wilton_Server_stop_server(server);
+    char* err = wilton_Server_stop(server);
     if (nullptr != err) {
         REGISTRY_SERVERS.put(server);
         env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
@@ -476,7 +476,7 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(appendLog)
     int logger_len = static_cast<int> (env->GetStringUTFLength(logger));
     const char* message_cstr = env->GetStringUTFChars(message, 0);
     int message_len = static_cast<int> (env->GetStringUTFLength(message));
-    char* err = wilton_log(level_cstr, level_len, logger_cstr, logger_len, message_cstr, message_len);
+    char* err = wilton_logger_log(level_cstr, level_len, logger_cstr, logger_len, message_cstr, message_len);
     env->ReleaseStringUTFChars(level, level_cstr);
     env->ReleaseStringUTFChars(logger, logger_cstr);
     env->ReleaseStringUTFChars(message, message_cstr);
