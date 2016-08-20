@@ -24,7 +24,7 @@ public class TestGateway implements WiltonGateway {
     public static final int TCP_PORT = 8080;
     public static final int TCP_PORT_HTTPS = 8443;
     public static final String ROOT_URL = "http://127.0.0.1:" + TCP_PORT + "/";
-    public static final String ROOT_URL_HTTPS = "https://127.0.0.1:" + TCP_PORT_HTTPS + "/";
+    public static final String ROOT_URL_HTTPS = "https://localhost:" + TCP_PORT_HTTPS + "/";
     public static final String LOG_DATA = "Please append me to log";
     public static final String STATIC_FILE_DATA = "I am data from static file";
     public static final String STATIC_ZIP_DATA = "I am data from ZIP file";
