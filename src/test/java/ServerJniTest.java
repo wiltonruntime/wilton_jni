@@ -65,6 +65,7 @@ public class ServerJniTest {
         }
     }
 
+    // todo: investigate me
     @Test
     public void testLogging() throws Exception {
         File dir = null;
@@ -228,17 +229,20 @@ public class ServerJniTest {
     @Test
     public void testMustache() throws Exception {
         String template = "{{#names}}Hi {{name}}!\n{{/names}}";
-        String valuesJson = GSON.toJson(ImmutableMap.builder()
-                .put("names", ImmutableList.builder()
-                        .add(ImmutableMap.builder().put("name", "Chris").build())
-                        .add(ImmutableMap.builder().put("name", "Mark").build())
-                        .add(ImmutableMap.builder().put("name", "Scott").build())
+        ImmutableMap<String, Object> json = ImmutableMap.<String, Object>builder()
+                .put("template", template)
+                .put("values", ImmutableMap.builder()
+                        .put("names", ImmutableList.builder()
+                                .add(ImmutableMap.builder().put("name", "Chris").build())
+                                .add(ImmutableMap.builder().put("name", "Mark").build())
+                                .add(ImmutableMap.builder().put("name", "Scott").build())
+                                .build())
                         .build())
-                .build());
+                .build();
         String expected = "Hi Chris!\nHi Mark!\nHi Scott!\n";
 
         // test mustache direct processing
-        String processed = renderMustache(template, valuesJson);
+        String processed = wiltoncall("render_mustache", GSON.toJson(json), null);
         assertEquals(expected, processed);
 
         // test file processing
@@ -255,7 +259,7 @@ public class ServerJniTest {
             assertEquals(ROOT_RESP, httpGet(ROOT_URL));
             assertTrue(file.exists());
             HttpPost post = new HttpPost(ROOT_URL + "mustache");
-            post.setEntity(new StringEntity(valuesJson));
+            post.setEntity(new StringEntity(GSON.toJson(json.get("values"))));
             post.addHeader("X-Mustache-File", file.getAbsolutePath());
             resp = http.execute(post);
             assertEquals(200, resp.getStatusLine().getStatusCode());

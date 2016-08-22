@@ -1,5 +1,5 @@
 /* 
- * File:   wilton_jni.cpp
+ * File:   wiltonjs_jni.cpp
  * Author: alex
  *
  * Created on May 1, 2016, 12:08 AM
@@ -8,13 +8,16 @@
 
 #include "jni.h"
 
-#include <string>
 #include <mutex>
+#include <string>
 #include <unordered_set>
 
 #include "staticlib/config.hpp"
 
 #include "wilton/wilton.h"
+
+#include "wiltonjs/wiltoncall.hpp"
+#include "wiltonjs/wiltonjs.hpp"
 
 #define WILTON_JNI_CLASS net_wiltonwebtoolkit_WiltonJni
 #define WILTON_JNI_GATEWAY_INTERFACE "net/wiltonwebtoolkit/WiltonGateway"
@@ -27,6 +30,7 @@
 namespace { // anonymous
 
 namespace sc = staticlib::config;
+namespace wj = wiltonjs;
 
 // globals
 JavaVM* JAVA_VM;
@@ -146,11 +150,19 @@ void delete_file(jstring filePath) {
     env->DeleteGlobalRef(filePath);
 }
 
+void register_wiltoncalls() {    
+    wj::put_wilton_function("render_mustache", wj::render_mustache);
+}
+
 } // namespace
 
 extern "C" {
 
-JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {    
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {
+    // wiltoncalls
+    // todo: error reporting
+    register_wiltoncalls();
+    // env
     JNIEnv* env;
     auto err = vm->GetEnv(reinterpret_cast<void**>(std::addressof(env)), JNI_VERSION_1_6);
     if (JNI_OK != err) { return -1; }
@@ -175,6 +187,29 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {
     FILE_DELETE_METHOD = env->GetMethodID(FILE_CLASS, "delete", "()Z");
     if (nullptr == FILE_DELETE_METHOD) { return -1; }    
     return JNI_VERSION_1_6;
+}
+
+JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(wiltoncall)
+(JNIEnv* env, jclass, jstring name, jstring data, jobject object) {
+    if (nullptr == name) {
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'name' parameter specified").c_str());
+        return nullptr;
+    }
+    if (nullptr == data) {
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'data' parameter specified").c_str());
+        return nullptr;
+    }
+    std::string name_string = jstring_to_str(env, name);
+    std::string data_string = jstring_to_str(env, data);
+    try {
+        std::string res = wj::invoke_wilton_function(name_string, data_string, static_cast<void*>(object));
+        return env->NewStringUTF(res.c_str());
+    } catch (const std::exception& e) {
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(e.what()).c_str());
+    } catch (...) {
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("System error").c_str());
+    }
+    return nullptr;
 }
 
 
@@ -483,41 +518,6 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(appendLog)
     if (nullptr != err) {
         env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
         wilton_free(err);
-    }
-}
-
-
-// Mustache
-
-JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(renderMustache)
-(JNIEnv* env, jclass, jstring templateText, jstring valuesJson) {
-    if (nullptr == templateText) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'templateText' parameter specified").c_str());
-        return nullptr;
-    }
-    if (nullptr == valuesJson) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'valuesJson' parameter specified").c_str());
-        return nullptr;
-    }
-    const char* templateText_cstr = env->GetStringUTFChars(templateText, 0);
-    int templateText_len = static_cast<int> (env->GetStringUTFLength(templateText));
-    const char* valuesJson_cstr = env->GetStringUTFChars(valuesJson, 0);
-    int valuesJson_len = static_cast<int> (env->GetStringUTFLength(valuesJson));
-    char* data;
-    int data_len;
-    char* err = wilton_render_mustache(templateText_cstr, templateText_len, valuesJson_cstr, valuesJson_len,
-            std::addressof(data), std::addressof(data_len));
-    env->ReleaseStringUTFChars(templateText, templateText_cstr);
-    env->ReleaseStringUTFChars(valuesJson, valuesJson_cstr);
-    if (nullptr == err) {
-        // consider it nul-terminated
-        jstring res = env->NewStringUTF(data);
-        wilton_free(data);
-        return res;
-    } else {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-        return nullptr;
     }
 }
 

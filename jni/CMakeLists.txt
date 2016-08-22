@@ -95,8 +95,13 @@ staticlib_pkg_check_modules ( ${PROJECT_NAME}_DEPS_PRIVATE_PC REQUIRED ${PROJECT
 
 # build steps
 set_property ( GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE )
-add_library ( ${PROJECT_NAME} SHARED ${CMAKE_CURRENT_LIST_DIR}/wilton_jni.cpp )
-target_include_directories ( ${PROJECT_NAME} BEFORE PRIVATE ${${PROJECT_NAME}_DEPS_PUBLIC_PC_INCLUDE_DIRS} )
+add_library ( ${PROJECT_NAME} SHARED
+        ${CMAKE_CURRENT_LIST_DIR}/wiltonjs/wiltoncall.cpp 
+        ${CMAKE_CURRENT_LIST_DIR}/wiltonjs/wiltonjs.cpp 
+        ${CMAKE_CURRENT_LIST_DIR}/wiltonjs_jni.cpp )
+target_include_directories ( ${PROJECT_NAME} BEFORE PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}
+        ${${PROJECT_NAME}_DEPS_PUBLIC_PC_INCLUDE_DIRS} )
 target_compile_options ( ${PROJECT_NAME} PRIVATE ${${PROJECT_NAME}_DEPS_PUBLIC_PC_CFLAGS_OTHER} )
 target_link_libraries ( ${PROJECT_NAME} 
         ${${PROJECT_NAME}_DEPS_PUBLIC_PC_LIBRARIES}

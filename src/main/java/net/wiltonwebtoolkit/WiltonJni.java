@@ -27,6 +27,10 @@ public class WiltonJni {
         }
     }
 
+    // unified jni access point
+
+    public static native String wiltoncall(String name, String data, Object object);
+
     // server
 
     public static native long createServer(Object gateway, String conf) throws WiltonException;
@@ -54,10 +58,6 @@ public class WiltonJni {
     // log
 
     public static native void appendLog(String level, String logger, String message) throws WiltonException;
-
-    // mustache
-
-    public static native String renderMustache(String template, String valuesJson) throws WiltonException;
 
     // DB
 

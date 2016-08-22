@@ -231,17 +231,19 @@ define(function () {
     };
     
     Mustache.prototype = {
+        // todo: revisit API
         render: function(template, values, options) {
             try {
                 if ("string" !== typeof (template)) {
                     template = String(template);
                 }
                 if ("undefined" === typeof (values) || null === values) {
-                    values = "{}";
-                } else if ("string" !== typeof (values)) {
-                    values = JSON.stringify(values);
-                }
-                var res = this.jni.renderMustache(template, values);
+                    values = {};
+                } 
+                var res = this.jni.wiltoncall("render_mustache", JSON.stringify({
+                    template: template,
+                    values: values
+                }), null);
                 if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
