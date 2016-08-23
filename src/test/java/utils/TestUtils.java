@@ -50,6 +50,7 @@ public class TestUtils {
     public static final Type MAP_TYPE = new TypeToken<LinkedHashMap<String, Object>>() {}.getType();
     public static final Type STRING_MAP_TYPE = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
     public static final Type LIST_MAP_TYPE = new TypeToken<ArrayList<LinkedHashMap<String, String>>>() {}.getType();
+    public static final Type LONG_MAP_TYPE = new TypeToken<LinkedHashMap<String, Long>>() {}.getType();
 
     public static String httpGet(String url) throws Exception {
         CloseableHttpResponse resp = null;

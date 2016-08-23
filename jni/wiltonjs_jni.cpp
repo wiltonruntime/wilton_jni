@@ -151,7 +151,11 @@ void delete_file(jstring filePath) {
 }
 
 void register_wiltoncalls() {    
-    wj::put_wilton_function("render_mustache", wj::render_mustache);
+    wj::put_wilton_function("mustache_render", wj::mustache_render);
+    wj::put_wilton_function("httpclient_create", wj::httpclient_create);
+    wj::put_wilton_function("httpclient_close", wj::httpclient_close);
+    wj::put_wilton_function("httpclient_execute", wj::httpclient_execute);
+    wj::put_wilton_function("httpclient_send_temp_file", wj::httpclient_send_temp_file);
 }
 
 } // namespace
@@ -680,142 +684,5 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(rollbackDbTransaction)
         wilton_free(err);
     }
 }
-
-
-// HttpClient
-
-JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(createHttpClient)
-(JNIEnv* env, jclass, jstring conf) {
-    if (nullptr == conf) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'conf' parameter specified").c_str());
-        return 0;
-    }
-    wilton_HttpClient* http;
-    const char* conf_cstr = env->GetStringUTFChars(conf, 0);
-    int conf_len = static_cast<int> (env->GetStringUTFLength(conf));
-    char* err = wilton_HttpClient_create(std::addressof(http), conf_cstr, conf_len);
-    env->ReleaseStringUTFChars(conf, conf_cstr);
-    if (nullptr == err) {
-        return REGISTRY_HTTPCLIENTS.put(http);
-    } else {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-        return 0;
-    }
-}
-
-JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(closeHttpClient)
-(JNIEnv* env, jclass, jlong httpClientHandle) {
-    wilton_HttpClient* http = REGISTRY_HTTPCLIENTS.remove(httpClientHandle);
-    if (nullptr == http) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Invalid 'httpClientHandle' parameter specified:" +
-                " [" + sc::to_string(httpClientHandle) + "]").c_str());
-        return;
-    }
-    char* err = wilton_HttpClient_close(http);
-    if (nullptr != err) {
-        REGISTRY_HTTPCLIENTS.put(http);
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-    }
-}
-
-JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(httpExecute)
-(JNIEnv* env, jclass, jlong httpClientHandle, jstring url, jstring data, jstring metadata) {
-    if (nullptr == url) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'url' parameter specified").c_str());
-        return nullptr;
-    }
-    if (nullptr == data) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'data' parameter specified").c_str());
-        return nullptr;
-    }
-    if (nullptr == metadata) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'metadata' parameter specified").c_str());
-        return nullptr;
-    }
-    wilton_HttpClient* http = REGISTRY_HTTPCLIENTS.remove(httpClientHandle);
-    if (nullptr == http) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Invalid 'httpClientHandle' parameter specified:" +
-                " [" + sc::to_string(httpClientHandle) + "]").c_str());
-        return nullptr;
-    }
-    const char* url_cstr = env->GetStringUTFChars(url, 0);
-    int url_len = static_cast<int> (env->GetStringUTFLength(url));
-    const char* data_cstr = env->GetStringUTFChars(data, 0);
-    int data_len = static_cast<int> (env->GetStringUTFLength(data));
-    const char* metadata_cstr = env->GetStringUTFChars(metadata, 0);
-    int metadata_len = static_cast<int> (env->GetStringUTFLength(metadata));
-    char* data_out;
-    int data_out_len;
-    char* err = wilton_HttpClient_execute(http, url_cstr, url_len, data_cstr, data_len, metadata_cstr, metadata_len,
-            std::addressof(data_out), std::addressof(data_out_len));
-    REGISTRY_HTTPCLIENTS.put(http);
-    env->ReleaseStringUTFChars(url, url_cstr);
-    env->ReleaseStringUTFChars(data, data_cstr);
-    env->ReleaseStringUTFChars(metadata, metadata_cstr);
-    if (nullptr == err) {
-        // consider it nul-terminated
-        jstring res = env->NewStringUTF(data_out);
-        wilton_free(data_out);
-        return res;
-    } else {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-        return nullptr;
-    }
-}
-
-JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(httpSendTempFile)
-(JNIEnv* env, jclass, jlong httpClientHandle, jstring url, jstring filePath, jstring metadata) {
-    if (nullptr == url) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'url' parameter specified").c_str());
-        return nullptr;
-    }
-    if (nullptr == filePath) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'filePath' parameter specified").c_str());
-        return nullptr;
-    }
-    if (nullptr == metadata) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'metadata' parameter specified").c_str());
-        return nullptr;
-    }
-    wilton_HttpClient* http = REGISTRY_HTTPCLIENTS.remove(httpClientHandle);
-    if (nullptr == http) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Invalid 'httpClientHandle' parameter specified:" +
-                " [" + sc::to_string(httpClientHandle) + "]").c_str());
-        return nullptr;
-    }
-    const char* url_cstr = env->GetStringUTFChars(url, 0);
-    int url_len = static_cast<int> (env->GetStringUTFLength(url));
-    const char* filePath_cstr = env->GetStringUTFChars(filePath, 0);
-    int filePath_len = static_cast<int> (env->GetStringUTFLength(filePath));
-    const char* metadata_cstr = env->GetStringUTFChars(metadata, 0);
-    int metadata_len = static_cast<int> (env->GetStringUTFLength(metadata));
-    char* data_out;
-    int data_out_len;
-    char* err = wilton_HttpClient_send_file(http, url_cstr, url_len, filePath_cstr, filePath_len,
-            metadata_cstr, metadata_len, std::addressof(data_out), std::addressof(data_out_len),
-            env->NewGlobalRef(filePath), 
-            [](void* ctx, int) {
-                jstring filePath_passed = static_cast<jstring> (ctx);
-                delete_file(filePath_passed);
-            });
-    REGISTRY_HTTPCLIENTS.put(http);
-    env->ReleaseStringUTFChars(url, url_cstr);
-    env->ReleaseStringUTFChars(filePath, filePath_cstr);
-    env->ReleaseStringUTFChars(metadata, metadata_cstr);
-    if (nullptr == err) {
-        // consider it nul-terminated
-        jstring res = env->NewStringUTF(data_out);
-        wilton_free(data_out);
-        return res;
-    } else {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-        return nullptr;
-    }
-}
-
 
 } // C

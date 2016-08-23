@@ -26,14 +26,23 @@ public class HttpClientJniTest {
             handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
                     .put("tcpPort", TCP_PORT)
                     .build()));
-            http = createHttpClient("{}");
-            String resp = httpExecute(http, ROOT_URL, "", GSON.toJson(ImmutableMap.builder()
-                    .put("forceHttp10", true)
+            String out = wiltoncall("httpclient_create");
+            Map<String, Long> hamap = GSON.fromJson(out, LONG_MAP_TYPE);
+            http = hamap.get("httpclientHandle");
+            assertTrue(http > 0);
+            String resp = wiltoncall("httpclient_execute", GSON.toJson(ImmutableMap.builder()
+                    .put("httpclientHandle", http)
+                    .put("url", ROOT_URL)
+                    .put("metadata", ImmutableMap.builder()
+                            .put("forceHttp10", true)
+                            .build())
                     .build()));
             Map<String, Object> map = GSON.fromJson(resp, MAP_TYPE);
             assertEquals(ROOT_RESP, map.get("data"));
         } finally {
-            closeHttpClient(http);
+            wiltoncall("httpclient_close", GSON.toJson(ImmutableMap.builder()
+                    .put("httpclientHandle", http)
+                    .build()));
             stopServer(handle);
         }
     }
@@ -47,11 +56,17 @@ public class HttpClientJniTest {
             handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
                     .put("tcpPort", TCP_PORT)
                     .build()));
-            http = createHttpClient("{}");
-            String resp = httpExecute(http, ROOT_URL + "headers", "", GSON.toJson(ImmutableMap.builder()
-                    .put("forceHttp10", true)
-                    .put("headers", ImmutableMap.builder()
-                            .put("X-Foo", "bar")
+            String out = wiltoncall("httpclient_create");
+            Map<String, Long> hamap = GSON.fromJson(out, LONG_MAP_TYPE);
+            http = hamap.get("httpclientHandle");
+            String resp = wiltoncall("httpclient_execute", GSON.toJson(ImmutableMap.builder()
+                    .put("httpclientHandle", http)
+                    .put("url", ROOT_URL + "headers")
+                    .put("metadata", ImmutableMap.builder()
+                            .put("forceHttp10", true)
+                            .put("headers", ImmutableMap.builder()
+                                    .put("X-Foo", "bar")
+                                    .build())
                             .build())
                     .build()));
             Map<String, Object> map = GSON.fromJson(resp, MAP_TYPE);
@@ -59,7 +74,9 @@ public class HttpClientJniTest {
             Map<String, Object> headers = (Map<String, Object>) map.get("headers");
             assertEquals("foo", headers.get("X-Server-H1"));
         } finally {
-            closeHttpClient(http);
+            wiltoncall("httpclient_close", GSON.toJson(ImmutableMap.builder()
+                    .put("httpclientHandle", http)
+                    .build()));
             stopServer(handle);
         }
     }
@@ -72,14 +89,23 @@ public class HttpClientJniTest {
             handle = createServer(new TestGateway(), GSON.toJson(ImmutableMap.builder()
                     .put("tcpPort", TCP_PORT)
                     .build()));
-            http = createHttpClient("{}");
-            String resp = httpExecute(http, ROOT_URL + "postmirror", "foo", GSON.toJson(ImmutableMap.builder()
-                    .put("forceHttp10", true)
+            String out = wiltoncall("httpclient_create");
+            Map<String, Long> hamap = GSON.fromJson(out, LONG_MAP_TYPE);
+            http = hamap.get("httpclientHandle");
+            String resp = wiltoncall("httpclient_execute", GSON.toJson(ImmutableMap.builder()
+                    .put("httpclientHandle", http)
+                    .put("url", ROOT_URL + "postmirror")
+                    .put("data", "foo")
+                    .put("metadata", ImmutableMap.builder()
+                            .put("forceHttp10", true)
+                            .build())
                     .build()));
             Map<String, Object> map = GSON.fromJson(resp, MAP_TYPE);
             assertEquals("foo", map.get("data"));
         } finally {
-            closeHttpClient(http);
+            wiltoncall("httpclient_close", GSON.toJson(ImmutableMap.builder()
+                    .put("httpclientHandle", http)
+                    .build()));
             stopServer(handle);
         }
     }
@@ -97,16 +123,25 @@ public class HttpClientJniTest {
                     .put("tcpPort", TCP_PORT)
                     .build()));
             assertTrue(file.exists());
-            http = createHttpClient("{}");
-            String resp = httpSendTempFile(http, ROOT_URL + "postmirror", file.getAbsolutePath(), GSON.toJson(ImmutableMap.builder()
-                    .put("forceHttp10", true)
+            String out = wiltoncall("httpclient_create");
+            Map<String, Long> hamap = GSON.fromJson(out, LONG_MAP_TYPE);
+            http = hamap.get("httpclientHandle");
+            String resp = wiltoncall("httpclient_send_temp_file", GSON.toJson(ImmutableMap.builder()
+                    .put("httpclientHandle", http)
+                    .put("url", ROOT_URL + "postmirror")
+                    .put("filePath", file.getAbsolutePath())
+                    .put("metadata", ImmutableMap.builder()
+                            .put("forceHttp10", true)
+                            .build())
                     .build()));
             Map<String, Object> map = GSON.fromJson(resp, MAP_TYPE);
             assertEquals(STATIC_FILE_DATA, map.get("data"));
             Thread.sleep(200);
             assertFalse(file.exists());
         } finally {
-            closeHttpClient(http);
+            wiltoncall("httpclient_close", GSON.toJson(ImmutableMap.builder()
+                    .put("httpclientHandle", http)
+                    .build()));
             stopServer(handle);
             FileUtils.deleteDirectory(dir);
         }
@@ -126,22 +161,30 @@ public class HttpClientJniTest {
                             .put("verifySubjectSubstr", "CN=testclient")
                             .build())
                     .build()));
-            http = createHttpClient("{}");
-            String resp = httpExecute(http, ROOT_URL_HTTPS, "", GSON.toJson(ImmutableMap.builder()
-                    .put("forceHttp10", true)
-                    .put("sslcertFilename", "src/test/resources/certificates/client/testclient.cer")
-                    .put("sslcertype", "PEM")
-                    .put("sslkeyFilename", "src/test/resources/certificates/client/testclient.key")
-                    .put("sslKeyType", "PEM")
-                    .put("sslKeypasswd", "test")
-                    .put("sslVerifyhost", true)
-                    .put("sslVerifypeer", true)
-                    .put("cainfoFilename", "src/test/resources/certificates/client/staticlibs_test_ca.cer")
+            String out = wiltoncall("httpclient_create");
+            Map<String, Long> hamap = GSON.fromJson(out, LONG_MAP_TYPE);
+            http = hamap.get("httpclientHandle");
+            String resp = wiltoncall("httpclient_execute", GSON.toJson(ImmutableMap.builder()
+                    .put("httpclientHandle", http)
+                    .put("url", ROOT_URL_HTTPS)
+                    .put("metadata", ImmutableMap.builder()
+                            .put("forceHttp10", true)
+                            .put("sslcertFilename", "src/test/resources/certificates/client/testclient.cer")
+                            .put("sslcertype", "PEM")
+                            .put("sslkeyFilename", "src/test/resources/certificates/client/testclient.key")
+                            .put("sslKeyType", "PEM")
+                            .put("sslKeypasswd", "test")
+                            .put("sslVerifyhost", true)
+                            .put("sslVerifypeer", true)
+                            .put("cainfoFilename", "src/test/resources/certificates/client/staticlibs_test_ca.cer")
+                            .build())
                     .build()));
             Map<String, Object> map = GSON.fromJson(resp, MAP_TYPE);
             assertEquals(ROOT_RESP, map.get("data"));
         } finally {
-            closeHttpClient(http);
+            wiltoncall("httpclient_close", GSON.toJson(ImmutableMap.builder()
+                    .put("httpclientHandle", http)
+                    .build()));
             stopServer(handle);
         }
     }

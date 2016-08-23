@@ -29,6 +29,14 @@ public class WiltonJni {
 
     // unified jni access point
 
+    public static String wiltoncall(String name) {
+        return wiltoncall(name, "{}", null);
+    }
+
+    public static String wiltoncall(String name, String data) {
+        return wiltoncall(name, data, null);
+    }
+
     public static native String wiltoncall(String name, String data, Object object);
 
     // server
@@ -75,13 +83,4 @@ public class WiltonJni {
 
     public static native void rollbackDbTransaction(long transactionHandle) throws WiltonException;
 
-    // HttpClient
-
-    public static native long createHttpClient(String conf) throws WiltonException;
-
-    public static native void closeHttpClient(long httpClientHandle) throws WiltonException;
-
-    public static native String httpExecute(long httpClientHandle, String url, String data, String metadata) throws WiltonException;
-
-    public static native String httpSendTempFile(long httpClientHandle, String url, String filePath, String metadata) throws WiltonException;
 }

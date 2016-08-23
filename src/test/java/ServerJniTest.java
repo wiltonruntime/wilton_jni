@@ -65,7 +65,6 @@ public class ServerJniTest {
         }
     }
 
-    // todo: investigate me
     @Test
     public void testLogging() throws Exception {
         File dir = null;
@@ -242,7 +241,7 @@ public class ServerJniTest {
         String expected = "Hi Chris!\nHi Mark!\nHi Scott!\n";
 
         // test mustache direct processing
-        String processed = wiltoncall("render_mustache", GSON.toJson(json), null);
+        String processed = wiltoncall("mustache_render", GSON.toJson(json), null);
         assertEquals(expected, processed);
 
         // test file processing

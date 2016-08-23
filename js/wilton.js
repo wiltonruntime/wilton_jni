@@ -239,11 +239,12 @@ define(function () {
                 }
                 if ("undefined" === typeof (values) || null === values) {
                     values = {};
-                } 
-                var res = this.jni.wiltoncall("render_mustache", JSON.stringify({
+                }
+                var data = JSON.stringify({
                     template: template,
                     values: values
-                }), null);
+                });
+                var res = this.jni.wiltoncall("mustache_render", data);
                 if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
@@ -389,8 +390,10 @@ define(function () {
             delete conf.onSuccess;
             delete conf.onError;
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
-            var conf_json = JSON.stringify(conf);
-            this.handle = this.jni.createHttpClient(conf_json);
+            var data = JSON.stringify(conf);
+            var json = this.jni.wiltoncall("httpclient_create", data);
+            var out = JSON.parse(json);
+            this.handle = out.httpclientHandle;
             if ("function" === typeof (onSuccess)) {
                 onSuccess(this);
             }
@@ -409,8 +412,7 @@ define(function () {
                 } else if ("string" !== typeof (url)) {
                     url = String(url);
                 }
-                var data = "";
-                var metadata = "{}";
+                var requestData = "";
                 var onSuccess = null;
                 var onError = null;
                 if ("object" === typeof (options) && null !== options) {
@@ -421,16 +423,21 @@ define(function () {
                     if ("undefined" !== typeof (options.data)) {
                         if (null !== options.data) {
                             if ("string" !== typeof (options.data)) {
-                                data = JSON.stringify(options.data);
+                                requestData = JSON.stringify(options.data);
                             } else {
-                                data = options.data;
+                                requestData = options.data;
                             }
                         }
                         delete options.data;
                     }
-                    metadata = JSON.stringify(options);
                 }
-                var resp_json = this.jni.httpExecute(this.handle, url, data, metadata);
+                var data = JSON.stringify({
+                    httpclientHandle: this.handle,
+                    url: url,
+                    data: requestData,
+                    metadata: options
+                });
+                var resp_json = this.jni.wiltoncall("httpclient_execute", data);
                 var resp = JSON.parse(resp_json);
                 if ("function" === typeof (onSuccess)) {
                     onSuccess(resp);
@@ -455,12 +462,18 @@ define(function () {
                 } else if ("string" !== typeof (filePath)) {
                     filePath = String(filePath);
                 }
-                var meta_json = "{}";
+                var metadata = {};
                 if ("object" === typeof (options) && null !== options && 
                         "object" === typeof (options.meta) && null !== options.meta) {
-                    meta_json = JSON.stringify(options.meta);
+                    metadata = options.meta;
                 }
-                var resp_json = this.jni.httpSendTempFile(this.handle, url, filePath, meta_json);
+                var data = JSON.stringify({
+                    httpclientHandle: this.handle,
+                    url: url,
+                    filePath: filePath,
+                    metadata: metadata
+                });
+                var resp_json = this.jni.wiltoncall("httpclient_send_temp_file", data);
                 var resp = JSON.parse(resp_json);
                 if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
                     options.onSuccess(resp);
@@ -475,7 +488,10 @@ define(function () {
         
         close: function(options) {
             try {
-                this.jni.closeHttpClient(this.handle);
+                var data = JSON.stringify({
+                    httpclientHandle: this.handle
+                });
+                this.jni.wiltoncall("httpclient_close", data);
                 if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
