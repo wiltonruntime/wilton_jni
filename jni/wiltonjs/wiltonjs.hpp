@@ -31,6 +31,13 @@ std::string httpclient_execute(const std::string& data, void* object);
 
 std::string httpclient_send_temp_file(const std::string& data, void* object);
 
+// Logger
+
+std::string logger_initialize(const std::string& data, void* object);
+
+std::string logger_log(const std::string& data, void* object);
+
+std::string logger_is_level_enabled(const std::string& data, void* object);
 
 // internal
 

@@ -47,7 +47,12 @@ define(function () {
                         // log as-is
                     }
                 }
-                this.jni.appendLog(level, this.name, message);
+                var data = JSON.stringify({
+                    level: level,
+                    logger: this.name,
+                    message: message
+                });
+                this.jni.wiltoncall("logger_log", data);
             } catch (e) {
                 print("===LOGGER ERROR:");
                 print(e.toString() + "\n" + e.stack);

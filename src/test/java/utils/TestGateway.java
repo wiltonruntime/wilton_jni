@@ -52,8 +52,13 @@ public class TestGateway implements WiltonGateway {
             } else if ("/postmirror".equalsIgnoreCase(path)) {
                 resp = getRequestData(requestHandle);
             } else if ("/logger".equalsIgnoreCase(path)) {
-                String data = getRequestData(requestHandle);
-                appendLog("INFO", TestGateway.class.getName(), data);
+                String msg = getRequestData(requestHandle);
+                String data = GSON.toJson(ImmutableMap.builder()
+                        .put("level", "INFO")
+                        .put("logger", TestGateway.class.getName())
+                        .put("message", msg)
+                        .build());
+                wiltoncall("logger_log", data);
                 resp = "";
             } else if ("/sendfile".equalsIgnoreCase(path)) {
                 String filename = getRequestData(requestHandle);

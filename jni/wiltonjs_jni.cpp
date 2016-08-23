@@ -150,12 +150,17 @@ void delete_file(jstring filePath) {
     env->DeleteGlobalRef(filePath);
 }
 
-void register_wiltoncalls() {    
+void register_wiltoncalls() {
     wj::put_wilton_function("mustache_render", wj::mustache_render);
+    
     wj::put_wilton_function("httpclient_create", wj::httpclient_create);
     wj::put_wilton_function("httpclient_close", wj::httpclient_close);
     wj::put_wilton_function("httpclient_execute", wj::httpclient_execute);
     wj::put_wilton_function("httpclient_send_temp_file", wj::httpclient_send_temp_file);
+    
+    wj::put_wilton_function("logger_initialize", wj::logger_initialize);
+    wj::put_wilton_function("logger_log", wj::logger_log);
+    wj::put_wilton_function("logger_is_level_enabled", wj::logger_is_level_enabled);
 }
 
 } // namespace

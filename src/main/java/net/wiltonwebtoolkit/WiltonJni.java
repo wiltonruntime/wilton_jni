@@ -63,10 +63,6 @@ public class WiltonJni {
 
     public static native long sendWithResponseWriter(long responseWriterHandle, String data) throws WiltonException;
 
-    // log
-
-    public static native void appendLog(String level, String logger, String message) throws WiltonException;
-
     // DB
 
     public static native long openDbConnection(String url) throws WiltonException;
