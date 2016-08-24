@@ -7,6 +7,8 @@
 
 #include "wiltonjs/wiltonjs.hpp"
 
+#include <functional>
+
 #include "staticlib/serialization.hpp"
 
 #include "wilton/wilton.h"
@@ -27,10 +29,12 @@ std::string logger_initialize(const std::string& data, void*) {
 }
 
 std::string logger_log(const std::string& data, void*) {
+    // json parse
     ss::JsonValue json = ss::load_json_from_string(data);
     const std::string& level = json.get("level").get_string();
     const std::string& logger = json.get("logger").get_string();
     const std::string& message = json.get("message").get_string();
+    // call wilton
     char* err = wilton_logger_log(level.c_str(), level.length(), logger.c_str(), logger.length(),
             message.c_str(), message.length());
     if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +

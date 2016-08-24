@@ -214,9 +214,11 @@ JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(wiltoncall)
         std::string res = wj::invoke_wilton_function(name_string, data_string, static_cast<void*>(object));
         return env->NewStringUTF(res.c_str());
     } catch (const std::exception& e) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(e.what()).c_str());
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(e.what() + 
+                "\nwiltoncall error for name: [" + name_string + "], data: [" + data_string + "]").c_str());
     } catch (...) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("System error").c_str());
+        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(
+                "\nwiltoncall error for name: [" + name_string + "], data: [" + data_string + "]").c_str());
     }
     return nullptr;
 }

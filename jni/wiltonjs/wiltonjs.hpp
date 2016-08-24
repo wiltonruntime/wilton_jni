@@ -12,6 +12,9 @@
 #include <mutex>
 #include <string>
 #include <unordered_set>
+#include <vector>
+
+#include "staticlib/serialization.hpp"
 
 #include "wiltonjs/WiltonJsException.hpp"
 
@@ -43,10 +46,20 @@ std::string logger_is_level_enabled(const std::string& data, void* object);
 
 namespace detail {
 
+// shortcuts
+
 void throw_wilton_error(char* err, const std::string& msg);
 
 std::string wrap_wilton_output(char* out, int out_len);
 
+// json parse
+
+const std::string& get_json_string(const staticlib::serialization::JsonField& field, const std::string& name);
+
+int64_t get_json_handle(const staticlib::serialization::JsonField& field, const std::string& name);
+
+const staticlib::serialization::JsonValue& get_json_object(
+        const staticlib::serialization::JsonField& field, const std::string& name);
 
 template<typename T>
 class handle_registry {
