@@ -43,8 +43,8 @@ std::string httpclient_close(const std::string& data, void*) {
     // json parse
     ss::JsonValue json = ss::load_json_from_string(data);
     int64_t handle = -1;
-    for (const ss::JsonField& fi : json.get_object()) {
-        auto& name = fi.get_name();
+    for (const ss::JsonField& fi : json.as_object()) {
+        auto& name = fi.name();
         if ("httpclientHandle" == name) {
             handle = detail::get_json_handle(fi, "httpclientHandle");
         } else {
@@ -71,16 +71,16 @@ std::string httpclient_execute(const std::string& data, void*) {
     auto url = std::ref(EMPTY_STRING);
     auto request_data = std::ref(EMPTY_STRING);
     std::string metadata = EMPTY_STRING;
-    for (const ss::JsonField& fi : json.get_object()) {
-        auto& name = fi.get_name();
+    for (const ss::JsonField& fi : json.as_object()) {
+        auto& name = fi.name();
         if ("httpclientHandle" == name) {
             handle = detail::get_json_handle(fi, "httpclientHandle");
         } else if ("url" == name) {
             url = detail::get_json_string(fi, "url");
         } else if ("data" == name) {
-            request_data = fi.get_string();
+            request_data = fi.as_string();
         } else if ("metadata" == name) {
-            metadata = ss::dump_json_to_string(fi.get_value());
+            metadata = ss::dump_json_to_string(fi.value());
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
@@ -112,8 +112,8 @@ std::string httpclient_send_temp_file(const std::string& data, void*) {
     auto url = std::ref(EMPTY_STRING);
     auto filePath = std::ref(EMPTY_STRING);
     std::string metadata = EMPTY_STRING;
-    for (const ss::JsonField& fi : json.get_object()) {
-        auto& name = fi.get_name();
+    for (const ss::JsonField& fi : json.as_object()) {
+        auto& name = fi.name();
         if ("httpclientHandle" == name) {
             handle = detail::get_json_handle(fi, "httpclientHandle");
         } else if ("url" == name) {
@@ -121,7 +121,7 @@ std::string httpclient_send_temp_file(const std::string& data, void*) {
         } else if ("filePath" == name) {
             filePath = detail::get_json_string(fi, "filePath");
         } else if ("metadata" == name) {
-            metadata = ss::dump_json_to_string(fi.get_value());
+            metadata = ss::dump_json_to_string(fi.value());
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }

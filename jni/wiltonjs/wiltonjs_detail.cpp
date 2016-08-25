@@ -33,31 +33,31 @@ std::string wrap_wilton_output(char* out, int out_len) {
 }
 
 const std::string& get_json_string(const ss::JsonField& field, const std::string& name) {
-    if (ss::JsonType::STRING != field.get_type() || field.get_string().empty()) {
+    if (ss::JsonType::STRING != field.type() || field.as_string().empty()) {
         throw WiltonJsException(TRACEMSG("Invalid '" + name + "' field,"
-                " type: [" + ss::stringify_json_type(field.get_type()) + "]," +
-                " value: [" + ss::dump_json_to_string(field.get_value()) + "]"));
+                " type: [" + ss::stringify_json_type(field.type()) + "]," +
+                " value: [" + ss::dump_json_to_string(field.value()) + "]"));
     }
-    return field.get_string();
+    return field.as_string();
 }
 
 int64_t get_json_handle(const ss::JsonField& field, const std::string& name) {
-    if (ss::JsonType::INTEGER != field.get_type()) {
+    if (ss::JsonType::INTEGER != field.type()) {
         throw WiltonJsException(TRACEMSG("Invalid '" + name + "' field,"
-                " type: [" + ss::stringify_json_type(field.get_type()) + "]," +
-                " value: [" + ss::dump_json_to_string(field.get_value()) + "]"));
+                " type: [" + ss::stringify_json_type(field.type()) + "]," +
+                " value: [" + ss::dump_json_to_string(field.value()) + "]"));
     }
-    return field.get_integer();
+    return field.as_int64();
 }
 
 const ss::JsonValue& get_json_object(
         const ss::JsonField& field, const std::string& name) {
-    if (ss::JsonType::OBJECT != field.get_type()) {
+    if (ss::JsonType::OBJECT != field.type()) {
         throw WiltonJsException(TRACEMSG("Invalid '" + name + "' field,"
-                " type: [" + ss::stringify_json_type(field.get_type()) + "]," +
-                " value: [" + ss::dump_json_to_string(field.get_value()) + "]"));
+                " type: [" + ss::stringify_json_type(field.type()) + "]," +
+                " value: [" + ss::dump_json_to_string(field.value()) + "]"));
     }
-    return field.get_value();    
+    return field.value();    
 }
 
 } // namespace

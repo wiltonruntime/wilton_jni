@@ -31,9 +31,9 @@ std::string logger_initialize(const std::string& data, void*) {
 std::string logger_log(const std::string& data, void*) {
     // json parse
     ss::JsonValue json = ss::load_json_from_string(data);
-    const std::string& level = json.get("level").get_string();
-    const std::string& logger = json.get("logger").get_string();
-    const std::string& message = json.get("message").get_string();
+    const std::string& level = json["level"].as_string();
+    const std::string& logger = json["logger"].as_string();
+    const std::string& message = json["message"].as_string();
     // call wilton
     char* err = wilton_logger_log(level.c_str(), level.length(), logger.c_str(), logger.length(),
             message.c_str(), message.length());
@@ -44,8 +44,8 @@ std::string logger_log(const std::string& data, void*) {
 
 std::string logger_is_level_enabled(const std::string& data, void*) {
     ss::JsonValue json = ss::load_json_from_string(data);
-    const std::string& level = json.get("level").get_string();
-    const std::string& logger = json.get("logger").get_string();
+    const std::string& level = json["level"].as_string();
+    const std::string& logger = json["logger"].as_string();
     int out;
     char* err = wilton_logger_is_level_enabled(logger.c_str(), logger.length(), 
             level.c_str(), level.length(), std::addressof(out));

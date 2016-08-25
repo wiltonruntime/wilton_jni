@@ -21,8 +21,8 @@ namespace ss = staticlib::serialization;
 
 std::string mustache_render(const std::string& data, void*) {
     ss::JsonValue data_json = ss::load_json_from_string(data);
-    const std::string& templade = data_json.get("template").get_string();
-    std::string values = ss::dump_json_to_string(data_json.get("values"));    
+    const std::string& templade = data_json["template"].as_string();
+    std::string values = ss::dump_json_to_string(data_json["values"]);
     char* out;
     int out_len;
     char* err = wilton_render_mustache(templade.c_str(), templade.length(),
