@@ -17,12 +17,32 @@ namespace { // anonymous
 
 namespace ss = staticlib::serialization;
 
+const std::string EMPTY_STRING = "";
+
 } // namespace
 
 std::string mustache_render(const std::string& data, void*) {
-    ss::JsonValue data_json = ss::load_json_from_string(data);
-    const std::string& templade = data_json["template"].as_string();
-    std::string values = ss::dump_json_to_string(data_json["values"]);
+    // parse json
+    ss::JsonValue json = ss::load_json_from_string(data);
+    auto rtemplate = std::ref(EMPTY_STRING);
+    std::string values = EMPTY_STRING;
+    for (const ss::JsonField& fi : json.as_object()) {
+        auto& name = fi.name();
+        if ("template" == name) {
+            rtemplate = detail::get_json_string(fi, "template");
+        } else if ("values" == name) {
+            values = ss::dump_json_to_string(fi.value());
+        } else {
+            throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
+        }
+    }
+    if (rtemplate.get().empty()) throw WiltonJsException(TRACEMSG(
+            "Required parameter 'level' not specified, data: [" + data + "]"));
+    const std::string& templade = rtemplate.get();
+    if (values.empty()) {
+        values = "{}";
+    }
+    // call wilton
     char* out;
     int out_len;
     char* err = wilton_render_mustache(templade.c_str(), templade.length(),

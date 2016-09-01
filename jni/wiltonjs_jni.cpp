@@ -499,40 +499,6 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendWithResponseWriter)
     }
 }
 
-
-// logging
-
-JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(appendLog)
-(JNIEnv* env, jclass, jstring level, jstring logger, jstring message) {
-    if (nullptr == level) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'level' parameter specified").c_str());
-        return; 
-    }
-    if (nullptr == logger) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'logger' parameter specified").c_str());
-        return;
-    }
-    if (nullptr == message) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'message' parameter specified").c_str());
-        return;
-    }
-    const char* level_cstr = env->GetStringUTFChars(level, 0);
-    int level_len = static_cast<int> (env->GetStringUTFLength(level));
-    const char* logger_cstr = env->GetStringUTFChars(logger, 0);
-    int logger_len = static_cast<int> (env->GetStringUTFLength(logger));
-    const char* message_cstr = env->GetStringUTFChars(message, 0);
-    int message_len = static_cast<int> (env->GetStringUTFLength(message));
-    char* err = wilton_logger_log(level_cstr, level_len, logger_cstr, logger_len, message_cstr, message_len);
-    env->ReleaseStringUTFChars(level, level_cstr);
-    env->ReleaseStringUTFChars(logger, logger_cstr);
-    env->ReleaseStringUTFChars(message, message_cstr);
-    if (nullptr != err) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-    }
-}
-
-
 // DB
 
 JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(openDbConnection)

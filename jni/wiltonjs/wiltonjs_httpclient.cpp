@@ -68,17 +68,17 @@ std::string httpclient_execute(const std::string& data, void*) {
     // json parse
     ss::JsonValue json = ss::load_json_from_string(data);
     int64_t handle = -1;
-    auto url = std::ref(EMPTY_STRING);
-    auto request_data = std::ref(EMPTY_STRING);
+    auto rurl = std::ref(EMPTY_STRING);
+    auto rdata = std::ref(EMPTY_STRING);
     std::string metadata = EMPTY_STRING;
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("httpclientHandle" == name) {
             handle = detail::get_json_handle(fi, "httpclientHandle");
         } else if ("url" == name) {
-            url = detail::get_json_string(fi, "url");
+            rurl = detail::get_json_string(fi, "url");
         } else if ("data" == name) {
-            request_data = fi.as_string();
+            rdata = fi.as_string();
         } else if ("metadata" == name) {
             metadata = ss::dump_json_to_string(fi.value());
         } else {
@@ -87,8 +87,10 @@ std::string httpclient_execute(const std::string& data, void*) {
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
             "Required parameter 'httpclientHandle' not specified, data: [" + data + "]"));
-    if (url.get().empty()) throw WiltonJsException(TRACEMSG(
+    if (rurl.get().empty()) throw WiltonJsException(TRACEMSG(
             "Required parameter 'url' not specified, data: [" + data + "]"));
+    const std::string& url = rurl.get();
+    const std::string& request_data = rdata.get();
     // get handle
     wilton_HttpClient* http = static_registry().remove(handle);
     if (nullptr == http) throw WiltonJsException(TRACEMSG(
@@ -96,8 +98,8 @@ std::string httpclient_execute(const std::string& data, void*) {
     // call wilton
     char* out;
     int out_len;
-    char* err = wilton_HttpClient_execute(http, url.get().c_str(), url.get().length(), 
-            request_data.get().c_str(), request_data.get().length(), metadata.c_str(), metadata.length(),
+    char* err = wilton_HttpClient_execute(http, url.c_str(), url.length(), 
+            request_data.c_str(), request_data.length(), metadata.c_str(), metadata.length(),
             std::addressof(out), std::addressof(out_len));
     static_registry().put(http);
     if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
@@ -109,17 +111,17 @@ std::string httpclient_send_temp_file(const std::string& data, void*) {
     // json parse
     ss::JsonValue json = ss::load_json_from_string(data);
     int64_t handle = -1;
-    auto url = std::ref(EMPTY_STRING);
-    auto filePath = std::ref(EMPTY_STRING);
+    auto rurl = std::ref(EMPTY_STRING);
+    auto rfile = std::ref(EMPTY_STRING);
     std::string metadata = EMPTY_STRING;
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("httpclientHandle" == name) {
             handle = detail::get_json_handle(fi, "httpclientHandle");
         } else if ("url" == name) {
-            url = detail::get_json_string(fi, "url");
+            rurl = detail::get_json_string(fi, "url");
         } else if ("filePath" == name) {
-            filePath = detail::get_json_string(fi, "filePath");
+            rfile = detail::get_json_string(fi, "filePath");
         } else if ("metadata" == name) {
             metadata = ss::dump_json_to_string(fi.value());
         } else {
@@ -128,10 +130,12 @@ std::string httpclient_send_temp_file(const std::string& data, void*) {
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
             "Required parameter 'httpclientHandle' not specified, data: [" + data + "]"));
-    if (url.get().empty()) throw WiltonJsException(TRACEMSG(
+    if (rurl.get().empty()) throw WiltonJsException(TRACEMSG(
             "Required parameter 'url' not specified, data: [" + data + "]"));
-    if (filePath.get().empty()) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'filePath' not specified, data: [" + data + "]"));    
+    if (rfile.get().empty()) throw WiltonJsException(TRACEMSG(
+            "Required parameter 'filePath' not specified, data: [" + data + "]"));
+    const std::string& url = rurl.get();
+    const std::string& file_path = rfile.get();
     // get handle
     wilton_HttpClient* http = static_registry().remove(handle);
     if (nullptr == http) throw WiltonJsException(TRACEMSG(
@@ -139,10 +143,10 @@ std::string httpclient_send_temp_file(const std::string& data, void*) {
     // call wilton
     char* out;
     int out_len;
-    char* err = wilton_HttpClient_send_file(http, url.get().c_str(), url.get().length(), 
-            filePath.get().c_str(), filePath.get().length(), metadata.c_str(), metadata.length(), 
+    char* err = wilton_HttpClient_send_file(http, url.c_str(), url.length(), 
+            file_path.c_str(), file_path.length(), metadata.c_str(), metadata.length(), 
             std::addressof(out), std::addressof(out_len),
-            new std::string(filePath.get().data(), filePath.get().length()),
+            new std::string(file_path.data(), file_path.length()),
             [](void* ctx, int) {
                 std::string* filePath_passed = static_cast<std::string*> (ctx);
                 std::remove(filePath_passed->c_str());
