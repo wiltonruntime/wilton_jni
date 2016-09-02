@@ -89,15 +89,20 @@ define(function () {
         send: function (data, options) {
             try {
                 if ("object" === typeof (options) && null !== options && "object" === typeof (options.meta)) {
-                    var json = JSON.stringify(options.meta);
-                    this.jni.setResponseMetadata(this.handle, json);
+                    this.jni.wiltoncall("request_set_response_metadata", JSON.stringify({
+                        requestHandle: this.handle,
+                        metadata: options.meta
+                    }));
                 }
                 if ("undefined" === typeof (data) || null === data) {
                     data = "";
                 } else if ("string" !== typeof (data)) {
                     data = JSON.stringify(data);
                 }
-                this.jni.sendResponse(this.handle, data);
+                this.jni.wiltoncall("request_send_response", JSON.stringify({
+                    requestHandle: this.handle,
+                    data: data
+                }));
                 if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
@@ -110,10 +115,15 @@ define(function () {
         sendTempFile: function (filePath, options) {
             try {
                 if ("object" === typeof (options) && null !== options && "object" === typeof (options.meta)) {
-                    var json = JSON.stringify(options.meta);
-                    this.jni.setResponseMetadata(this.handle, json);
+                    this.jni.wiltoncall("request_set_response_metadata", JSON.stringify({
+                        requestHandle: this.handle,
+                        metadata: options.meta
+                    }));
                 }
-                this.jni.sendTempFile(this.handle, filePath);
+                this.jni.wiltoncall("request_send_temp_file", JSON.stringify({
+                    requestHandle: this.handle,
+                    filePath: filePath
+                }));
                 if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
@@ -126,15 +136,19 @@ define(function () {
         sendMustache: function (filePath, data, options) {
             try {
                 if ("object" === typeof (options) && null !== options && "object" === typeof (options.meta)) {
-                    var json = JSON.stringify(options.meta);
-                    this.jni.setResponseMetadata(this.handle, json);
+                    this.jni.wiltoncall("request_set_response_metadata", JSON.stringify({
+                        requestHandle: this.handle,
+                        metadata: options.meta
+                    }));
                 }
                 if ("undefined" === typeof (data) || null === data) {
-                    data = "{}";
-                } else if ("string" !== typeof (data)) {
-                    data = JSON.stringify(data);
-                }
-                this.jni.sendMustache(this.handle, filePath, data);
+                    data = {};
+                } 
+                this.jni.wiltoncall("request_send_mustache", JSON.stringify({
+                    requestHandle: this.handle,
+                    mustacheFilePath: filePath,
+                    values: data
+                }));
                 if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
@@ -166,8 +180,10 @@ define(function () {
                 }
             });
             delete conf.callbacks;
-            var confJson = JSON.stringify(conf);
-            this.handle = this.jni.createServer(gatewayPass, confJson);
+            var data = JSON.stringify(conf);
+            var handleJson = this.jni.wiltoncall("server_create", data, gatewayPass);
+            var handleObj = JSON.parse(handleJson);
+            this.handle = handleObj.serverHandle;
             if ("function" === typeof (onSuccess)) {
                 onSuccess(this);
             }
@@ -181,7 +197,9 @@ define(function () {
     Server.prototype = {
         gatewayCallback: function (requestHandle) {
             try {
-                var json = this.jni.getRequestMetadata(requestHandle);
+                var json = this.jni.wiltoncall("request_get_metadata", JSON.stringify({
+                    requestHandle: requestHandle
+                }));
                 var req = JSON.parse(json);
                 var cb = null;
                 if ("function" === typeof (this.gateway)) {
@@ -189,35 +207,49 @@ define(function () {
                 } else {
                     cb = this.callbacks[req.pathname];
                     if ("undefined" === typeof (cb)) {
-                        var rm = JSON.stringify({
-                            statusCode: 404,
-                            statusMessage: "Not Found"
-                        });
-                        this.jni.setResponseMetadata(requestHandle, rm);
-                        this.jni.sendResponse(requestHandle, "404: Not Found: [" + req.pathname + "]");
+                        this.jni.wiltoncall("request_set_response_metadata", JSON.stringify({
+                            requestHandle: requestHandle,
+                            metadata: {
+                                statusCode: 404,
+                                statusMessage: "Not Found"
+                            }
+                        }));
+                        this.jni.wiltoncall("request_send_response", JSON.stringify({
+                            requestHandle: requestHandle,
+                            data: "404: Not Found: [" + req.pathname + "]"
+                        }));
                         return;
                     }
                 }
                 req.data = "";
                 if ("POST" === req.method || "PUT" === req.method) {
-                    var bdata = this.jni.getRequestData(requestHandle);
+                    var bdata = this.jni.wiltoncall("request_get_data", JSON.stringify({
+                        requestHandle: requestHandle
+                    }));
                     req.data = "" + bdata;
                 }
                 var resp = new Response(this.server, this.jni, requestHandle);
                 cb(req, resp);
             } catch (e) {
                 this.server.logger.error(e);
-                var rm = JSON.stringify({
-                    statusCode: 500,
-                    statusMessage: "Server Error"
-                });
-                this.jni.setResponseMetadata(requestHandle, rm);
-                this.jni.sendResponse(requestHandle, "500: Server Error");
+                this.jni.wiltoncall("request_set_response_metadata", JSON.stringify({
+                    requestHandle: requestHandle,
+                    metadata: {
+                        statusCode: 500,
+                        statusMessage: "Server Error"
+                    }
+                }));
+                this.jni.wiltoncall("request_send_response", JSON.stringify({
+                    requestHandle: requestHandle,
+                    data: "500: Server Error"
+                }));
             }
         },
         stop: function (options) {
             try {
-                this.jni.stopServer(this.handle);
+                this.jni.wiltoncall("server_stop", JSON.stringify({
+                    serverHandle: this.handle
+                }));
                 if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }

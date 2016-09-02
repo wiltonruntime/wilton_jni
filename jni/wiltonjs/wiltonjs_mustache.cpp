@@ -31,7 +31,7 @@ std::string mustache_render(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("template" == name) {
-            rtemplate = detail::get_json_string(fi, "template");
+            rtemplate = detail::get_json_string(fi);
         } else if ("values" == name) {
             values = ss::dump_json_to_string(fi.value());
         } else {

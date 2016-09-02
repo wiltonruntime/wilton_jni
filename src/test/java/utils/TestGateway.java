@@ -5,12 +5,8 @@ import net.wiltonwebtoolkit.WiltonGateway;
 
 import java.util.Map;
 
-import static net.wiltonwebtoolkit.WiltonJni.*;
-import static net.wiltonwebtoolkit.WiltonJni.sendResponse;
-import static net.wiltonwebtoolkit.WiltonJni.setResponseMetadata;
-import static utils.TestUtils.GSON;
-import static utils.TestUtils.MAP_TYPE;
-import static utils.TestUtils.sleepQuietly;
+import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
+import static utils.TestUtils.*;
 
 /**
  * User: alexkasko
@@ -33,26 +29,34 @@ public class TestGateway implements WiltonGateway {
     @Override
     public void gatewayCallback(long requestHandle) {
         try {
-            String meta = getRequestMetadata(requestHandle);
+            String meta = wiltoncall("request_get_metadata", GSON.toJson(ImmutableMap.builder()
+                    .put("requestHandle", requestHandle)
+                    .build()));
             Map<String, Object> metaMap = GSON.fromJson(meta, MAP_TYPE);
             String path = String.valueOf(metaMap.get("pathname"));
             final String resp;
             if ("/".equalsIgnoreCase(path)) {
                 resp = ROOT_RESP;
             } else if ("/headers".equalsIgnoreCase(path)) {
-                String json = GSON.toJson(ImmutableMap.builder()
-                        .put("headers", ImmutableMap.builder()
-                                .put("X-Server-H1", "foo")
-                                .put("X-Server-H2", "bar")
-                                .put("X-Proto", metaMap.get("protocol"))
+                wiltoncall("request_set_response_metadata", GSON.toJson(ImmutableMap.builder()
+                        .put("requestHandle", requestHandle)
+                        .put("metadata", ImmutableMap.builder()
+                                .put("headers", ImmutableMap.builder()
+                                        .put("X-Server-H1", "foo")
+                                        .put("X-Server-H2", "bar")
+                                        .put("X-Proto", metaMap.get("protocol"))
+                                        .build())
                                 .build())
-                        .build());
-                setResponseMetadata(requestHandle, json);
+                        .build()));
                 resp = GSON.toJson(metaMap.get("headers"));
             } else if ("/postmirror".equalsIgnoreCase(path)) {
-                resp = getRequestData(requestHandle);
+                resp = wiltoncall("request_get_data", GSON.toJson(ImmutableMap.builder()
+                        .put("requestHandle", requestHandle)
+                        .build()));
             } else if ("/logger".equalsIgnoreCase(path)) {
-                String msg = getRequestData(requestHandle);
+                String msg = wiltoncall("request_get_data", GSON.toJson(ImmutableMap.builder()
+                        .put("requestHandle", requestHandle)
+                        .build()));
                 String data = GSON.toJson(ImmutableMap.builder()
                         .put("level", "INFO")
                         .put("logger", TestGateway.class.getName())
@@ -61,41 +65,71 @@ public class TestGateway implements WiltonGateway {
                 wiltoncall("logger_log", data);
                 resp = "";
             } else if ("/sendfile".equalsIgnoreCase(path)) {
-                String filename = getRequestData(requestHandle);
-                sendTempFile(requestHandle, filename);
+                String filename = wiltoncall("request_get_data", GSON.toJson(ImmutableMap.builder()
+                        .put("requestHandle", requestHandle)
+                        .build()));
+                wiltoncall("request_send_temp_file", GSON.toJson(ImmutableMap.builder()
+                        .put("requestHandle", requestHandle)
+                        .put("filePath", filename)
+                        .build()));
                 resp = null;
             } else if ("/mustache".equalsIgnoreCase(path)) {
                 Map<String, String> headers = (Map<String, String>) metaMap.get("headers");
                 String mustacheFile = headers.get("X-Mustache-File");
-                String values = getRequestData(requestHandle);
-                sendMustache(requestHandle, mustacheFile, values);
+                String valuesJson = wiltoncall("request_get_data", GSON.toJson(ImmutableMap.builder()
+                        .put("requestHandle", requestHandle)
+                        .build()));
+                Map<String, Object> values = GSON.fromJson(valuesJson, MAP_TYPE);
+                wiltoncall("request_send_mustache", GSON.toJson(ImmutableMap.builder()
+                        .put("requestHandle", requestHandle)
+                        .put("mustacheFilePath", mustacheFile)
+                        .put("values", values)
+                        .build()));
                 resp = null;
             } else if ("/async".equalsIgnoreCase(path)) {
-                final long responseWriterHandle = sendLater(requestHandle);
+                String out = wiltoncall("request_send_later", GSON.toJson(ImmutableMap.builder()
+                        .put("requestHandle", requestHandle)
+                        .build()));
+                Map<String, Long> hamap = GSON.fromJson(out, LONG_MAP_TYPE);
+                final long responseWriterHandle = hamap.get("responseWriterHandle");
+
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         sleepQuietly(200);
-                        sendWithResponseWriter(responseWriterHandle, ASYNC_RESP);
+                        wiltoncall("request_send_with_response_writer", GSON.toJson(ImmutableMap.builder()
+                                .put("responseWriterHandle", responseWriterHandle)
+                                .put("data", ASYNC_RESP)
+                                .build()));
                     }
                 }).start();
                 resp = null;
             } else if ("/reqfilename".equalsIgnoreCase(path)) {
-                resp = getRequestDataFilename(requestHandle);
+                resp = wiltoncall("request_get_data_filename", GSON.toJson(ImmutableMap.builder()
+                        .put("requestHandle", requestHandle)
+                        .build()));
             } else {
-                String json = GSON.toJson(ImmutableMap.builder()
-                        .put("statusCode", 404)
-                        .put("statusMessage", "Not Found")
-                        .build());
-                setResponseMetadata(requestHandle, json);
+                wiltoncall("request_set_response_metadata", GSON.toJson(ImmutableMap.builder()
+                        .put("requestHandle", requestHandle)
+                        .put("metadata", ImmutableMap.builder()
+                                .put("statusCode", 404)
+                                .put("statusMessage", "Not Found")
+                                .build())
+                        .build()));
                 resp = NOT_FOUND_RESP;
             }
             if (null != resp) { // sendfile case
-                sendResponse(requestHandle, resp);
+                wiltoncall("request_send_response", GSON.toJson(ImmutableMap.builder()
+                        .put("requestHandle", requestHandle)
+                        .put("data", resp)
+                        .build()));
             }
         } catch (Throwable e) {
             e.printStackTrace();
-            sendResponse(requestHandle, e.getMessage());
+            wiltoncall("request_send_response", GSON.toJson(ImmutableMap.builder()
+                    .put("requestHandle", requestHandle)
+                    .put("data", e.getMessage())
+                    .build()));
         }
     }
 }

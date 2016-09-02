@@ -102,6 +102,7 @@ add_library ( ${PROJECT_NAME} SHARED
         ${CMAKE_CURRENT_LIST_DIR}/wiltonjs/wiltonjs_httpclient.cpp 
         ${CMAKE_CURRENT_LIST_DIR}/wiltonjs/wiltonjs_logger.cpp 
         ${CMAKE_CURRENT_LIST_DIR}/wiltonjs/wiltonjs_mustache.cpp 
+        ${CMAKE_CURRENT_LIST_DIR}/wiltonjs/wiltonjs_server.cpp 
         ${CMAKE_CURRENT_LIST_DIR}/wiltonjs_jni.cpp )
 target_include_directories ( ${PROJECT_NAME} BEFORE PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}

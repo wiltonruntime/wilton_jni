@@ -1,5 +1,6 @@
 package utils;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -36,6 +37,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
+import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
 /**
@@ -176,7 +178,9 @@ public class TestUtils {
     public static void stopServerQuietly(long handle) {
         try {
             if (0 != handle) {
-                WiltonJni.stopServer(handle);
+                wiltoncall("server_stop", GSON.toJson(ImmutableMap.builder()
+                        .put("serverHandle", handle)
+                        .build()));
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -46,7 +46,7 @@ std::string httpclient_close(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("httpclientHandle" == name) {
-            handle = detail::get_json_handle(fi, "httpclientHandle");
+            handle = detail::get_json_handle(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
@@ -77,9 +77,9 @@ std::string httpclient_execute(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("httpclientHandle" == name) {
-            handle = detail::get_json_handle(fi, "httpclientHandle");
+            handle = detail::get_json_handle(fi);
         } else if ("url" == name) {
-            rurl = detail::get_json_string(fi, "url");
+            rurl = detail::get_json_string(fi);
         } else if ("data" == name) {
             rdata = fi.as_string();
         } else if ("metadata" == name) {
@@ -120,11 +120,11 @@ std::string httpclient_send_temp_file(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("httpclientHandle" == name) {
-            handle = detail::get_json_handle(fi, "httpclientHandle");
+            handle = detail::get_json_handle(fi);
         } else if ("url" == name) {
-            rurl = detail::get_json_string(fi, "url");
+            rurl = detail::get_json_string(fi);
         } else if ("filePath" == name) {
-            rfile = detail::get_json_string(fi, "filePath");
+            rfile = detail::get_json_string(fi);
         } else if ("metadata" == name) {
             metadata = ss::dump_json_to_string(fi.value());
         } else {

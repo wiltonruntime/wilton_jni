@@ -58,6 +58,29 @@ std::string db_transaction_commit(const std::string& data, void* object);
 
 std::string db_transaction_rollback(const std::string& data, void* object);
 
+// Server
+
+std::string server_create(const std::string& data, void* object);
+
+std::string server_stop(const std::string& data, void* object);
+
+std::string request_get_metadata(const std::string& data, void* object);
+
+std::string request_get_data(const std::string& data, void* object);
+
+std::string request_get_data_filename(const std::string& data, void* object);
+
+std::string request_set_response_metadata(const std::string& data, void* object);
+
+std::string request_send_response(const std::string& data, void* object);
+
+std::string request_send_temp_file(const std::string& data, void* object);
+
+std::string request_send_mustache(const std::string& data, void* object);
+
+std::string request_send_later(const std::string& data, void* object);
+
+std::string request_send_with_response_writer(const std::string& data, void* object);
 
 
 // internal
@@ -72,12 +95,18 @@ std::string wrap_wilton_output(char* out, int out_len);
 
 // json parse
 
-const std::string& get_json_string(const staticlib::serialization::JsonField& field, const std::string& name);
+const std::string& get_json_string(const staticlib::serialization::JsonField& field);
 
-int64_t get_json_handle(const staticlib::serialization::JsonField& field, const std::string& name);
+int64_t get_json_handle(const staticlib::serialization::JsonField& field);
 
 const staticlib::serialization::JsonValue& get_json_object(
-        const staticlib::serialization::JsonField& field, const std::string& name);
+        const staticlib::serialization::JsonField& field);
+
+// JNI
+
+void* /* JNIEnv* */ get_jni_env();
+
+void* /* jmethodID */ get_gateway_method();
 
 template<typename T>
 class handle_registry {

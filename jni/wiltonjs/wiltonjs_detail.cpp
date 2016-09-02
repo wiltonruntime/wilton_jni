@@ -32,18 +32,18 @@ std::string wrap_wilton_output(char* out, int out_len) {
     return res;
 }
 
-const std::string& get_json_string(const ss::JsonField& field, const std::string& name) {
+const std::string& get_json_string(const ss::JsonField& field) {
     if (ss::JsonType::STRING != field.type() || field.as_string().empty()) {
-        throw WiltonJsException(TRACEMSG("Invalid '" + name + "' field,"
+        throw WiltonJsException(TRACEMSG("Invalid '" + field.name() + "' field,"
                 " type: [" + ss::stringify_json_type(field.type()) + "]," +
                 " value: [" + ss::dump_json_to_string(field.value()) + "]"));
     }
     return field.as_string();
 }
 
-int64_t get_json_handle(const ss::JsonField& field, const std::string& name) {
+int64_t get_json_handle(const ss::JsonField& field) {
     if (ss::JsonType::INTEGER != field.type()) {
-        throw WiltonJsException(TRACEMSG("Invalid '" + name + "' field,"
+        throw WiltonJsException(TRACEMSG("Invalid '" + field.name() + "' field,"
                 " type: [" + ss::stringify_json_type(field.type()) + "]," +
                 " value: [" + ss::dump_json_to_string(field.value()) + "]"));
     }
@@ -51,9 +51,9 @@ int64_t get_json_handle(const ss::JsonField& field, const std::string& name) {
 }
 
 const ss::JsonValue& get_json_object(
-        const ss::JsonField& field, const std::string& name) {
+        const ss::JsonField& field) {
     if (ss::JsonType::OBJECT != field.type()) {
-        throw WiltonJsException(TRACEMSG("Invalid '" + name + "' field,"
+        throw WiltonJsException(TRACEMSG("Invalid '" + field.name() + "' field,"
                 " type: [" + ss::stringify_json_type(field.type()) + "]," +
                 " value: [" + ss::dump_json_to_string(field.value()) + "]"));
     }

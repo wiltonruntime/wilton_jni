@@ -39,28 +39,4 @@ public class WiltonJni {
 
     public static native String wiltoncall(String name, String data, Object object);
 
-    // server
-
-    public static native long createServer(Object gateway, String conf) throws WiltonException;
-
-    public static native void stopServer(long serverHandle) throws WiltonException;
-
-    public static native String getRequestMetadata(long requestHandle) throws WiltonException;
-
-    public static native String getRequestData(long requestHandle) throws WiltonException;
-
-    public static native String getRequestDataFilename(long requestHandle) throws WiltonException;
-
-    public static native void setResponseMetadata(long requestHandle, String conf) throws WiltonException;
-
-    public static native void sendResponse(long requestHandle, String data) throws WiltonException;
-
-    public static native void sendTempFile(long requestHandle, String filePath) throws WiltonException;
-
-    public static native void sendMustache(long requestHandle, String mustacheFilePath, String valuesJson) throws WiltonException;
-
-    public static native long sendLater(long requestHandle) throws WiltonException;
-
-    public static native long sendWithResponseWriter(long responseWriterHandle, String data) throws WiltonException;
-
 }

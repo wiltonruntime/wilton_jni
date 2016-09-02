@@ -39,9 +39,9 @@ std::string logger_log(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("level" == name) {
-            rlevel = detail::get_json_string(fi, "level");
+            rlevel = detail::get_json_string(fi);
         } else if ("logger" == name) {
-            rlogger = detail::get_json_string(fi, "logger");
+            rlogger = detail::get_json_string(fi);
         } else if ("message" == name) {
             rmessage = fi.as_string();
         } else {
@@ -71,9 +71,9 @@ std::string logger_is_level_enabled(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("level" == name) {
-            rlevel = detail::get_json_string(fi, "level");
+            rlevel = detail::get_json_string(fi);
         } else if ("logger" == name) {
-            rlogger = detail::get_json_string(fi, "logger");
+            rlogger = detail::get_json_string(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }

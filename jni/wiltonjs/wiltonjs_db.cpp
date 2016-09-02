@@ -53,9 +53,9 @@ std::string db_connection_query(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("connectionHandle" == name) {
-            handle = detail::get_json_handle(fi, "connectionHandle");
+            handle = detail::get_json_handle(fi);
         } else if ("sql" == name) {
-            rsql = detail::get_json_string(fi, "sql");
+            rsql = detail::get_json_string(fi);
         } else if ("params" == name) {
             params = ss::dump_json_to_string(fi.value());
         } else {
@@ -94,9 +94,9 @@ std::string db_connection_execute(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("connectionHandle" == name) {
-            handle = detail::get_json_handle(fi, "connectionHandle");
+            handle = detail::get_json_handle(fi);
         } else if ("sql" == name) {
-            rsql = detail::get_json_string(fi, "sql");
+            rsql = detail::get_json_string(fi);
         } else if ("params" == name) {
             params = ss::dump_json_to_string(fi.value());
         } else {
@@ -131,7 +131,7 @@ std::string db_connection_close(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("connectionHandle" == name) {
-            handle = detail::get_json_handle(fi, "connectionHandle");
+            handle = detail::get_json_handle(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
@@ -159,7 +159,7 @@ std::string db_transaction_start(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("connectionHandle" == name) {
-            handle = detail::get_json_handle(fi, "connectionHandle");
+            handle = detail::get_json_handle(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
@@ -188,7 +188,7 @@ std::string db_transaction_commit(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("transactionHandle" == name) {
-            handle = detail::get_json_handle(fi, "transactionHandle");
+            handle = detail::get_json_handle(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
@@ -215,7 +215,7 @@ std::string db_transaction_rollback(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("transactionHandle" == name) {
-            handle = detail::get_json_handle(fi, "transactionHandle");
+            handle = detail::get_json_handle(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
