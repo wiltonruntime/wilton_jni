@@ -63,20 +63,4 @@ public class WiltonJni {
 
     public static native long sendWithResponseWriter(long responseWriterHandle, String data) throws WiltonException;
 
-    // DB
-
-    public static native long openDbConnection(String url) throws WiltonException;
-
-    public static native String dbQuery(long connectionHandle, String sql, String paramsJson) throws WiltonException;
-
-    public static native void dbExecute(long connectionHandle, String sql, String paramsJson) throws WiltonException;
-
-    public static native void closeDbConnection(long connectionHandle) throws WiltonException;
-
-    public static native long startDbTransaction(long connectionHandle) throws WiltonException;
-
-    public static native void commitDbTransaction(long transactionHandle) throws WiltonException;
-
-    public static native void rollbackDbTransaction(long transactionHandle) throws WiltonException;
-
 }

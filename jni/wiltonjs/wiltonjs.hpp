@@ -42,6 +42,24 @@ std::string logger_log(const std::string& data, void* object);
 
 std::string logger_is_level_enabled(const std::string& data, void* object);
 
+// DB
+
+std::string db_connection_open(const std::string& data, void* object);
+
+std::string db_connection_query(const std::string& data, void* object);
+
+std::string db_connection_execute(const std::string& data, void* object);
+
+std::string db_connection_close(const std::string& data, void* object);
+
+std::string db_transaction_start(const std::string& data, void* object);
+
+std::string db_transaction_commit(const std::string& data, void* object);
+
+std::string db_transaction_rollback(const std::string& data, void* object);
+
+
+
 // internal
 
 namespace detail {

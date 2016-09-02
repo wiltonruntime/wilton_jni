@@ -59,8 +59,11 @@ std::string httpclient_close(const std::string& data, void*) {
             "Invalid 'httpclientHandle' parameter specified: [" + data + "]"));
     // call wilton
     char* err = wilton_HttpClient_close(http);
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
+    if (nullptr != err) {
+        static_registry().put(http);
+        detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
             "\nhttpclient_close error for input data: [" + data + "]"));
+    }
     return "{}";
 }
 

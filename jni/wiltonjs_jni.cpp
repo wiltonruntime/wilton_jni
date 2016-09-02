@@ -65,9 +65,6 @@ public:
 handle_registry<wilton_Server> REGISTRY_SERVERS;
 handle_registry<wilton_Request> REGISTRY_REQUESTS;
 handle_registry<wilton_ResponseWriter> REGISTRY_RESPONSE_WRITERS;
-handle_registry<wilton_DBConnection> REGISTRY_DBCONNS;
-handle_registry<wilton_DBTransaction> REGISTRY_DBTRANS;
-handle_registry<wilton_HttpClient> REGISTRY_HTTPCLIENTS;
 
 void log_error(const std::string& message) {
     static std::string error_level{"ERROR"};
@@ -161,6 +158,15 @@ void register_wiltoncalls() {
     wj::put_wilton_function("logger_initialize", wj::logger_initialize);
     wj::put_wilton_function("logger_log", wj::logger_log);
     wj::put_wilton_function("logger_is_level_enabled", wj::logger_is_level_enabled);
+    
+    wj::put_wilton_function("db_connection_open", wj::db_connection_open);
+    wj::put_wilton_function("db_connection_query", wj::db_connection_query);
+    wj::put_wilton_function("db_connection_execute", wj::db_connection_execute);
+    wj::put_wilton_function("db_connection_close", wj::db_connection_close);
+    wj::put_wilton_function("db_transaction_start", wj::db_transaction_start);
+    wj::put_wilton_function("db_transaction_commit", wj::db_transaction_commit);
+    wj::put_wilton_function("db_transaction_rollback", wj::db_transaction_rollback);
+    
 }
 
 } // namespace
@@ -494,165 +500,6 @@ JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(sendWithResponseWriter)
     char* err = wilton_ResponseWriter_send(writer, data_cstr, data_len);
     env->ReleaseStringUTFChars(data, data_cstr);
     if (nullptr != err) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-    }
-}
-
-// DB
-
-JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(openDbConnection)
-(JNIEnv* env, jclass, jstring url) {
-    if (nullptr == url) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'url' parameter specified").c_str());
-        return 0;
-    }
-    wilton_DBConnection* conn;
-    const char* url_cstr = env->GetStringUTFChars(url, 0);
-    int url_len = static_cast<int> (env->GetStringUTFLength(url));
-    char* err = wilton_DBConnection_open(std::addressof(conn), url_cstr, url_len);
-    env->ReleaseStringUTFChars(url, url_cstr);
-    if (nullptr == err) {
-        return REGISTRY_DBCONNS.put(conn);
-    } else {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-        return 0;
-    }
-}
-
-JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(dbQuery)
-(JNIEnv* env, jclass, jlong connectionHandle, jstring sql, jstring paramsJson) {
-    if (nullptr == sql) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'sql' parameter specified").c_str());
-        return nullptr;
-    }
-    if (nullptr == paramsJson) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'paramsJson' parameter specified").c_str());
-        return nullptr;
-    }
-    wilton_DBConnection* conn = REGISTRY_DBCONNS.remove(connectionHandle);
-    if (nullptr == conn) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Invalid 'connectionHandle' parameter specified:" +
-                " [" + sc::to_string(connectionHandle) + "]").c_str());
-        return nullptr;
-    }
-    const char* sql_cstr = env->GetStringUTFChars(sql, 0);
-    int sql_len = static_cast<int> (env->GetStringUTFLength(sql));
-    const char* paramsJson_cstr = env->GetStringUTFChars(paramsJson, 0);
-    int paramsJson_len = static_cast<int> (env->GetStringUTFLength(paramsJson));
-    char* data;
-    int data_len;
-    char* err = wilton_DBConnection_query(conn, sql_cstr, sql_len, paramsJson_cstr, paramsJson_len, 
-            std::addressof(data), std::addressof(data_len));
-    REGISTRY_DBCONNS.put(conn);
-    env->ReleaseStringUTFChars(sql, sql_cstr);
-    env->ReleaseStringUTFChars(paramsJson, paramsJson_cstr);
-    if (nullptr == err) {
-        // consider it nul-terminated
-        jstring res = env->NewStringUTF(data);
-        wilton_free(data);
-        return res;
-    } else {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-        return nullptr;
-    }
-}
-
-JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(dbExecute)
-(JNIEnv* env, jclass, jlong connectionHandle, jstring sql, jstring paramsJson) {
-    if (nullptr == sql) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'sql' parameter specified").c_str());
-        return;
-    }
-    if (nullptr == paramsJson) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'paramsJson' parameter specified").c_str());
-        return;
-    }
-    wilton_DBConnection* conn = REGISTRY_DBCONNS.remove(connectionHandle);
-    if (nullptr == conn) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Invalid 'connectionHandle' parameter specified:" +
-                " [" + sc::to_string(connectionHandle) + "]").c_str());
-        return;
-    }
-    const char* sql_cstr = env->GetStringUTFChars(sql, 0);
-    int sql_len = static_cast<int> (env->GetStringUTFLength(sql));
-    const char* paramsJson_cstr = env->GetStringUTFChars(paramsJson, 0);
-    int paramsJson_len = static_cast<int> (env->GetStringUTFLength(paramsJson));
-    char* err = wilton_DBConnection_execute(conn, sql_cstr, sql_len, paramsJson_cstr, paramsJson_len);
-    REGISTRY_DBCONNS.put(conn);
-    env->ReleaseStringUTFChars(sql, sql_cstr);
-    env->ReleaseStringUTFChars(paramsJson, paramsJson_cstr);
-    if (nullptr != err) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-    }
-}
-
-JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(closeDbConnection)
-(JNIEnv* env, jclass, jlong connectionHandle) {
-    wilton_DBConnection* conn = REGISTRY_DBCONNS.remove(connectionHandle);
-    if (nullptr == conn) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Invalid 'connectionHandle' parameter specified:" +
-                " [" + sc::to_string(connectionHandle) + "]").c_str());
-        return;
-    }
-    char* err = wilton_DBConnection_close(conn);
-    if (nullptr != err) {
-        REGISTRY_DBCONNS.put(conn);
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-    }    
-}
-
-JNIEXPORT jlong JNICALL WILTON_JNI_FUNCTION(startDbTransaction)
-(JNIEnv* env, jclass, jlong connectionHandle) {
-    wilton_DBConnection* conn = REGISTRY_DBCONNS.remove(connectionHandle);
-    if (nullptr == conn) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Invalid 'connectionHandle' parameter specified:" +
-                " [" + sc::to_string(connectionHandle) + "]").c_str());
-        return 0;
-    }
-    wilton_DBTransaction* tran;
-    char* err = wilton_DBTransaction_start(conn, std::addressof(tran));
-    REGISTRY_DBCONNS.put(conn);
-    if (nullptr == err) {
-        return REGISTRY_DBTRANS.put(tran);
-    } else {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-        return 0;
-    }
-}
-
-JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(commitDbTransaction)
-(JNIEnv* env, jclass, jlong transactionHandle) {
-    wilton_DBTransaction* tran = REGISTRY_DBTRANS.remove(transactionHandle);
-    if (nullptr == tran) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Invalid 'transactionHandle' parameter specified:" +
-                " [" + sc::to_string(transactionHandle) + "]").c_str());
-        return;
-    }
-    char* err = wilton_DBTransaction_commit(tran);
-    if (nullptr != err) {
-        REGISTRY_DBTRANS.put(tran);
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
-        wilton_free(err);
-    }
-}
-
-JNIEXPORT void JNICALL WILTON_JNI_FUNCTION(rollbackDbTransaction)
-(JNIEnv* env, jclass, jlong transactionHandle) {
-    wilton_DBTransaction* tran = REGISTRY_DBTRANS.remove(transactionHandle);
-    if (nullptr == tran) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Invalid 'transactionHandle' parameter specified:" +
-                " [" + sc::to_string(transactionHandle) + "]").c_str());
-        return;
-    }
-    char* err = wilton_DBTransaction_rollback(tran);
-    if (nullptr != err) {
-        REGISTRY_DBTRANS.put(tran);
         env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(err).c_str());
         wilton_free(err);
     }

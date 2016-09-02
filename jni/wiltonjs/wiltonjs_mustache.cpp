@@ -7,6 +7,8 @@
 
 #include "wiltonjs/wiltonjs.hpp"
 
+#include <functional>
+
 #include "staticlib/serialization.hpp"
 
 #include "wilton/wilton.h"
@@ -37,7 +39,7 @@ std::string mustache_render(const std::string& data, void*) {
         }
     }
     if (rtemplate.get().empty()) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'level' not specified, data: [" + data + "]"));
+            "Required parameter 'template' not specified, data: [" + data + "]"));
     const std::string& templade = rtemplate.get();
     if (values.empty()) {
         values = "{}";

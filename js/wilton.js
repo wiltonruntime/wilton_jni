@@ -268,7 +268,9 @@ define(function () {
         try {
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             this.url = conf.url;
-            this.handle = this.jni.openDbConnection(this.url);
+            var handleJson = this.jni.wiltoncall("db_connection_open", this.url);
+            var handleParsed = JSON.parse(handleJson);
+            this.handle = handleParsed.connectionHandle;
             if ("function" === typeof (conf.onSuccess)) {
                 conf.onSuccess(this);
             }
@@ -286,11 +288,13 @@ define(function () {
                     sql = String(sql);
                 }
                 if ("undefined" === typeof (params) || null === params) {
-                    params = "";
-                } else if ("string" !== typeof (params)) {
-                    params = JSON.stringify(params);
+                    params = {};
                 }
-                this.jni.dbExecute(this.handle, sql, params);
+                this.jni.wiltoncall("db_connection_execute", JSON.stringify({
+                    connectionHandle: this.handle,
+                    sql: sql,
+                    params: params
+                }));
                 if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
@@ -308,10 +312,12 @@ define(function () {
                 }
                 if ("undefined" === typeof (params) || null === params) {
                     params = "";
-                } else if ("string" !== typeof (params)) {
-                    params = JSON.stringify(params);
                 }
-                var json = this.jni.dbQuery(this.handle, sql, params);
+                var json = this.jni.wiltoncall("db_connection_query", JSON.stringify({
+                    connectionHandle: this.handle,
+                    sql: sql,
+                    params: params
+                }));
                 var res = JSON.parse(json);
                 if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
                     options.onSuccess(res);
@@ -349,12 +355,19 @@ define(function () {
         
         doInTransaction: function (callback, options) {
             try {
-                var tran = this.jni.startDbTransaction(this.handle);
+                var tranJson = this.jni.wiltoncall("db_transaction_start", JSON.stringify({
+                    connectionHandle: this.handle
+                }));
+                var tran = JSON.parse(tranJson);
                 try {
                     callback();
-                    this.jni.commitDbTransaction(tran);
+                    this.jni.wiltoncall("db_transaction_commit", JSON.stringify({
+                        transactionHandle: tran.transactionHandle
+                    }));
                 } catch (e) {
-                    this.jni.rollbackDbTransaction(tran);
+                    this.jni.wiltoncall("db_transaction_rollback", JSON.stringify({
+                        transactionHandle: tran.transactionHandle
+                    }));
                     if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
                         options.onError(e);
                     }
@@ -371,7 +384,9 @@ define(function () {
         
         close: function(options) {
             try {
-                this.jni.closeDbConnection(this.handle);
+                this.jni.wiltoncall("db_connection_close", JSON.stringify({
+                    connectionHandle: this.handle
+                }));
                 if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
