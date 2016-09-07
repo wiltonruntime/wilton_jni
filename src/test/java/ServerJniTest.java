@@ -286,6 +286,50 @@ public class ServerJniTest {
     }
 
     @Test
+    public void testMustachePartials() throws Exception {
+        long handle = 0;
+        File dir = null;
+        CloseableHttpResponse resp = null;
+        try {
+            dir = Files.createTempDir();
+            File file = new File(dir, "test.mustache");
+            FileUtils.writeStringToFile(file, "<h2>Names</h2>{{#names}}{{> user}}{{/names}}");
+            File partialsDir = new File(dir, "partials");
+            partialsDir.mkdirs();
+            File part = new File(partialsDir, "user.mustache");
+            FileUtils.writeStringToFile(part, "<strong>{{name}}</strong>");
+            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+                    .put("tcpPort", TCP_PORT)
+                    .put("mustache", ImmutableMap.builder()
+                            .put("partialsDirs", ImmutableList.builder()
+                                    .add(partialsDir.getAbsolutePath())
+                                    .build())
+                            .build())
+                    .build()), new TestGateway());
+            Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
+            handle = shamap.get("serverHandle");
+            assertEquals(ROOT_RESP, httpGet(ROOT_URL));
+            HttpPost post = new HttpPost(ROOT_URL + "mustache");
+            post.setEntity(new StringEntity(GSON.toJson(ImmutableMap.builder()
+                    .put("names", ImmutableList.builder()
+                            .add(ImmutableMap.builder().put("name", "Chris").build())
+                            .add(ImmutableMap.builder().put("name", "Mark").build())
+                            .add(ImmutableMap.builder().put("name", "Scott").build())
+                            .build())
+                    .build())));
+            post.addHeader("X-Mustache-File", file.getAbsolutePath());
+            resp = http.execute(post);
+            assertEquals(200, resp.getStatusLine().getStatusCode());
+            String contents = EntityUtils.toString(resp.getEntity(), "UTF-8");
+            assertEquals("<h2>Names</h2><strong>Chris</strong><strong>Mark</strong><strong>Scott</strong>", contents);
+        } finally {
+            closeQuietly(resp);
+            stopServerQuietly(handle);
+            FileUtils.deleteDirectory(dir);
+        }
+    }
+
+    @Test
     public void testHttps() throws Exception {
         long handle = 0;
         CloseableHttpClient https = null;

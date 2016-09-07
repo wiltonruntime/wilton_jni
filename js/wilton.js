@@ -33,7 +33,7 @@ define(function () {
         this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
         this.name = "string" === typeof (name) ? name : "wilton";
     };
-
+    
     Logger.prototype = {
         append: function (level, message) {
             try {
