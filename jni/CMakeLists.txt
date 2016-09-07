@@ -100,6 +100,7 @@ set_property ( GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE )
 add_library ( ${PROJECT_NAME} SHARED
         ${CMAKE_CURRENT_LIST_DIR}/wiltonjs/wiltoncall.cpp 
         ${CMAKE_CURRENT_LIST_DIR}/wiltonjs/wiltonjs_db.cpp 
+        ${CMAKE_CURRENT_LIST_DIR}/wiltonjs/wiltonjs_cron.cpp 
         ${CMAKE_CURRENT_LIST_DIR}/wiltonjs/wiltonjs_detail.cpp 
         ${CMAKE_CURRENT_LIST_DIR}/wiltonjs/wiltonjs_httpclient.cpp 
         ${CMAKE_CURRENT_LIST_DIR}/wiltonjs/wiltonjs_logger.cpp 

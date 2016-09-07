@@ -31,6 +31,8 @@ namespace wj = wiltonjs;
 JavaVM* JAVA_VM;
 jclass GATEWAY_INTERFACE_CLASS;
 jmethodID GATEWAY_CALLBACK_METHOD;
+jclass RUNNABLE_INTERFACE_CLASS;
+jmethodID RUNNABLE_CALLBACK_METHOD;
 jclass EXCEPTION_CLASS;
 
 std::string jstring_to_str(JNIEnv* env, jstring jstr) {
@@ -72,6 +74,9 @@ void register_wiltoncalls() {
     wj::put_wilton_function("request_send_mustache", wj::request_send_mustache);
     wj::put_wilton_function("request_send_later", wj::request_send_later);
     wj::put_wilton_function("request_send_with_response_writer", wj::request_send_with_response_writer);
+    
+    wj::put_wilton_function("cron_start", wj::cron_start);
+    wj::put_wilton_function("cron_stop", wj::cron_stop);
 }
 
 } // namespace
@@ -101,6 +106,10 @@ void* /* jmethodID */ get_gateway_method() {
     return static_cast<void*> (GATEWAY_CALLBACK_METHOD);
 }
 
+void* /* jmethodID */ get_runnable_method() {
+    return static_cast<void*> (RUNNABLE_CALLBACK_METHOD);
+}
+
 } // namespace
 }
 
@@ -115,12 +124,19 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {
     if (JNI_OK != err) { return -1; }
     JAVA_VM = vm;
     // gateway
-    jclass gatewayCLass = env->FindClass(WILTON_JNI_GATEWAY_INTERFACE);
-    if (nullptr == gatewayCLass) { return -1; }
-    GATEWAY_INTERFACE_CLASS = static_cast<jclass> (env->NewGlobalRef(gatewayCLass));
+    jclass gatewayClass = env->FindClass(WILTON_JNI_GATEWAY_INTERFACE);
+    if (nullptr == gatewayClass) { return -1; }
+    GATEWAY_INTERFACE_CLASS = static_cast<jclass> (env->NewGlobalRef(gatewayClass));
     if (nullptr == GATEWAY_INTERFACE_CLASS) { return -1; }
     GATEWAY_CALLBACK_METHOD = env->GetMethodID(GATEWAY_INTERFACE_CLASS, "gatewayCallback", "(J)V");
     if (nullptr == GATEWAY_CALLBACK_METHOD) { return -1; }
+    // runnable
+    jclass runnableClass = env->FindClass("java/lang/Runnable");
+    if (nullptr == runnableClass) { return -1; }
+    RUNNABLE_INTERFACE_CLASS = static_cast<jclass> (env->NewGlobalRef(runnableClass));
+    if (nullptr == RUNNABLE_INTERFACE_CLASS) {return -1; }
+    RUNNABLE_CALLBACK_METHOD = env->GetMethodID(RUNNABLE_INTERFACE_CLASS, "run", "()V");
+    if (nullptr == RUNNABLE_CALLBACK_METHOD) { return -1; }
     // exception
     jclass exClass = env->FindClass(WILTON_JNI_EXCEPTION_CLASS);
     if (nullptr == exClass) { return -1; }

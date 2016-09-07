@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-// version 0.2.5
+// version 0.2.6
 
 if ("undefined" === typeof (Packages)) {
     console.log("Error: wilton.js requires Nashorn or Rhino JVM environment");
@@ -34,6 +34,24 @@ define(function () {
         this.name = "string" === typeof (name) ? name : "wilton";
     };
     
+    Logger.initilize = function(conf) {
+        try {
+            var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
+            var onSuccess = conf.onSuccess;
+            var onError = conf.onError;
+            delete conf.onSuccess;
+            delete conf.onError;
+            jni.wiltoncall("logger_initialize", JSON.stringify(conf));
+            if ("function" === typeof (onSuccess)) {
+                onSuccess(this);
+            }
+        } catch (e) {
+            if ("function" === typeof (onError)) {
+                onError(e);
+            }
+        }
+    };
+
     Logger.prototype = {
         append: function (level, message) {
             try {
@@ -228,10 +246,10 @@ define(function () {
                     }));
                     req.data = "" + bdata;
                 }
-                var resp = new Response(this.server, this.jni, requestHandle);
+                var resp = new Response(this, this.jni, requestHandle);
                 cb(req, resp);
             } catch (e) {
-                this.server.logger.error(e);
+                this.logger.error(e);
                 this.jni.wiltoncall("request_set_response_metadata", JSON.stringify({
                     requestHandle: requestHandle,
                     metadata: {
@@ -555,6 +573,58 @@ define(function () {
         }
     };
     
+    // Cron
+    
+    var CronTask = function (conf) {
+        try {
+            this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
+            var onSuccess = conf.onSuccess;
+            var onError = conf.onError;            
+            delete conf.onSuccess;
+            delete conf.onError;
+            if ("function" === typeof(conf.callback)) {
+                var cb = conf.callback;
+                delete conf.callback;
+                var runnable = new Packages.java.lang.Runnable({
+                    run: function () {
+                        cb();
+                    }
+                });
+                var data = JSON.stringify(conf);
+                var handleJson = this.jni.wiltoncall("cron_start", data, runnable);
+                var handleObj = JSON.parse(handleJson);
+                this.handle = handleObj.cronHandle;
+                if ("function" === typeof (onSuccess)) {
+                    onSuccess(this);
+                }
+            } else {
+                onError("Invalid 'callback' specified");
+            }
+        } catch (e) {
+            if ("function" === typeof (onError)) {
+                onError(e);
+            }
+        }
+    };
+    
+    CronTask.prototype = {
+        stop: function(options) {
+            try {
+                var data = JSON.stringify({
+                    cronHandle: this.handle
+                });
+                this.jni.wiltoncall("cron_stop", data);
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                    options.onSuccess();
+                }
+            } catch (e) {
+                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    options.onError(e);
+                }
+            }
+        }
+    };
+    
     // export
     
     return {
@@ -562,7 +632,8 @@ define(function () {
         HttpClient: HttpClient,
         Logger: Logger,
         Mustache: Mustache,
-        Server: Server
+        Server: Server,
+        CronTask: CronTask
     };
     
 });

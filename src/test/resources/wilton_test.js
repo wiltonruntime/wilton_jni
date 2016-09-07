@@ -4,6 +4,7 @@ var httpGet = Packages.utils.TestUtils.httpGet;
 var httpGetHeader = Packages.utils.TestUtils.httpGetHeader;
 var httpPost = Packages.utils.TestUtils.httpPost;
 var assertEquals = Packages.org.junit.Assert.assertEquals;
+var assertTrue = Packages.org.junit.Assert.assertTrue;
 
 var errorCb = function (e) {
     throw e;
@@ -155,3 +156,19 @@ conn.doInTransaction(function() {/* some db actions */}, {
 });
 
 conn.close();
+
+// Cron
+var holder = [0];
+
+var cron = new wilton.CronTask({
+    expression: "* * * * * *",
+    callback: function() {
+        holder[0] += 1;
+    },
+    onError: errorCb
+});
+Packages.java.lang.Thread.sleep(1500);
+assertTrue(1 === holder[0] || 2 === holder[0]);
+cron.stop();
+Packages.java.lang.Thread.sleep(1000);
+assertTrue(2 === holder[0] || 3 === holder[0]);

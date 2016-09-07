@@ -82,6 +82,12 @@ std::string request_send_later(const std::string& data, void* object);
 
 std::string request_send_with_response_writer(const std::string& data, void* object);
 
+// Cron
+
+std::string cron_start(const std::string& data, void* object);
+
+std::string cron_stop(const std::string& data, void* object);
+
 
 // internal
 
@@ -107,6 +113,8 @@ const staticlib::serialization::JsonValue& get_json_object(
 void* /* JNIEnv* */ get_jni_env();
 
 void* /* jmethodID */ get_gateway_method();
+
+void* /* jmethodID */ get_runnable_method();
 
 template<typename T>
 class handle_registry {
