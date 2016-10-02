@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-// version 0.2.6
+// version 0.2.8
 
 if ("undefined" === typeof (Packages)) {
     console.log("Error: wilton.js requires Nashorn or Rhino JVM environment");
@@ -34,7 +34,7 @@ define(function () {
         this.name = "string" === typeof (name) ? name : "wilton";
     };
     
-    Logger.initilize = function(conf) {
+    Logger.initialize = function(conf) {
         try {
             var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             var onSuccess = conf.onSuccess;
@@ -43,11 +43,25 @@ define(function () {
             delete conf.onError;
             jni.wiltoncall("logger_initialize", JSON.stringify(conf));
             if ("function" === typeof (onSuccess)) {
-                onSuccess(this);
+                onSuccess();
             }
         } catch (e) {
             if ("function" === typeof (onError)) {
                 onError(e);
+            }
+        }
+    };
+    
+    Logger.shutdown = function (conf) {
+        try {
+            var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
+            jni.wiltoncall("logger_shutdown");
+            if ("object" === typeof (conf) && null !== conf && "function" === typeof (conf.onSuccess)) {
+                conf.onSuccess();
+            }
+        } catch (e) {
+            if ("object" === typeof (conf) && null !== conf && "function" === typeof (conf.onError)) {
+                conf.onError(e);
             }
         }
     };

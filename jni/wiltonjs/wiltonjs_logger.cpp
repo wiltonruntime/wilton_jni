@@ -95,4 +95,13 @@ std::string logger_is_level_enabled(const std::string& data, void*) {
     });
 }
 
+std::string logger_shutdown(const std::string&, void*) {
+    // call wilton
+    int out;
+    char* err = wilton_logger_shutdown();
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
+            "\nlogger_sutdown error for"));
+    return "{}";
+}
+
 } // namespace

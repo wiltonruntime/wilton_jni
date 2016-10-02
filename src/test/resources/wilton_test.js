@@ -10,23 +10,28 @@ var errorCb = function (e) {
     throw e;
 };
 
-// Server
+// Logging
 
-var server = new wilton.Server({
-    tcpPort: 8080,
-    logging: {
-        appenders: [{
+wilton.Logger.initialize({
+    appenders: [{
             appenderType: "CONSOLE",
             thresholdLevel: "WARN" // lower me for debugging
         }],
-        loggers: [{
+    loggers: [{
             name: "staticlib.httpserver",
             level: "INFO"
         }, {
             name: "wilton",
             level: "DEBUG"
-        }]
-    }, callbacks: {
+        }],
+    onError: errorCb
+});
+
+// Server
+
+var server = new wilton.Server({
+    tcpPort: 8080,
+    callbacks: {
         "/hi": function(req, resp) {
             resp.send("Hi from wilton_test!");
         },
@@ -172,3 +177,8 @@ assertTrue(1 === holder[0] || 2 === holder[0]);
 cron.stop();
 Packages.java.lang.Thread.sleep(1000);
 assertTrue(2 === holder[0] || 3 === holder[0]);
+
+// shutdown
+wilton.Logger.shutdown({
+    onError: errorCb
+});

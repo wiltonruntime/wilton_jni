@@ -54,6 +54,7 @@ void register_wiltoncalls() {
     wj::put_wilton_function("logger_initialize", wj::logger_initialize);
     wj::put_wilton_function("logger_log", wj::logger_log);
     wj::put_wilton_function("logger_is_level_enabled", wj::logger_is_level_enabled);
+    wj::put_wilton_function("logger_shutdown", wj::logger_shutdown);
     
     wj::put_wilton_function("db_connection_open", wj::db_connection_open);
     wj::put_wilton_function("db_connection_query", wj::db_connection_query);
