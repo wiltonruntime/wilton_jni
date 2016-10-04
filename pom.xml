@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.wiltonwebtoolkit</groupId>
     <artifactId>wilton.js</artifactId>
-    <version>0.2.9</version>
+    <version>0.2.10-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Wilton Web Toolkit JNI library</name>
 
@@ -17,7 +17,7 @@
         <url>https://github.com/wilton-web-toolkit/wilton-jni</url>
         <connection>scm:git:https://github.com/wilton-web-toolkit/wilton-jni.git</connection>
         <developerConnection>scm:git:https://github.com/wilton-web-toolkit/wilton-jni.git</developerConnection>
-        <tag>0.2.9</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <dependencies>
