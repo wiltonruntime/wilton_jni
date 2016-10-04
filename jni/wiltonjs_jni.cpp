@@ -78,6 +78,13 @@ void register_wiltoncalls() {
     
     wj::put_wilton_function("cron_start", wj::cron_start);
     wj::put_wilton_function("cron_stop", wj::cron_stop);
+    
+    wj::put_wilton_function("mutex_create", wj::mutex_create);
+    wj::put_wilton_function("mutex_lock", wj::mutex_lock);
+    wj::put_wilton_function("mutex_unlock", wj::mutex_unlock);
+    wj::put_wilton_function("mutex_destroy", wj::mutex_destroy);
+    
+    wj::put_wilton_function("sleep_millis", wj::sleep_millis);
 }
 
 } // namespace

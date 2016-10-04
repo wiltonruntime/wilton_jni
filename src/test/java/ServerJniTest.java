@@ -62,6 +62,7 @@ public class ServerJniTest {
             assertEquals("foo", httpPost(ROOT_URL + "postmirror", "foo"));
             assertEquals(NOT_FOUND_RESP, httpGet(ROOT_URL + "foo"));
             assertEquals(404, httpGetCode(ROOT_URL + "foo"));
+            assertEquals(QUERIES_RESP, httpGet(ROOT_URL + "querymirror?foo=bar&boo=baz&foo=baa"));
         } finally {
             stopServerQuietly(handle);
         }

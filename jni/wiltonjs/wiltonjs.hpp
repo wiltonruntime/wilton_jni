@@ -90,6 +90,20 @@ std::string cron_start(const std::string& data, void* object);
 
 std::string cron_stop(const std::string& data, void* object);
 
+// Mutex
+
+std::string mutex_create(const std::string& data, void* object);
+
+std::string mutex_lock(const std::string& data, void* object);
+
+std::string mutex_unlock(const std::string& data, void* object);
+
+std::string mutex_destroy(const std::string& data, void* object);
+
+// Misc
+
+std::string sleep_millis(const std::string& data, void* object);
+
 
 // internal
 

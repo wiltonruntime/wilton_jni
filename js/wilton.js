@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-// version 0.2.8
+// version 0.2.9
 
 if ("undefined" === typeof (Packages)) {
     console.log("Error: wilton.js requires Nashorn or Rhino JVM environment");
@@ -53,14 +53,17 @@ define(function () {
     };
     
     Logger.shutdown = function (conf) {
+        if ("undefined" === typeof (conf) || null === conf) {
+            conf = {};
+        }
         try {
             var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             jni.wiltoncall("logger_shutdown");
-            if ("object" === typeof (conf) && null !== conf && "function" === typeof (conf.onSuccess)) {
+            if ("function" === typeof (conf.onSuccess)) {
                 conf.onSuccess();
             }
         } catch (e) {
-            if ("object" === typeof (conf) && null !== conf && "function" === typeof (conf.onError)) {
+            if ("function" === typeof (conf.onError)) {
                 conf.onError(e);
             }
         }
@@ -119,8 +122,11 @@ define(function () {
 
     Response.prototype = {
         send: function (data, options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             try {
-                if ("object" === typeof (options) && null !== options && "object" === typeof (options.meta)) {
+                if ("object" === typeof (options) && "object" === typeof (options.meta)) {
                     this.jni.wiltoncall("request_set_response_metadata", JSON.stringify({
                         requestHandle: this.handle,
                         metadata: options.meta
@@ -135,18 +141,21 @@ define(function () {
                     requestHandle: this.handle,
                     data: data
                 }));
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
             } catch (e) {
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                if ("function" === typeof (options.onError)) {
                     options.onError(e);
                 }
             }
         },
         sendTempFile: function (filePath, options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             try {
-                if ("object" === typeof (options) && null !== options && "object" === typeof (options.meta)) {
+                if ("object" === typeof (options) && "object" === typeof (options.meta)) {
                     this.jni.wiltoncall("request_set_response_metadata", JSON.stringify({
                         requestHandle: this.handle,
                         metadata: options.meta
@@ -156,18 +165,21 @@ define(function () {
                     requestHandle: this.handle,
                     filePath: filePath
                 }));
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
             } catch (e) {
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                if ("function" === typeof (options.onError)) {
                     options.onError(e);
                 }
             }
         },
         sendMustache: function (filePath, data, options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             try {
-                if ("object" === typeof (options) && null !== options && "object" === typeof (options.meta)) {
+                if ("object" === typeof (options) && "object" === typeof (options.meta)) {
                     this.jni.wiltoncall("request_set_response_metadata", JSON.stringify({
                         requestHandle: this.handle,
                         metadata: options.meta
@@ -181,11 +193,11 @@ define(function () {
                     mustacheFilePath: filePath,
                     values: data
                 }));
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
             } catch (e) {
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                if ("function" === typeof (options.onError)) {
                     options.onError(e);
                 }
             }
@@ -217,7 +229,7 @@ define(function () {
             var handleObj = JSON.parse(handleJson);
             this.handle = handleObj.serverHandle;
             if ("function" === typeof (onSuccess)) {
-                onSuccess(this);
+                onSuccess();
             }
         } catch (e) {
             if ("function" === typeof (onError)) {
@@ -278,15 +290,18 @@ define(function () {
             }
         },
         stop: function (options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             try {
                 this.jni.wiltoncall("server_stop", JSON.stringify({
                     serverHandle: this.handle
                 }));
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
             } catch (e) {
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                if ("function" === typeof (options.onError)) {
                     options.onError(e);
                 }
             }
@@ -302,6 +317,9 @@ define(function () {
     Mustache.prototype = {
         // todo: revisit API
         render: function(template, values, options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             try {
                 if ("string" !== typeof (template)) {
                     template = String(template);
@@ -314,14 +332,15 @@ define(function () {
                     values: values
                 });
                 var res = this.jni.wiltoncall("mustache_render", data);
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
                 return res;
             } catch (e) {
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                if ("function" === typeof (options.onError)) {
                     options.onError(e);
                 }
+                return "";
             }
         }
     };
@@ -336,7 +355,7 @@ define(function () {
             var handleParsed = JSON.parse(handleJson);
             this.handle = handleParsed.connectionHandle;
             if ("function" === typeof (conf.onSuccess)) {
-                conf.onSuccess(this);
+                conf.onSuccess();
             }
         } catch (e) {
             if ("function" === typeof (conf.onError)) {
@@ -347,6 +366,9 @@ define(function () {
     
     DBConnection.prototype = {
         execute: function(sql, params, options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             try {
                 if ("string" !== typeof (sql)) {
                     sql = String(sql);
@@ -359,17 +381,20 @@ define(function () {
                     sql: sql,
                     params: params
                 }));
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
             } catch (e) {
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                if ("function" === typeof (options.onError)) {
                     options.onError(e);
                 }
             }
         },
         
         queryList: function(sql, params, options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             try {
                 if ("string" !== typeof (sql)) {
                     sql = String(sql);
@@ -383,20 +408,24 @@ define(function () {
                     params: params
                 }));
                 var res = JSON.parse(json);
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess(res);
                 }
                 return res;
             } catch (e) {
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                if ("function" === typeof (options.onError)) {
                     options.onError(e);
                 }
+                return [];
             }
         },
         
         query: function(sql, params, options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             var onError = null;
-            if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+            if ("object" === typeof (options) && "function" === typeof (options.onError)) {
                 onError = options.onError;
             }
             var list = this.queryList(sql, params, {
@@ -409,15 +438,19 @@ define(function () {
                 } else if (1 === list.length) {
                     res = list[0];
                 }
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess(res);
                 }
                 return res;
             }
             // else error happened
+            return {};
         },
         
         doInTransaction: function (callback, options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             try {
                 var tranJson = this.jni.wiltoncall("db_transaction_start", JSON.stringify({
                     connectionHandle: this.handle
@@ -432,30 +465,33 @@ define(function () {
                     this.jni.wiltoncall("db_transaction_rollback", JSON.stringify({
                         transactionHandle: tran.transactionHandle
                     }));
-                    if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                    if ("function" === typeof (options.onError)) {
                         options.onError(e);
                     }
                 }
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
             } catch (e) {
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                if ("function" === typeof (options.onError)) {
                     options.onError(e);
                 }
             }
         },
         
         close: function(options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             try {
                 this.jni.wiltoncall("db_connection_close", JSON.stringify({
                     connectionHandle: this.handle
                 }));
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
             } catch (e) {
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                if ("function" === typeof (options.onError)) {
                     options.onError(e);
                 }
             }
@@ -479,7 +515,7 @@ define(function () {
             var out = JSON.parse(json);
             this.handle = out.httpclientHandle;
             if ("function" === typeof (onSuccess)) {
-                onSuccess(this);
+                onSuccess();
             }
         } catch (e) {
             if ("function" === typeof (onError)) {
@@ -531,10 +567,14 @@ define(function () {
                 if ("function" === typeof (onError)) {
                     onError(e);
                 }
+                return {};
             }
         },
         
         sendTempFile: function(url, filePath, options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             try {
                 if ("undefined" === typeof (url) || null === url) {
                     url = "";
@@ -559,28 +599,32 @@ define(function () {
                 });
                 var resp_json = this.jni.wiltoncall("httpclient_send_temp_file", data);
                 var resp = JSON.parse(resp_json);
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess(resp);
                 }
                 return resp;
             } catch (e) {
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                if ("function" === typeof (options.onError)) {
                     options.onError(e);
                 }
+                return {};
             }
         },
         
         close: function(options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             try {
                 var data = JSON.stringify({
                     httpclientHandle: this.handle
                 });
                 this.jni.wiltoncall("httpclient_close", data);
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
             } catch (e) {
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                if ("function" === typeof (options.onError)) {
                     options.onError(e);
                 }
             }
@@ -609,7 +653,7 @@ define(function () {
                 var handleObj = JSON.parse(handleJson);
                 this.handle = handleObj.cronHandle;
                 if ("function" === typeof (onSuccess)) {
-                    onSuccess(this);
+                    onSuccess();
                 }
             } else {
                 onError("Invalid 'callback' specified");
@@ -623,21 +667,99 @@ define(function () {
     
     CronTask.prototype = {
         stop: function(options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
             try {
                 var data = JSON.stringify({
                     cronHandle: this.handle
                 });
                 this.jni.wiltoncall("cron_stop", data);
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onSuccess)) {
+                if ("function" === typeof (options.onSuccess)) {
                     options.onSuccess();
                 }
             } catch (e) {
-                if ("object" === typeof (options) && null !== options && "function" === typeof (options.onError)) {
+                if ("function" === typeof (options.onError)) {
                     options.onError(e);
                 }
             }
         }
     };
+    
+    // Mutex
+    
+    var Mutex = function (options) {
+        if ("undefined" === typeof (options) || null === options) {
+            options = {};
+        }
+        try {
+            this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
+            var handleJson = this.jni.wiltoncall("mutex_create");
+            var handleObj = JSON.parse(handleJson);
+            this.handle = handleObj.mutexHandle;
+            if ("function" === typeof (options.onSuccess)) {
+                options.onSuccess();
+            }
+        } catch (e) {
+            if ("function" === typeof (options.onError)) {
+                options.onError(e);
+            }
+        }
+    };
+    
+    Mutex.prototype = {
+        synchronized: function (options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
+            try {
+                if ("function" !== typeof (options.callback)) {
+                    if ("function" === typeof (options.onError)) {
+                        options.onError("Required 'callback' attribute not specified");
+                    }
+                    return {};
+                }
+                var data = JSON.stringify({
+                    mutexHandle: this.handle
+                });
+                var res = {};
+                try {
+                    this.jni.wiltoncall("mutex_lock", data);
+                    res = options.callback();
+                } finally {
+                    this.jni.wiltoncall("mutex_unlock", data);
+                }                
+                if ("function" === typeof (options.onSuccess)) {
+                    options.onSuccess(res);
+                }
+                return res;
+            } catch (e) {
+                if ("function" === typeof (options.onError)) {
+                    options.onError(e);
+                    return {};
+                }
+            }
+        },
+        destroy: function(options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
+            try {
+                var data = JSON.stringify({
+                    mutexHandle: this.handle
+                });
+                this.jni.wiltoncall("mutex_destroy", data);
+                if ("function" === typeof (options.onSuccess)) {
+                    options.onSuccess();
+                }
+            } catch (e) {
+                if ("function" === typeof (options.onError)) {
+                    options.onError(e);
+                }
+            }
+        }
+    };
+    
     
     // export
     
@@ -647,7 +769,8 @@ define(function () {
         Logger: Logger,
         Mustache: Mustache,
         Server: Server,
-        CronTask: CronTask
+        CronTask: CronTask,
+        Mutex: Mutex
     };
     
 });

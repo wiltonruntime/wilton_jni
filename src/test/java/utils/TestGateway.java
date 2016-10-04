@@ -17,6 +17,10 @@ public class TestGateway implements WiltonGateway {
     public static final String ROOT_RESP = "Hello Java!\n";
     public static final String NOT_FOUND_RESP = "Not found\n";
     public static final String ASYNC_RESP = "Hello from Async\n";
+    public static final String QUERIES_RESP = "{\n" +
+            "  \"foo\": \"baa,bar\",\n" +
+            "  \"boo\": \"baz\"\n" +
+            "}";
     public static final int TCP_PORT = 8080;
     public static final int TCP_PORT_HTTPS = 8443;
     public static final String ROOT_URL = "http://127.0.0.1:" + TCP_PORT + "/";
@@ -53,6 +57,8 @@ public class TestGateway implements WiltonGateway {
                 resp = wiltoncall("request_get_data", GSON.toJson(ImmutableMap.builder()
                         .put("requestHandle", requestHandle)
                         .build()));
+            } else if ("/querymirror".equalsIgnoreCase(path)) {
+                resp = GSON.toJson(metaMap.get("queries"));
             } else if ("/logger".equalsIgnoreCase(path)) {
                 String msg = wiltoncall("request_get_data", GSON.toJson(ImmutableMap.builder()
                         .put("requestHandle", requestHandle)

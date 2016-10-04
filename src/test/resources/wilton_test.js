@@ -178,6 +178,21 @@ cron.stop();
 Packages.java.lang.Thread.sleep(1000);
 assertTrue(2 === holder[0] || 3 === holder[0]);
 
+// Mutex
+
+var mutex = new wilton.Mutex();
+var mholder = [0];
+mutex.synchronized({
+    callback: function() {
+        mholder[0] += 1;
+    },
+    onError: errorCb
+});
+mutex.destroy({
+    onError: errorCb
+});
+assertTrue(1 === mholder[0]);
+
 // shutdown
 wilton.Logger.shutdown({
     onError: errorCb
