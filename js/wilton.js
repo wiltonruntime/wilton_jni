@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-// version 0.2.9
+// version 0.2.10
 
 if ("undefined" === typeof (Packages)) {
     console.log("Error: wilton.js requires Nashorn or Rhino JVM environment");
@@ -315,7 +315,6 @@ define(function () {
     };
     
     Mustache.prototype = {
-        // todo: revisit API
         render: function(template, values, options) {
             if ("undefined" === typeof (options) || null === options) {
                 options = {};
@@ -333,7 +332,35 @@ define(function () {
                 });
                 var res = this.jni.wiltoncall("mustache_render", data);
                 if ("function" === typeof (options.onSuccess)) {
-                    options.onSuccess();
+                    options.onSuccess(res);
+                }
+                return res;
+            } catch (e) {
+                if ("function" === typeof (options.onError)) {
+                    options.onError(e);
+                }
+                return "";
+            }
+        },
+        
+        renderFile: function (templateFile, values, options) {
+            if ("undefined" === typeof (options) || null === options) {
+                options = {};
+            }
+            try {
+                if ("string" !== typeof (templateFile)) {
+                    templateFile = String(templateFile);
+                }
+                if ("undefined" === typeof (values) || null === values) {
+                    values = {};
+                }
+                var data = JSON.stringify({
+                    file: templateFile,
+                    values: values
+                });
+                var res = this.jni.wiltoncall("mustache_render_file", data);
+                if ("function" === typeof (options.onSuccess)) {
+                    options.onSuccess(res);
                 }
                 return res;
             } catch (e) {

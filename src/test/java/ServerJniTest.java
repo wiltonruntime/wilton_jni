@@ -239,20 +239,21 @@ public class ServerJniTest {
     @Test
     public void testMustache() throws Exception {
         String template = "{{#names}}Hi {{name}}!\n{{/names}}";
+        ImmutableMap<String, Object> values = ImmutableMap.<String, Object>builder()
+                .put("names", ImmutableList.builder()
+                        .add(ImmutableMap.builder().put("name", "Chris").build())
+                        .add(ImmutableMap.builder().put("name", "Mark").build())
+                        .add(ImmutableMap.builder().put("name", "Scott").build())
+                        .build())
+                .build();
         ImmutableMap<String, Object> json = ImmutableMap.<String, Object>builder()
                 .put("template", template)
-                .put("values", ImmutableMap.builder()
-                        .put("names", ImmutableList.builder()
-                                .add(ImmutableMap.builder().put("name", "Chris").build())
-                                .add(ImmutableMap.builder().put("name", "Mark").build())
-                                .add(ImmutableMap.builder().put("name", "Scott").build())
-                                .build())
-                        .build())
+                .put("values", values)
                 .build();
         String expected = "Hi Chris!\nHi Mark!\nHi Scott!\n";
 
         // test mustache direct processing
-        String processed = wiltoncall("mustache_render", GSON.toJson(json), null);
+        String processed = wiltoncall("mustache_render", GSON.toJson(json));
         assertEquals(expected, processed);
 
         // test file processing
@@ -263,6 +264,14 @@ public class ServerJniTest {
             dir = Files.createTempDir();
             File file = new File(dir, "test.mustache");
             FileUtils.writeStringToFile(file, template);
+
+            // test mustache from file processing
+            String fprocessed = wiltoncall("mustache_render_file", GSON.toJson(ImmutableMap.<String, Object>builder()
+                    .put("file", file.getAbsolutePath())
+                    .put("values", values)
+                    .build()));
+            assertEquals(expected, fprocessed);
+
             String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
                    .put("tcpPort", TCP_PORT)
                    .build()), new TestGateway());

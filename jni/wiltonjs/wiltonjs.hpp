@@ -24,6 +24,8 @@ namespace wiltonjs {
 
 std::string mustache_render(const std::string& data, void* object);
 
+std::string mustache_render_file(const std::string& data, void* object);
+
 // HttpClient
 
 std::string httpclient_create(const std::string& data, void* object);

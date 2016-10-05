@@ -53,5 +53,36 @@ std::string mustache_render(const std::string& data, void*) {
             "\nMustache render error for input data: [" + data + "]"));
     return detail::wrap_wilton_output(out, out_len);
 }
+
+std::string mustache_render_file(const std::string& data, void*) {
+    // parse json
+    ss::JsonValue json = ss::load_json_from_string(data);
+    auto rfile = std::ref(EMPTY_STRING);
+    std::string values = EMPTY_STRING;
+    for (const ss::JsonField& fi : json.as_object()) {
+        auto& name = fi.name();
+        if ("file" == name) {
+            rfile = detail::get_json_string(fi);
+        } else if ("values" == name) {
+            values = ss::dump_json_to_string(fi.value());
+        } else {
+            throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
+        }
+    }
+    if (rfile.get().empty()) throw WiltonJsException(TRACEMSG(
+            "Required parameter 'file' not specified, data: [" + data + "]"));
+    const std::string& file = rfile.get();
+    if (values.empty()) {
+        values = "{}";
+    }
+    // call wilton
+    char* out;
+    int out_len;
+    char* err = wilton_render_mustache_file(file.c_str(), file.length(),
+            values.c_str(), values.length(), std::addressof(out), std::addressof(out_len));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
+            "\nMustache file render error for input data: [" + data + "]"));
+    return detail::wrap_wilton_output(out, out_len);
+}
     
 } // namespace

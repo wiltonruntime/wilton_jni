@@ -45,6 +45,7 @@ std::string jstring_to_str(JNIEnv* env, jstring jstr) {
 
 void register_wiltoncalls() {
     wj::put_wilton_function("mustache_render", wj::mustache_render);
+    wj::put_wilton_function("mustache_render_file", wj::mustache_render_file);
     
     wj::put_wilton_function("httpclient_create", wj::httpclient_create);
     wj::put_wilton_function("httpclient_close", wj::httpclient_close);
