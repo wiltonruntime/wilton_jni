@@ -6,10 +6,6 @@ var httpPost = Packages.utils.TestUtils.httpPost;
 var assertEquals = Packages.org.junit.Assert.assertEquals;
 var assertTrue = Packages.org.junit.Assert.assertTrue;
 
-var errorCb = function (e) {
-    throw e;
-};
-
 // Logging
 
 wilton.Logger.initialize({
@@ -23,15 +19,14 @@ wilton.Logger.initialize({
         }, {
             name: "wilton",
             level: "DEBUG"
-        }],
-    onError: errorCb
+        }]
 });
 
 // Server
 
 var server = new wilton.Server({
     tcpPort: 8080,
-    callbacks: {
+    views: {
         "/hi": function(req, resp) {
             resp.send("Hi from wilton_test!");
         },
@@ -46,7 +41,7 @@ var server = new wilton.Server({
                 meta: {
                     foo: "bar"
                 },
-                onError: function () {
+                onFailure: function () {
                     resp.send("Error triggered");
                 }
             });
@@ -60,16 +55,13 @@ var server = new wilton.Server({
                     headers: {
                         "X-Foo": "foo"
                     }
-                },
-                onError: errorCb
+                }
             });
         },
         "/postmirror": function (req, resp) {
-            resp.send(req.data, {
-                onError: errorCb
-            });
+            resp.send(req.data);
         }
-    }, onError: errorCb
+    }
 });
 
 var prefix = "http://127.0.0.1:8080";
@@ -85,22 +77,22 @@ assertEquals("foobar", httpPost(prefix + "/postmirror", "foobar"));
 // HttpClient
 var http = new wilton.HttpClient();
 var resp = http.execute(prefix + "/hi", {
-    forceHttp10: true,
-    onError: errorCb
+    meta: {
+        forceHttp10: true
+    }
 });
 assertEquals("Hi from wilton_test!", resp.data);
 assertEquals("close", resp.headers.Connection);
 var resp = http.execute(prefix + "/postmirror", {
     data: "foobar",
-    forceHttp10: true,
-    onError: errorCb
+    meta: {        
+        forceHttp10: true
+    }
 });
 assertEquals("foobar", resp.data);
 http.close();
 
-server.stop({
-    onError: errorCb
-});
+server.stop();
 
 // Mustache
 
@@ -108,36 +100,23 @@ var mustache = new wilton.Mustache();
 assertEquals("Hi Chris!\nHi Mark!\nHi Scott!\n", mustache.render("{{#names}}Hi {{name}}!\n{{/names}}", 
     {
         names: [{name: "Chris"}, {name: "Mark"}, {name: "Scott"}]
-    }, {
-        onError: errorCb
     }));
 
 // DBConnection
 
 var conn = new wilton.DBConnection({
-    url: "sqlite://target/test.db",
-    onError: errorCb
+    url: "sqlite://target/test.db"
 });
-conn.execute("drop table if exists t1", {}, {
-    onError: errorCb
-});
+conn.execute("drop table if exists t1", {});
 // insert
-conn.execute("create table t1 (foo varchar, bar int)", {}, {
-    onError: errorCb
-});
-conn.execute("insert into t1 values('aaa', 41)", {}, {
-    onError: errorCb
-});
+conn.execute("create table t1 (foo varchar, bar int)", {});
+conn.execute("insert into t1 values('aaa', 41)", {});
 // named params
 conn.execute("insert into t1 values(:foo, :bar)", {
     foo: "bbb",
     bar: 42
-}, {
-    onError: errorCb
 });
-conn.execute("insert into t1 values(?, ?)", ["ccc", 43], {
-    onError: errorCb
-});
+conn.execute("insert into t1 values(?, ?)", ["ccc", 43]);
 // select
 var rs = conn.query("select foo, bar from t1 where foo = :foo or bar = :bar order by bar", {
     foo: "ccc",
@@ -156,9 +135,7 @@ var el = conn.query("select foo, bar from t1 where foo = :foo or bar = :bar orde
 assertEquals("bbb", el.foo);
 assertEquals("42", String(el.bar));
 
-conn.doInTransaction(function() {/* some db actions */}, {
-    onError: errorCb
-});
+conn.doInTransaction(function() {/* some db actions */});
 
 conn.close();
 
@@ -169,8 +146,7 @@ var cron = new wilton.CronTask({
     expression: "* * * * * *",
     callback: function() {
         holder[0] += 1;
-    },
-    onError: errorCb
+    }
 });
 Packages.java.lang.Thread.sleep(1500);
 assertTrue(1 === holder[0] || 2 === holder[0]);
@@ -185,15 +161,10 @@ var mholder = [0];
 mutex.synchronized({
     callback: function() {
         mholder[0] += 1;
-    },
-    onError: errorCb
+    }
 });
-mutex.destroy({
-    onError: errorCb
-});
+mutex.destroy();
 assertTrue(1 === mholder[0]);
 
 // shutdown
-wilton.Logger.shutdown({
-    onError: errorCb
-});
+wilton.Logger.shutdown();
