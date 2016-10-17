@@ -208,4 +208,29 @@ public class HttpClientJniTest {
                     .build()));
         }
     }
+
+    @Test
+    public void testConnectFail() throws Exception {
+        long http = 0;
+        try {
+            String out = wiltoncall("httpclient_create");
+            Map<String, Long> hamap = GSON.fromJson(out, LONG_MAP_TYPE);
+            http = hamap.get("httpclientHandle");
+            String resp = wiltoncall("httpclient_execute", GSON.toJson(ImmutableMap.builder()
+                    .put("httpclientHandle", http)
+                    .put("url", ROOT_URL)
+                    .put("metadata", ImmutableMap.builder()
+                            .put("forceHttp10", true)
+                            .put("connecttimeoutMillis", 100)
+                            .put("abortOnConnectError", false)
+                            .build())
+                    .build()));
+            Map<String, Object> map = GSON.fromJson(resp, MAP_TYPE);
+            assertEquals(false, map.get("connectionSuccess"));
+        } finally {
+            wiltoncall("httpclient_close", GSON.toJson(ImmutableMap.builder()
+                    .put("httpclientHandle", http)
+                    .build()));
+        }
+    }
 }

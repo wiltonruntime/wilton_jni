@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-// version 0.5.0
+// version 0.5.1
 
 if ("undefined" === typeof (Packages)) {
     console.log("Error: wilton.js requires Nashorn or Rhino JVM environment");
@@ -895,6 +895,33 @@ define(function () {
     };
     
     
+    // Thread
+    var Thread = function() {
+        throw new Error("Direct thread management is not supported," +
+                " please use static methods and/or platform thread facilities instead");
+    };
+        
+    Thread.sleepMillis = function(millis, options) {
+        var opts = {};
+        if ("object" === typeof (options) && null !== options) {
+            opts = options;
+        }
+        try {
+            this.jni.wiltoncall("sleep_millis", JSON.stringify({
+                millis: millis
+            }));
+            if ("function" === typeof (opts.onSuccess)) {
+                opts.onSuccess();
+            }
+        } catch (e) {
+            if ("function" === typeof (opts.onFailure)) {
+                opts.onFailure(e);
+            } else {
+                throw e;
+            }
+        }
+    };
+    
     // export
     
     return {
@@ -904,7 +931,8 @@ define(function () {
         Mustache: Mustache,
         Server: Server,
         CronTask: CronTask,
-        Mutex: Mutex
+        Mutex: Mutex,
+        Thread: Thread
     };
     
 });
