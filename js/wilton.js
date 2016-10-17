@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-// version 0.5.1
+// version 0.5.2
 
 if ("undefined" === typeof (Packages)) {
     console.log("Error: wilton.js requires Nashorn or Rhino JVM environment");
@@ -77,20 +77,24 @@ define(function () {
     Logger.prototype = {
         append: function (level, message) {
             try {
-                if (message instanceof Error) {
-                    message = message.toString() + "\n" + message.stack;
-                } else if ("string" !== typeof (message)) {
-                    message = String(message);
-                    try {
-                        message = JSON.stringify(message);
-                    } catch (e) {
-                        // log as-is
+                var msg = "";
+                if ("undefined" !== typeof (message) && null !== message) {
+                    if ("string" === typeof (message)) {
+                        msg = message;
+                    } else if (message instanceof Error) {
+                        msg = message.toString() + "\n" + message.stack;
+                    } else {
+                        try {
+                            msg = JSON.stringify(message);
+                        } catch (e) {
+                            msg = String(message);
+                        }
                     }
                 }
                 var data = JSON.stringify({
                     level: level,
                     logger: this.name,
-                    message: message
+                    message: msg
                 });
                 this.jni.wiltoncall("logger_log", data);
             } catch (e) {
