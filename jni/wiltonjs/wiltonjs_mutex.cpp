@@ -40,23 +40,22 @@ std::string mutex_lock(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("mutexHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'mutexHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'mutexHandle' not specified"));
     // get handle
     wilton_Mutex* mutex = static_registry().remove(handle);
     if (nullptr == mutex) throw WiltonJsException(TRACEMSG(
-            "Invalid 'mutexHandle' parameter specified: [" + data + "]"));
+            "Invalid 'mutexHandle' parameter specified"));
     // call wilton
     char* err = wilton_Mutex_lock(mutex);
     static_registry().put(mutex);
     if (nullptr != err) {
-        detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-                "\nmutex_lock error for input data: [" + data + "]"));
+        detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     }
     return "{}";
 }
@@ -68,23 +67,22 @@ std::string mutex_unlock(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("mutexHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'mutexHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'mutexHandle' not specified"));
     // get handle
     wilton_Mutex* mutex = static_registry().remove(handle);
     if (nullptr == mutex) throw WiltonJsException(TRACEMSG(
-            "Invalid 'mutexHandle' parameter specified: [" + data + "]"));
+            "Invalid 'mutexHandle' parameter specified"));
     // call wilton
     char* err = wilton_Mutex_unlock(mutex);
     static_registry().put(mutex);
     if (nullptr != err) {
-        detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-                "\nmutex_unlock error for input data: [" + data + "]"));
+        detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     }
     return "{}";
 }
@@ -96,23 +94,22 @@ std::string mutex_destroy(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("mutexHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'mutexHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'mutexHandle' not specified"));
     // get handle
     wilton_Mutex* mutex = static_registry().remove(handle);
     if (nullptr == mutex) throw WiltonJsException(TRACEMSG(
-            "Invalid 'mutexHandle' parameter specified: [" + data + "]"));
+            "Invalid 'mutexHandle' parameter specified"));
     // call wilton
     char* err = wilton_Mutex_destroy(mutex);
     if (nullptr != err) {
         static_registry().put(mutex);
-        detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-                "\nmutex_destroy error for input data: [" + data + "]"));
+        detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     }
     return "{}";
 }

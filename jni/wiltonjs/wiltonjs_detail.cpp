@@ -41,7 +41,7 @@ const std::string& get_json_string(const ss::JsonField& field) {
     return field.as_string();
 }
 
-int64_t get_json_handle(const ss::JsonField& field) {
+int64_t get_json_int(const ss::JsonField& field) {
     if (ss::JsonType::INTEGER != field.type()) {
         throw WiltonJsException(TRACEMSG("Invalid '" + field.name() + "' field,"
                 " type: [" + ss::stringify_json_type(field.type()) + "]," +

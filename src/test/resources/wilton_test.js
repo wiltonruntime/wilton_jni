@@ -64,6 +64,15 @@ var server = new wilton.Server({
     }
 });
 
+// Misc
+
+wilton.Misc.threadSleepMillis(100);
+wilton.Misc.tcpWaitForConnection({
+    ipAddress: "127.0.0.1",
+    tcpPort: 8080,
+    timeoutMillis: 100
+});
+
 var prefix = "http://127.0.0.1:8080";
 assertEquals("404: Not Found: [/foo]", httpGet(prefix + "/foo"));
 assertEquals("Hi from wilton_test!", httpGet(prefix + "/hi"));

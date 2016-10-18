@@ -104,7 +104,9 @@ std::string mutex_destroy(const std::string& data, void* object);
 
 // Misc
 
-std::string sleep_millis(const std::string& data, void* object);
+std::string thread_sleep_millis(const std::string& data, void* object);
+
+std::string tcp_wait_for_connection(const std::string& data, void* object);
 
 
 // internal
@@ -121,7 +123,7 @@ std::string wrap_wilton_output(char* out, int out_len);
 
 const std::string& get_json_string(const staticlib::serialization::JsonField& field);
 
-int64_t get_json_handle(const staticlib::serialization::JsonField& field);
+int64_t get_json_int(const staticlib::serialization::JsonField& field);
 
 const staticlib::serialization::JsonValue& get_json_object(
         const staticlib::serialization::JsonField& field);

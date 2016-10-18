@@ -85,7 +85,8 @@ void register_wiltoncalls() {
     wj::put_wilton_function("mutex_unlock", wj::mutex_unlock);
     wj::put_wilton_function("mutex_destroy", wj::mutex_destroy);
     
-    wj::put_wilton_function("sleep_millis", wj::sleep_millis);
+    wj::put_wilton_function("thread_sleep_millis", wj::thread_sleep_millis);
+    wj::put_wilton_function("tcp_wait_for_connection", wj::tcp_wait_for_connection);
 }
 
 } // namespace

@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-// version 0.5.2
+// version 0.5.3
 
 if ("undefined" === typeof (Packages)) {
     console.log("Error: wilton.js requires Nashorn or Rhino JVM environment");
@@ -35,12 +35,12 @@ define(function () {
     };
     
     Logger.initialize = function(config) {
+        var onSuccess = config.onSuccess;
+        var onFailure = config.onFailure;
+        delete config.onSuccess;
+        delete config.onFailure;
         try {
             var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
-            var onSuccess = config.onSuccess;
-            var onFailure = config.onFailure;
-            delete config.onSuccess;
-            delete config.onFailure;
             jni.wiltoncall("logger_initialize", JSON.stringify(config));
             if ("function" === typeof (onSuccess)) {
                 onSuccess();
@@ -269,15 +269,15 @@ define(function () {
             }
         };
         
+        var onSuccess = conf.onSuccess;
+        var onFailure = conf.onFailure;
+        delete conf.onSuccess;
+        delete conf.onFailure;
         try {                        
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             this.logger = new Logger("wilton.server");
             this.gateway = conf.gateway;
             this.views = _prepateViews(conf.views);
-            var onSuccess = conf.onSuccess;
-            var onFailure = conf.onFailure;
-            delete conf.onSuccess;
-            delete conf.onFailure;
             var self = this;
             var gatewayPass = new Packages.net.wiltonwebtoolkit.WiltonGateway({
                 gatewayCallback: function (requestHandle) {
@@ -626,11 +626,11 @@ define(function () {
         if ("object" === typeof (config) && null !== config) {
             conf = config;
         }
+        var onSuccess = conf.onSuccess;
+        var onFailure = conf.onFailure;
+        delete conf.onSuccess;
+        delete conf.onFailure;
         try {
-            var onSuccess = conf.onSuccess;
-            var onFailure = conf.onFailure;
-            delete conf.onSuccess;
-            delete conf.onFailure;
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             var data = JSON.stringify(conf);
             var json = this.jni.wiltoncall("httpclient_create", data);
@@ -764,12 +764,12 @@ define(function () {
         if ("function" !== typeof (conf.callback)) {
             throw new Error("Required 'callback' attribute not specified");
         }
+        var onSuccess = conf.onSuccess;
+        var onFailure = conf.onFailure;
+        delete conf.onSuccess;
+        delete conf.onFailure;
         try {
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
-            var onSuccess = conf.onSuccess;
-            var onFailure = conf.onFailure;            
-            delete conf.onSuccess;
-            delete conf.onFailure;
             var cb = conf.callback;
             delete conf.callback;
             var runnable = new Packages.java.lang.Runnable({
@@ -899,19 +899,20 @@ define(function () {
     };
     
     
-    // Thread
-    var Thread = function() {
-        throw new Error("Direct thread management is not supported," +
-                " please use static methods and/or platform thread facilities instead");
+    // Misc
+    
+    var Misc = function() {
+        throw new Error("'Misc' object cannot be instantiated, use its functions directly instead.");
     };
         
-    Thread.sleepMillis = function(millis, options) {
+    Misc.threadSleepMillis = function(millis, options) {
         var opts = {};
         if ("object" === typeof (options) && null !== options) {
             opts = options;
         }
-        try {
-            this.jni.wiltoncall("sleep_millis", JSON.stringify({
+        try {            
+            var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
+            jni.wiltoncall("thread_sleep_millis", JSON.stringify({
                 millis: millis
             }));
             if ("function" === typeof (opts.onSuccess)) {
@@ -920,6 +921,30 @@ define(function () {
         } catch (e) {
             if ("function" === typeof (opts.onFailure)) {
                 opts.onFailure(e);
+            } else {
+                throw e;
+            }
+        }
+    };
+    
+    Misc.tcpWaitForConnection = function (options) {
+        var opts = {};
+        if ("object" === typeof (options) && null !== options) {
+            opts = options;
+        }
+        var onSuccess = opts.onSuccess;
+        var onFailure = opts.onFailure;
+        delete opts.onSuccess;
+        delete opts.onFailure;
+        try {
+            var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
+            jni.wiltoncall("tcp_wait_for_connection", JSON.stringify(opts));
+            if ("function" === typeof (onSuccess)) {
+                onSuccess();
+            }
+        } catch (e) {
+            if ("function" === typeof (onFailure)) {
+                onFailure(e);
             } else {
                 throw e;
             }
@@ -936,7 +961,7 @@ define(function () {
         Server: Server,
         CronTask: CronTask,
         Mutex: Mutex,
-        Thread: Thread
+        Misc: Misc
     };
     
 });

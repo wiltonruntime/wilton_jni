@@ -31,8 +31,7 @@ detail::handle_registry<wilton_HttpClient>& static_registry() {
 std::string httpclient_create(const std::string& data, void*) {
     wilton_HttpClient* http;
     char* err = wilton_HttpClient_create(std::addressof(http), data.c_str(), data.length());
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nhttpclient_create error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     int64_t handle = static_registry().put(http);
     return ss::dump_json_to_string({
         { "httpclientHandle", handle }
@@ -46,23 +45,22 @@ std::string httpclient_close(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("httpclientHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'httpclientHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'httpclientHandle' not specified"));
     // get handle
     wilton_HttpClient* http = static_registry().remove(handle);
     if (nullptr == http) throw WiltonJsException(TRACEMSG(
-            "Invalid 'httpclientHandle' parameter specified: [" + data + "]"));
+            "Invalid 'httpclientHandle' parameter specified"));
     // call wilton
     char* err = wilton_HttpClient_close(http);
     if (nullptr != err) {
         static_registry().put(http);
-        detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nhttpclient_close error for input data: [" + data + "]"));
+        detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     }
     return "{}";
 }
@@ -77,7 +75,7 @@ std::string httpclient_execute(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("httpclientHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else if ("url" == name) {
             rurl = detail::get_json_string(fi);
         } else if ("data" == name) {
@@ -89,15 +87,15 @@ std::string httpclient_execute(const std::string& data, void*) {
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'httpclientHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'httpclientHandle' not specified"));
     if (rurl.get().empty()) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'url' not specified, data: [" + data + "]"));
+            "Required parameter 'url' not specified"));
     const std::string& url = rurl.get();
     const std::string& request_data = rdata.get();
     // get handle
     wilton_HttpClient* http = static_registry().remove(handle);
     if (nullptr == http) throw WiltonJsException(TRACEMSG(
-            "Invalid 'httpclientHandle' parameter specified: [" + data + "]"));
+            "Invalid 'httpclientHandle' parameter specified"));
     // call wilton
     char* out;
     int out_len;
@@ -105,8 +103,7 @@ std::string httpclient_execute(const std::string& data, void*) {
             request_data.c_str(), request_data.length(), metadata.c_str(), metadata.length(),
             std::addressof(out), std::addressof(out_len));
     static_registry().put(http);
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nhttpclient_execute error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     return detail::wrap_wilton_output(out, out_len);
 }
 
@@ -120,7 +117,7 @@ std::string httpclient_send_temp_file(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("httpclientHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else if ("url" == name) {
             rurl = detail::get_json_string(fi);
         } else if ("filePath" == name) {
@@ -132,17 +129,17 @@ std::string httpclient_send_temp_file(const std::string& data, void*) {
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'httpclientHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'httpclientHandle' not specified"));
     if (rurl.get().empty()) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'url' not specified, data: [" + data + "]"));
+            "Required parameter 'url' not specified"));
     if (rfile.get().empty()) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'filePath' not specified, data: [" + data + "]"));
+            "Required parameter 'filePath' not specified"));
     const std::string& url = rurl.get();
     const std::string& file_path = rfile.get();
     // get handle
     wilton_HttpClient* http = static_registry().remove(handle);
     if (nullptr == http) throw WiltonJsException(TRACEMSG(
-            "Invalid 'httpclientHandle' parameter specified: [" + data + "]"));
+            "Invalid 'httpclientHandle' parameter specified"));
     // call wilton
     char* out;
     int out_len;
@@ -156,8 +153,7 @@ std::string httpclient_send_temp_file(const std::string& data, void*) {
                 delete filePath_passed;
             });
     static_registry().put(http);
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nhttpclient_send_temp_file error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     return detail::wrap_wilton_output(out, out_len);
 }
 

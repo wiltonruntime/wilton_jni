@@ -39,7 +39,7 @@ std::string mustache_render(const std::string& data, void*) {
         }
     }
     if (rtemplate.get().empty()) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'template' not specified, data: [" + data + "]"));
+            "Required parameter 'template' not specified"));
     const std::string& templade = rtemplate.get();
     if (values.empty()) {
         values = "{}";
@@ -49,8 +49,7 @@ std::string mustache_render(const std::string& data, void*) {
     int out_len;
     char* err = wilton_render_mustache(templade.c_str(), templade.length(),
             values.c_str(), values.length(), std::addressof(out), std::addressof(out_len));
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) + 
-            "\nMustache render error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     return detail::wrap_wilton_output(out, out_len);
 }
 
@@ -70,7 +69,7 @@ std::string mustache_render_file(const std::string& data, void*) {
         }
     }
     if (rfile.get().empty()) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'file' not specified, data: [" + data + "]"));
+            "Required parameter 'file' not specified"));
     const std::string& file = rfile.get();
     if (values.empty()) {
         values = "{}";
@@ -80,8 +79,7 @@ std::string mustache_render_file(const std::string& data, void*) {
     int out_len;
     char* err = wilton_render_mustache_file(file.c_str(), file.length(),
             values.c_str(), values.length(), std::addressof(out), std::addressof(out_len));
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nMustache file render error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     return detail::wrap_wilton_output(out, out_len);
 }
     

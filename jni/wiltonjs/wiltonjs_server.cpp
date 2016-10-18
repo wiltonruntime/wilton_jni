@@ -80,8 +80,7 @@ std::string server_create(const std::string& data, void* object) {
                 call_gateway(gateway, requestHandle);
                 static_request_registry().remove(requestHandle);
             }, data.c_str(), data.length());
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nserver_create error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     int64_t handle = static_server_registry().put(server);
     return ss::dump_json_to_string({
         { "serverHandle", handle}
@@ -95,23 +94,22 @@ std::string server_stop(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("serverHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'serverHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'serverHandle' not specified"));
     // get handle
     wilton_Server* server = static_server_registry().remove(handle);
     if (nullptr == server) throw WiltonJsException(TRACEMSG(
-            "Invalid 'serverHandle' parameter specified: [" + data + "]"));
+            "Invalid 'serverHandle' parameter specified"));
     // call wilton
     char* err = wilton_Server_stop(server);
     if (nullptr != err) {
         static_server_registry().put(server);
-        detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-                "\nserver_stop error for input data: [" + data + "]"));
+        detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     }
     return "{}";
 }
@@ -123,25 +121,24 @@ std::string request_get_metadata(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("requestHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'requestHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'requestHandle' not specified"));
     // get handle
     wilton_Request* request = static_request_registry().remove(handle);
     if (nullptr == request) throw WiltonJsException(TRACEMSG(
-            "Invalid 'requestHandle' parameter specified: [" + data + "]"));
+            "Invalid 'requestHandle' parameter specified"));
     // call wilton
     char* out;
     int out_len;
     char* err = wilton_Request_get_request_metadata(request,
             std::addressof(out), std::addressof(out_len));
     static_request_registry().put(request);
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nrequest_get_metadata error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     return detail::wrap_wilton_output(out, out_len);
 }
 
@@ -152,25 +149,24 @@ std::string request_get_data(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("requestHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'requestHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'requestHandle' not specified"));
     // get handle
     wilton_Request* request = static_request_registry().remove(handle);
     if (nullptr == request) throw WiltonJsException(TRACEMSG(
-            "Invalid 'requestHandle' parameter specified: [" + data + "]"));
+            "Invalid 'requestHandle' parameter specified"));
     // call wilton
     char* out;
     int out_len;
     char* err = wilton_Request_get_request_data(request,
             std::addressof(out), std::addressof(out_len));
     static_request_registry().put(request);
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nrequest_get_data error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     return detail::wrap_wilton_output(out, out_len);
 }
 
@@ -181,25 +177,24 @@ std::string request_get_data_filename(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("requestHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'requestHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'requestHandle' not specified"));
     // get handle
     wilton_Request* request = static_request_registry().remove(handle);
     if (nullptr == request) throw WiltonJsException(TRACEMSG(
-            "Invalid 'requestHandle' parameter specified: [" + data + "]"));
+            "Invalid 'requestHandle' parameter specified"));
     // call wilton
     char* out;
     int out_len;
     char* err = wilton_Request_get_request_data_filename(request,
             std::addressof(out), std::addressof(out_len));
     static_request_registry().put(request);
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nrequest_get_data_filename error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     return detail::wrap_wilton_output(out, out_len);
 }
 
@@ -211,7 +206,7 @@ std::string request_set_response_metadata(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("requestHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else if ("metadata" == name) {
             metadata = ss::dump_json_to_string(fi.value());
         } else {
@@ -219,18 +214,17 @@ std::string request_set_response_metadata(const std::string& data, void*) {
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'requestHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'requestHandle' not specified"));
     if (metadata.empty()) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'metadata' not specified, data: [" + data + "]"));
+            "Required parameter 'metadata' not specified"));
     // get handle
     wilton_Request* request = static_request_registry().remove(handle);
     if (nullptr == request) throw WiltonJsException(TRACEMSG(
-            "Invalid 'requestHandle' parameter specified: [" + data + "]"));
+            "Invalid 'requestHandle' parameter specified"));
     // call wilton
     char* err = wilton_Request_set_response_metadata(request, metadata.c_str(), metadata.length());
     static_request_registry().put(request);
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nrequest_set_response_metadata error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     return "{}";
 }
 
@@ -242,7 +236,7 @@ std::string request_send_response(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("requestHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else if ("data" == name) {
             rdata = fi.as_string();
         } else {
@@ -250,17 +244,16 @@ std::string request_send_response(const std::string& data, void*) {
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'requestHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'requestHandle' not specified"));
     const std::string& request_data = rdata.get().empty() ? "{}" : rdata.get();
     // get handle
     wilton_Request* request = static_request_registry().remove(handle);
     if (nullptr == request) throw WiltonJsException(TRACEMSG(
-            "Invalid 'requestHandle' parameter specified: [" + data + "]"));
+            "Invalid 'requestHandle' parameter specified"));
     // call wilton
     char* err = wilton_Request_send_response(request, request_data.c_str(), request_data.length());
     static_request_registry().put(request);
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nrequest_send_response error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     return "{}";
 }
 
@@ -272,7 +265,7 @@ std::string request_send_temp_file(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("requestHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else if ("filePath" == name) {
             file = detail::get_json_string(fi);
         } else {
@@ -280,13 +273,13 @@ std::string request_send_temp_file(const std::string& data, void*) {
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'requestHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'requestHandle' not specified"));
     if (file.empty()) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'filePath' not specified, data: [" + data + "]"));
+            "Required parameter 'filePath' not specified"));
     // get handle
     wilton_Request* request = static_request_registry().remove(handle);
     if (nullptr == request) throw WiltonJsException(TRACEMSG(
-            "Invalid 'requestHandle' parameter specified: [" + data + "]"));
+            "Invalid 'requestHandle' parameter specified"));
     // call wilton
     char* err = wilton_Request_send_file(request, file.c_str(), file.length(),
             new std::string(file.data(), file.length()),
@@ -296,8 +289,7 @@ std::string request_send_temp_file(const std::string& data, void*) {
                 delete filePath_passed;
             });
     static_request_registry().put(request);
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nrequest_send_temp_file error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     return "{}";
 }
 
@@ -310,7 +302,7 @@ std::string request_send_mustache(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("requestHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else if ("mustacheFilePath" == name) {
             rfile = detail::get_json_string(fi);
         } else if ("values" == name) {
@@ -320,9 +312,9 @@ std::string request_send_mustache(const std::string& data, void*) {
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'requestHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'requestHandle' not specified"));
     if (rfile.get().empty()) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'mustacheFilePath' not specified, data: [" + data + "]"));
+            "Required parameter 'mustacheFilePath' not specified"));
     if (values.empty()) {
         values = "{}";
     }
@@ -330,13 +322,12 @@ std::string request_send_mustache(const std::string& data, void*) {
     // get handle
     wilton_Request* request = static_request_registry().remove(handle);
     if (nullptr == request) throw WiltonJsException(TRACEMSG(
-            "Invalid 'requestHandle' parameter specified: [" + data + "]"));
+            "Invalid 'requestHandle' parameter specified"));
     // call wilton
     char* err = wilton_Request_send_mustache(request, file.c_str(), file.length(),
             values.c_str(), values.length());
     static_request_registry().put(request);
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nrequest_send_response error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     return "{}";
 }
 
@@ -347,23 +338,22 @@ std::string request_send_later(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("requestHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'requestHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'requestHandle' not specified"));
     // get handle
     wilton_Request* request = static_request_registry().remove(handle);
     if (nullptr == request) throw WiltonJsException(TRACEMSG(
-            "Invalid 'requestHandle' parameter specified: [" + data + "]"));
+            "Invalid 'requestHandle' parameter specified"));
     // call wilton
     wilton_ResponseWriter* writer;
     char* err = wilton_Request_send_later(request, std::addressof(writer));
     static_request_registry().put(request);
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nrequest_send_later error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     int64_t rwhandle = static_response_writer_registry().put(writer);
     return ss::dump_json_to_string({
         { "responseWriterHandle", rwhandle}
@@ -378,7 +368,7 @@ std::string request_send_with_response_writer(const std::string& data, void*) {
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("responseWriterHandle" == name) {
-            handle = detail::get_json_handle(fi);
+            handle = detail::get_json_int(fi);
         } else if ("data" == name) {
             rdata = fi.as_string();
         } else {
@@ -386,16 +376,15 @@ std::string request_send_with_response_writer(const std::string& data, void*) {
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'responseWriterHandle' not specified, data: [" + data + "]"));
+            "Required parameter 'responseWriterHandle' not specified"));
     const std::string& request_data = rdata.get().empty() ? "{}" : rdata.get();
     // get handle, note: won't be put back - one-off operation   
     wilton_ResponseWriter* writer = static_response_writer_registry().remove(handle);
     if (nullptr == writer) throw WiltonJsException(TRACEMSG(
-            "Invalid 'responseWriterHandle' parameter specified: [" + data + "]"));
+            "Invalid 'responseWriterHandle' parameter specified"));
     // call wilton
     char* err = wilton_ResponseWriter_send(writer, request_data.c_str(), request_data.length());
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err) +
-            "\nrequest_send_with_response_writer error for input data: [" + data + "]"));
+    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     return "{}";
 }
 
