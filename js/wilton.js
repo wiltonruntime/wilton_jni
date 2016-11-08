@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-// version 0.5.3
+// version 0.5.4
 
 if ("undefined" === typeof (Packages)) {
     console.log("Error: wilton.js requires Nashorn or Rhino JVM environment");
