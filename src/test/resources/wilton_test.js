@@ -172,8 +172,10 @@ mutex.synchronized({
         mholder[0] += 1;
     }
 });
-mutex.destroy();
 assertTrue(1 === mholder[0]);
+mutex.lock();
+mutex.unlock();
+mutex.destroy();
 
 // shutdown
 wilton.Logger.shutdown();
