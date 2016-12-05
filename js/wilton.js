@@ -36,6 +36,17 @@ define(function() {
         }
         return opts;
     }
+    
+    function callOrThrow(onFailure, e, res) {        
+        if ("function" === typeof(onFailure)) {
+            onFailure(e);
+            if ("undefined" !== typeof(res)) {
+                return res;
+            }
+        } else {
+            throw e;
+        }
+    }
 
     // Logger
 
@@ -56,11 +67,7 @@ define(function() {
                 onSuccess();
             }
         } catch (e) {
-            if ("function" === typeof(onFailure)) {
-                onFailure(e);
-            } else {
-                throw e;
-            }
+            callOrThrow(onFailure, e);
         }
     };
     
@@ -73,11 +80,7 @@ define(function() {
                 opts.onSuccess();
             }
         } catch (e) {
-            if ("function" === typeof(opts.onFailure)) {
-                opts.onFailure(e);
-            } else {
-                throw e;
-            }
+            callOrThrow(opts.onFailure, e);
         }
     };
 
@@ -167,11 +170,7 @@ define(function() {
                     opts.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e);
             }
         },
         
@@ -192,11 +191,7 @@ define(function() {
                     opts.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e);
             }
         },
         
@@ -222,11 +217,7 @@ define(function() {
                     opts.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e);
             }
         }        
     };
@@ -297,11 +288,7 @@ define(function() {
                 onSuccess();
             }
         } catch (e) {
-            if ("function" === typeof(onFailure)) {
-                onFailure(e);
-            } else {
-                throw e;
-            }
+            callOrThrow(opts.onFailure, e);
         }
     };
 
@@ -367,11 +354,7 @@ define(function() {
                     opts.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e);
             }
         }
     };
@@ -405,12 +388,7 @@ define(function() {
                 }
                 return resstr;
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                    return "";
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e, "");
             }
         },
         
@@ -435,12 +413,7 @@ define(function() {
                 }
                 return resstr;
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                    return "";
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e, "");
             }
         }
     };
@@ -460,11 +433,7 @@ define(function() {
                 conf.onSuccess();
             }
         } catch (e) {
-            if ("function" === typeof(conf.onFailure)) {
-                conf.onFailure(e);
-            } else {
-                throw e;
-            }
+            callOrThrow(opts.onFailure, e);
         }
     };
     
@@ -486,11 +455,7 @@ define(function() {
                     opts.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e);
             }
         },
         
@@ -513,12 +478,7 @@ define(function() {
                 }
                 return res;
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                    return [];
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e, []);
             }
         },
         
@@ -559,21 +519,13 @@ define(function() {
                     this.jni.wiltoncall("db_transaction_rollback", JSON.stringify({
                         transactionHandle: tran.transactionHandle
                     }));
-                    if ("function" === typeof(opts.onFailure)) {
-                        opts.onFailure(e);
-                    } else {
-                        throw e;
-                    }
+                    callOrThrow(opts.onFailure, e);
                 }
                 if ("function" === typeof(opts.onSuccess)) {
                     opts.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e);
             }
         },
         
@@ -587,11 +539,7 @@ define(function() {
                     opts.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e);
             }
         }
     };
@@ -618,11 +566,7 @@ define(function() {
                 onSuccess();
             }
         } catch (e) {
-            if ("function" === typeof(onFailure)) {
-                onFailure(e);
-            } else {
-                throw e;
-            }
+            callOrThrow(opts.onFailure, e);
         }
     };
     
@@ -656,11 +600,7 @@ define(function() {
                 }
                 return resp;
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e);
             }
         },
         
@@ -693,12 +633,7 @@ define(function() {
                 }
                 return resp;
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                    return {};
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e, {});
             }
         },
         
@@ -713,11 +648,7 @@ define(function() {
                     opts.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e);
             }
         }
     };
@@ -751,11 +682,7 @@ define(function() {
                 onSuccess();
             }
         } catch (e) {
-            if ("function" === typeof(onFailure)) {
-                onFailure(e);
-            } else {
-                throw e;
-            }
+            callOrThrow(opts.onFailure, e);
         }
     };
     
@@ -771,11 +698,7 @@ define(function() {
                     opts.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e);
             }
         }
     };
@@ -794,11 +717,7 @@ define(function() {
                 opts.onSuccess();
             }
         } catch (e) {
-            if ("function" === typeof(opts.onFailure)) {
-                opts.onFailure(e);
-            } else {
-                throw e;
-            }
+            callOrThrow(opts.onFailure, e);
         }
     };
     
@@ -824,12 +743,7 @@ define(function() {
                 }
                 return res;
             } catch (e) {
-                if ("function" === typeof(opts.onFailure)) {
-                    opts.onFailure(e);
-                    return {};
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e, {});
             }
         },
         
@@ -855,11 +769,7 @@ define(function() {
                     opts.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof (opts.onFailure)) {
-                    opts.onFailure(e);
-                } else {
-                    throw e;
-                }
+                callOrThrow(opts.onFailure, e);
             }
         }
     };
@@ -882,11 +792,7 @@ define(function() {
                 opts.onSuccess();
             }
         } catch (e) {
-            if ("function" === typeof(opts.onFailure)) {
-                opts.onFailure(e);
-            } else {
-                throw e;
-            }
+            callOrThrow(opts.onFailure, e);
         }
     };
     
@@ -903,11 +809,7 @@ define(function() {
                 onSuccess();
             }
         } catch (e) {
-            if ("function" === typeof(onFailure)) {
-                onFailure(e);
-            } else {
-                throw e;
-            }
+            callOrThrow(opts.onFailure, e);
         }
     };
     
