@@ -47,6 +47,16 @@ define(function() {
             throw e;
         }
     }
+    
+    function callOrIgnore(onSuccess, params) {
+        if ("function" === typeof(onSuccess)) {
+            if ("undefined" !== typeof(params)) {
+                onSuccess(params);
+            } else {
+                onSuccess();
+            }
+        }
+    }
 
     // Logger
 
@@ -56,16 +66,15 @@ define(function() {
     };
     
     Logger.initialize = function(config) {
-        var onSuccess = config.onSuccess;
-        var onFailure = config.onFailure;
-        delete config.onSuccess;
-        delete config.onFailure;
+        var opts = defaultOpts(config);
+        var onSuccess = opts.onSuccess;
+        var onFailure = opts.onFailure;
+        delete opts.onSuccess;
+        delete opts.onFailure;
         try {
             var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
-            jni.wiltoncall("logger_initialize", JSON.stringify(config));
-            if ("function" === typeof(onSuccess)) {
-                onSuccess();
-            }
+            jni.wiltoncall("logger_initialize", JSON.stringify(opts));
+            callOrIgnore(onSuccess);
         } catch (e) {
             callOrThrow(onFailure, e);
         }
@@ -76,9 +85,7 @@ define(function() {
         try {
             var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             jni.wiltoncall("logger_shutdown");
-            if ("function" === typeof(opts.onSuccess)) {
-                opts.onSuccess();
-            }
+            callOrIgnore(opts.onSuccess);
         } catch (e) {
             callOrThrow(opts.onFailure, e);
         }
@@ -166,9 +173,7 @@ define(function() {
                     requestHandle: this.handle,
                     data: dt
                 }));
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess();
-                }
+                callOrIgnore(opts.onSuccess);
             } catch (e) {
                 callOrThrow(opts.onFailure, e);
             }
@@ -187,9 +192,7 @@ define(function() {
                     requestHandle: this.handle,
                     filePath: filePath
                 }));
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess();
-                }
+                callOrIgnore(opts.onSuccess);
             } catch (e) {
                 callOrThrow(opts.onFailure, e);
             }
@@ -213,9 +216,7 @@ define(function() {
                     mustacheFilePath: this.server.mustacheTemplatesRootDir + filePath,
                     values: vals
                 }));
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess();
-                }
+                callOrIgnore(opts.onSuccess);
             } catch (e) {
                 callOrThrow(opts.onFailure, e);
             }
@@ -226,11 +227,7 @@ define(function() {
     // Server
 
     var Server = function(config) {
-        
-        var conf = {};
-        if ("object" === typeof(config) && null !== config) {
-            conf = config;
-        }
+        var opts = defaultOpts(config);
         
         var _prepateViews = function(views) {
             if ("object" !== typeof(views)) {
@@ -258,20 +255,20 @@ define(function() {
             }
         };
         
-        var onSuccess = conf.onSuccess;
-        var onFailure = conf.onFailure;
-        delete conf.onSuccess;
-        delete conf.onFailure;
+        var onSuccess = opts.onSuccess;
+        var onFailure = opts.onFailure;
+        delete opts.onSuccess;
+        delete opts.onFailure;
         try {                        
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             this.logger = new Logger("wilton.server");
-            this.gateway = conf.gateway;
-            this.views = _prepateViews(conf.views);
+            this.gateway = opts.gateway;
+            this.views = _prepateViews(opts.views);
             this.mustacheTemplatesRootDir = "";
-            if ("undefined" !== typeof(conf.mustache) && 
-                    "string" === typeof(conf.mustache.templatesRootDir)) {
-                this.mustacheTemplatesRootDir = conf.mustache.templatesRootDir;
-                delete conf.mustache.templatesRootDir;
+            if ("undefined" !== typeof(opts.mustache) && 
+                    "string" === typeof(opts.mustache.templatesRootDir)) {
+                this.mustacheTemplatesRootDir = opts.mustache.templatesRootDir;
+                delete opts.mustache.templatesRootDir;
             }
             var self = this;
             var gatewayPass = new Packages.net.wiltonwebtoolkit.WiltonGateway({
@@ -279,16 +276,14 @@ define(function() {
                     self._gatewaycb(requestHandle);
                 }
             });
-            delete conf.views;
-            var data = JSON.stringify(conf);
+            delete opts.views;
+            var data = JSON.stringify(opts);
             var handleJson = this.jni.wiltoncall("server_create", data, gatewayPass);
             var handleObj = JSON.parse(handleJson);
             this.handle = handleObj.serverHandle;
-            if ("function" === typeof(onSuccess)) {
-                onSuccess();
-            }
+            callOrIgnore(onSuccess);
         } catch (e) {
-            callOrThrow(opts.onFailure, e);
+            callOrThrow(onFailure, e);
         }
     };
 
@@ -350,9 +345,7 @@ define(function() {
                 this.jni.wiltoncall("server_stop", JSON.stringify({
                     serverHandle: this.handle
                 }));
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess();
-                }
+                callOrIgnore(opts.onSuccess);
             } catch (e) {
                 callOrThrow(opts.onFailure, e);
             }
@@ -383,9 +376,7 @@ define(function() {
                 });
                 var res = this.jni.wiltoncall("mustache_render", data);
                 var resstr = String(res);
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess(resstr);
-                }
+                callOrIgnore(opts.onSuccess, resstr);
                 return resstr;
             } catch (e) {
                 callOrThrow(opts.onFailure, e, "");
@@ -408,9 +399,7 @@ define(function() {
                 });
                 var res = this.jni.wiltoncall("mustache_render_file", data);
                 var resstr = String(res);
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess(resstr);
-                }
+                callOrIgnore(opts.onSuccess, resstr);
                 return resstr;
             } catch (e) {
                 callOrThrow(opts.onFailure, e, "");
@@ -422,16 +411,14 @@ define(function() {
     // Database
     
     var DBConnection = function(config) {
-        var conf = defaultOpts(config);
+        var opts = defaultOpts(config);
         try {
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
-            this.url = conf.url;
+            this.url = opts.url;
             var handleJson = this.jni.wiltoncall("db_connection_open", this.url);
             var handleParsed = JSON.parse(handleJson);
             this.handle = handleParsed.connectionHandle;
-            if ("function" === typeof(conf.onSuccess)) {
-                conf.onSuccess();
-            }
+            callOrIgnore(opts.onSuccess);
         } catch (e) {
             callOrThrow(opts.onFailure, e);
         }
@@ -451,9 +438,7 @@ define(function() {
                     sql: sqlstr,
                     params: pars
                 }));
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess();
-                }
+                callOrIgnore(opts.onSuccess);
             } catch (e) {
                 callOrThrow(opts.onFailure, e);
             }
@@ -473,9 +458,7 @@ define(function() {
                     params: pars
                 }));
                 var res = JSON.parse(json);
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess(res);
-                }
+                callOrIgnore(opts.onSuccess, res);
                 return res;
             } catch (e) {
                 callOrThrow(opts.onFailure, e, []);
@@ -494,9 +477,7 @@ define(function() {
                 } else if (1 === list.length) {
                     res = list[0];
                 }
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess(res);
-                }
+                callOrIgnore(opts.onSuccess, res);
                 return res;
             }
             // else error happened
@@ -521,9 +502,7 @@ define(function() {
                     }));
                     callOrThrow(opts.onFailure, e);
                 }
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess();
-                }
+                callOrIgnore(opts.onSuccess);
             } catch (e) {
                 callOrThrow(opts.onFailure, e);
             }
@@ -535,9 +514,7 @@ define(function() {
                 this.jni.wiltoncall("db_connection_close", JSON.stringify({
                     connectionHandle: this.handle
                 }));
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess();
-                }
+                callOrIgnore(opts.onSuccess);
             } catch (e) {
                 callOrThrow(opts.onFailure, e);
             }
@@ -548,25 +525,20 @@ define(function() {
     // HttpClient
     
     var HttpClient = function(config) {
-        var conf = {};
-        if ("object" === typeof(config) && null !== config) {
-            conf = config;
-        }
-        var onSuccess = conf.onSuccess;
-        var onFailure = conf.onFailure;
-        delete conf.onSuccess;
-        delete conf.onFailure;
+        var opts = defaultOpts(config);
+        var onSuccess = opts.onSuccess;
+        var onFailure = opts.onFailure;
+        delete opts.onSuccess;
+        delete opts.onFailure;
         try {
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
-            var data = JSON.stringify(conf);
+            var data = JSON.stringify(opts);
             var json = this.jni.wiltoncall("httpclient_create", data);
             var out = JSON.parse(json);
             this.handle = out.httpclientHandle;
-            if ("function" === typeof(onSuccess)) {
-                onSuccess();
-            }
+            callOrIgnore(onSuccess);
         } catch (e) {
-            callOrThrow(opts.onFailure, e);
+            callOrThrow(onFailure, e);
         }
     };
     
@@ -595,9 +567,7 @@ define(function() {
                 });
                 var resp_json = this.jni.wiltoncall("httpclient_execute", data);
                 var resp = JSON.parse(resp_json);
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess(resp);
-                }
+                callOrIgnore(opts.onSuccess, resp);
                 return resp;
             } catch (e) {
                 callOrThrow(opts.onFailure, e);
@@ -628,9 +598,7 @@ define(function() {
                 });
                 var resp_json = this.jni.wiltoncall("httpclient_send_temp_file", data);
                 var resp = JSON.parse(resp_json);
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess(resp);
-                }
+                callOrIgnore(opts.onSuccess, resp);
                 return resp;
             } catch (e) {
                 callOrThrow(opts.onFailure, e, {});
@@ -644,9 +612,7 @@ define(function() {
                     httpclientHandle: this.handle
                 });
                 this.jni.wiltoncall("httpclient_close", data);
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess();
-                }
+                callOrIgnore(opts.onSuccess);
             } catch (e) {
                 callOrThrow(opts.onFailure, e);
             }
@@ -657,32 +623,30 @@ define(function() {
     // Cron
     
     var CronTask = function(config) {
-        var conf = defaultOpts(config);
-        if ("function" !== typeof(conf.callback)) {
+        var opts = defaultOpts(config);
+        if ("function" !== typeof(opts.callback)) {
             throw new Error("Required 'callback' attribute not specified");
         }
-        var onSuccess = conf.onSuccess;
-        var onFailure = conf.onFailure;
-        delete conf.onSuccess;
-        delete conf.onFailure;
+        var onSuccess = opts.onSuccess;
+        var onFailure = opts.onFailure;
+        delete opts.onSuccess;
+        delete opts.onFailure;
         try {
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
-            var cb = conf.callback;
-            delete conf.callback;
+            var cb = opts.callback;
+            delete opts.callback;
             var runnable = new Packages.java.lang.Runnable({
                 run: function() {
                     cb();
                 }
             });
-            var data = JSON.stringify(conf);
+            var data = JSON.stringify(opts);
             var handleJson = this.jni.wiltoncall("cron_start", data, runnable);
             var handleObj = JSON.parse(handleJson);
             this.handle = handleObj.cronHandle;
-            if ("function" === typeof(onSuccess)) {
-                onSuccess();
-            }
+            callOrIgnore(onSuccess);
         } catch (e) {
-            callOrThrow(opts.onFailure, e);
+            callOrThrow(onFailure, e);
         }
     };
     
@@ -694,9 +658,7 @@ define(function() {
                     cronHandle: this.handle
                 });
                 this.jni.wiltoncall("cron_stop", data);
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess();
-                }
+                callOrIgnore(opts.onSuccess);
             } catch (e) {
                 callOrThrow(opts.onFailure, e);
             }
@@ -713,9 +675,7 @@ define(function() {
             var handleJson = this.jni.wiltoncall("mutex_create");
             var handleObj = JSON.parse(handleJson);
             this.handle = handleObj.mutexHandle;
-            if ("function" === typeof(opts.onSuccess)) {
-                opts.onSuccess();
-            }
+            callOrIgnore(opts.onSuccess);
         } catch (e) {
             callOrThrow(opts.onFailure, e);
         }
@@ -738,9 +698,7 @@ define(function() {
                 } finally {
                     this.jni.wiltoncall("mutex_unlock", data);
                 }                
-                if ("function" === typeof(opts.onSuccess)) {
-                    opts.onSuccess(res);
-                }
+                callOrIgnore(opts.onSuccess, res);
                 return res;
             } catch (e) {
                 callOrThrow(opts.onFailure, e, {});
@@ -765,9 +723,7 @@ define(function() {
                 this.jni.wiltoncall("mutex_" + name, JSON.stringify({
                     mutexHandle: this.handle
                 }));
-                if ("function" === typeof (opts.onSuccess)) {
-                    opts.onSuccess();
-                }
+                callOrIgnore(opts.onSuccess);
             } catch (e) {
                 callOrThrow(opts.onFailure, e);
             }
@@ -788,9 +744,7 @@ define(function() {
             jni.wiltoncall("thread_sleep_millis", JSON.stringify({
                 millis: millis
             }));
-            if ("function" === typeof(opts.onSuccess)) {
-                opts.onSuccess();
-            }
+            callOrIgnore(opts.onSuccess);
         } catch (e) {
             callOrThrow(opts.onFailure, e);
         }
@@ -805,11 +759,9 @@ define(function() {
         try {
             var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             jni.wiltoncall("tcp_wait_for_connection", JSON.stringify(opts));
-            if ("function" === typeof(onSuccess)) {
-                onSuccess();
-            }
+            callOrIgnore(onSuccess);
         } catch (e) {
-            callOrThrow(opts.onFailure, e);
+            callOrThrow(onFailure, e);
         }
     };
     
