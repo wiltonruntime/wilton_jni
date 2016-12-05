@@ -26,6 +26,16 @@ if ("undefined" === typeof(define) && "undefined" === typeof(wilton)) {
 // definition
 
 define(function() {
+    
+    // internal utils
+
+    function defaultOpts(options) {
+        var opts = {};
+        if ("object" === typeof(options) && null !== options) {
+            opts = options;
+        }
+        return opts;
+    }
 
     // Logger
 
@@ -55,10 +65,7 @@ define(function() {
     };
     
     Logger.shutdown = function(options) {
-        var opts = {};
-        if ("object" === typeof(options) && null !== options) {
-            opts = options;
-        }
+        var opts = defaultOpts(options);
         try {
             var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             jni.wiltoncall("logger_shutdown");
@@ -136,10 +143,7 @@ define(function() {
 
     Response.prototype = {
         send: function(data, options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 if ("object" === typeof(opts.meta) && null !== opts.meta) {
                     this.jni.wiltoncall("request_set_response_metadata", JSON.stringify({
@@ -172,10 +176,7 @@ define(function() {
         },
         
         sendTempFile: function(filePath, options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 if ("object" === typeof(opts.meta) && null !== opts.meta) {
                     this.jni.wiltoncall("request_set_response_metadata", JSON.stringify({
@@ -200,10 +201,7 @@ define(function() {
         },
         
         sendMustache: function(filePath, values, options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 if ("object" === typeof(opts) && "object" === typeof(opts.meta)) {
                     this.jni.wiltoncall("request_set_response_metadata", JSON.stringify({
@@ -360,19 +358,17 @@ define(function() {
         },
         
         stop: function(options) {
-            if ("undefined" === typeof(options) || null === options) {
-                options = {};
-            }
+            var opts = defaultOpts(options);
             try {
                 this.jni.wiltoncall("server_stop", JSON.stringify({
                     serverHandle: this.handle
                 }));
-                if ("function" === typeof(options.onSuccess)) {
-                    options.onSuccess();
+                if ("function" === typeof(opts.onSuccess)) {
+                    opts.onSuccess();
                 }
             } catch (e) {
-                if ("function" === typeof(options.onFailure)) {
-                    options.onFailure(e);
+                if ("function" === typeof(opts.onFailure)) {
+                    opts.onFailure(e);
                 } else {
                     throw e;
                 }
@@ -389,10 +385,7 @@ define(function() {
     
     Mustache.prototype = {
         render: function(template, values, options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 if ("string" !== typeof(template)) {
                     template = String(template);
@@ -422,10 +415,7 @@ define(function() {
         },
         
         renderFile: function(templateFile, values, options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 if ("string" !== typeof(templateFile)) {
                     templateFile = String(templateFile);
@@ -459,10 +449,7 @@ define(function() {
     // Database
     
     var DBConnection = function(config) {
-        var conf = {};
-        if ("object" === typeof(config) && null !== config) {
-            conf = config;
-        }
+        var conf = defaultOpts(config);
         try {
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             this.url = conf.url;
@@ -483,10 +470,7 @@ define(function() {
     
     DBConnection.prototype = {
         execute: function(sql, params, options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 var sqlstr = "string" === typeof(sql) ? sql : String(sql);
                 var pars = {};
@@ -511,10 +495,7 @@ define(function() {
         },
         
         queryList: function(sql, params, options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 var sqlstr = "string" === typeof(sql) ? sql : String(sql);
                 var pars = {};
@@ -542,10 +523,7 @@ define(function() {
         },
         
         query: function(sql, params, options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             var list = this.queryList(sql, params, {
                 onFailure: opts.onFailure
             });
@@ -566,10 +544,7 @@ define(function() {
         },
         
         doInTransaction: function(callback, options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 var tranJson = this.jni.wiltoncall("db_transaction_start", JSON.stringify({
                     connectionHandle: this.handle
@@ -603,10 +578,7 @@ define(function() {
         },
         
         close: function(options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 this.jni.wiltoncall("db_connection_close", JSON.stringify({
                     connectionHandle: this.handle
@@ -656,10 +628,7 @@ define(function() {
     
     HttpClient.prototype = {
         execute: function(url, options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 var urlstr = "string" === typeof(url) ? url : String(url);
                 var dt = "";
@@ -696,10 +665,7 @@ define(function() {
         },
         
         sendTempFile: function(url, options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 var urlstr = "string" === typeof(url) ? url : String(url);
                 var fp = "";
@@ -737,10 +703,7 @@ define(function() {
         },
         
         close: function(options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 var data = JSON.stringify({
                     httpclientHandle: this.handle
@@ -763,10 +726,7 @@ define(function() {
     // Cron
     
     var CronTask = function(config) {
-        var conf = {};
-        if ("object" === typeof(config) && null !== config) {
-            conf = config;
-        }
+        var conf = defaultOpts(config);
         if ("function" !== typeof(conf.callback)) {
             throw new Error("Required 'callback' attribute not specified");
         }
@@ -801,10 +761,7 @@ define(function() {
     
     CronTask.prototype = {
         stop: function(options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 var data = JSON.stringify({
                     cronHandle: this.handle
@@ -827,10 +784,7 @@ define(function() {
     // Mutex
     
     var Mutex = function(options) {
-        var opts = {};
-        if ("object" === typeof(options) && null !== options) {
-            opts = options;
-        }
+        var opts = defaultOpts(options);
         try {
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             var handleJson = this.jni.wiltoncall("mutex_create");
@@ -850,10 +804,7 @@ define(function() {
     
     Mutex.prototype = {
         synchronized: function(options) {
-            var opts = {};
-            if ("object" === typeof(options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             if ("function" !== typeof(opts.callback)) {
                 throw new Error("Required 'callback' attribute not specified");
             }
@@ -895,10 +846,7 @@ define(function() {
         },
         
         _voidcall: function(name, options) {
-            var opts = {};
-            if ("object" === typeof (options) && null !== options) {
-                opts = options;
-            }
+            var opts = defaultOpts(options);
             try {
                 this.jni.wiltoncall("mutex_" + name, JSON.stringify({
                     mutexHandle: this.handle
@@ -924,10 +872,7 @@ define(function() {
     };
         
     Misc.threadSleepMillis = function(millis, options) {
-        var opts = {};
-        if ("object" === typeof(options) && null !== options) {
-            opts = options;
-        }
+        var opts = defaultOpts(options);
         try {            
             var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             jni.wiltoncall("thread_sleep_millis", JSON.stringify({
@@ -946,10 +891,7 @@ define(function() {
     };
     
     Misc.tcpWaitForConnection = function(options) {
-        var opts = {};
-        if ("object" === typeof(options) && null !== options) {
-            opts = options;
-        }
+        var opts = defaultOpts(options);
         var onSuccess = opts.onSuccess;
         var onFailure = opts.onFailure;
         delete opts.onSuccess;
