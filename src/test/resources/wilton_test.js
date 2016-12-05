@@ -105,11 +105,9 @@ server.stop();
 
 // Mustache
 
-var mustache = new wilton.Mustache();
-assertEquals("Hi Chris!\nHi Mark!\nHi Scott!\n", mustache.render("{{#names}}Hi {{name}}!\n{{/names}}", 
-    {
-        names: [{name: "Chris"}, {name: "Mark"}, {name: "Scott"}]
-    }));
+assertEquals("Hi Chris!\nHi Mark!\nHi Scott!\n", wilton.Mustache.render("{{#names}}Hi {{name}}!\n{{/names}}", {
+    names: [{name: "Chris"}, {name: "Mark"}, {name: "Scott"}]
+}));
 
 // DBConnection
 

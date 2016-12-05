@@ -439,44 +439,45 @@ define(function() {
     // Mustache
 
     var Mustache = function() {
-        this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
+        throw new Error("'Mustache' object cannot be instantiated, use its functions directly instead.");
+        
     };
     
-    Mustache.prototype = {
-        render: function(template, values, options) {
-            var opts = Utils.defaultObject(options);
-            try {
-                var tp = Utils.defaultString(template);
-                var vals = Utils.defaultObject(values);
-                var data = JSON.stringify({
-                    template: tp,
-                    values: vals
-                });
-                var res = this.jni.wiltoncall("mustache_render", data);
-                var resstr = String(res);
-                Utils.callOrIgnore(opts.onSuccess, resstr);
-                return resstr;
-            } catch (e) {
-                Utils.callOrThrow(opts.onFailure, e, "");
-            }
-        },
-        
-        renderFile: function(templateFile, values, options) {
-            var opts = Utils.defaultObject(options);
-            try {
-                var tpf = Utils.defaultString(templateFile);
-                var vals = Utils.defaultObject(values);
-                var data = JSON.stringify({
-                    file: tpf,
-                    values: vals
-                });
-                var res = this.jni.wiltoncall("mustache_render_file", data);
-                var resstr = String(res);
-                Utils.callOrIgnore(opts.onSuccess, resstr);
-                return resstr;
-            } catch (e) {
-                Utils.callOrThrow(opts.onFailure, e, "");
-            }
+    Mustache.render = function(template, values, options) {
+        var opts = Utils.defaultObject(options);
+        try {
+            var tp = Utils.defaultString(template);
+            var vals = Utils.defaultObject(values);
+            var data = JSON.stringify({
+                template: tp,
+                values: vals
+            });
+            var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
+            var res = jni.wiltoncall("mustache_render", data);
+            var resstr = String(res);
+            Utils.callOrIgnore(opts.onSuccess, resstr);
+            return resstr;
+        } catch (e) {
+            Utils.callOrThrow(opts.onFailure, e, "");
+        }
+    };
+
+    Mustache.renderFile = function(templateFile, values, options) {
+        var opts = Utils.defaultObject(options);
+        try {
+            var tpf = Utils.defaultString(templateFile);
+            var vals = Utils.defaultObject(values);
+            var data = JSON.stringify({
+                file: tpf,
+                values: vals
+            });
+            var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
+            var res = jni.wiltoncall("mustache_render_file", data);
+            var resstr = String(res);
+            Utils.callOrIgnore(opts.onSuccess, resstr);
+            return resstr;
+        } catch (e) {
+            Utils.callOrThrow(opts.onFailure, e, "");
         }
     };
     
