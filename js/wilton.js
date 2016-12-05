@@ -27,41 +27,65 @@ if ("undefined" === typeof(define) && "undefined" === typeof(wilton)) {
 
 define(function() {
     
-    // internal utils
+    // Utils
+    
+    var Utils = function() {
+        throw new Error("'Utils' object cannot be instantiated, use its functions directly instead.");
+    };
+    
+    Utils.undefinedOrNull = function(obj) {
+        return "undefined" === typeof(obj) || null === obj;
+    };
 
-    function defaultObject(options) {
+    Utils.startsWith = function(str, prefix) {
+        if (Utils.undefinedOrNull(str) || Utils.undefinedOrNull(prefix)) {
+            return false;
+        }
+        return 0 === str.lastIndexOf(prefix, 0);
+    };
+
+    Utils.endsWith = function(str, suffix) {
+        if (Utils.undefinedOrNull(str) || Utils.undefinedOrNull(suffix)) {
+            return false;
+        }
+        return str.indexOf(suffix, str.length - suffix.length) !== -1;
+    };
+    
+    Utils.defaultObject = function(options) {
         var opts = {};
         if ("object" === typeof(options) && null !== options) {
             opts = options;
         }
         return opts;
-    }
+    };
     
-    function defaultString(str, value) {
+    Utils.defaultString = function(str, value) {
         if ("string" === typeof (str)) {
             return str;
+        } else if (!Utils.undefinedOrNull(str)) {
+            return String(str);
         } else {
             if ("undefined" !== typeof(value)) {
                 return value;
             } else {
-                return String(str);
+                return "";
             }
         }
-    }
+    };
     
-    function defaultJson(data) {
-        var dt = "";
-        if ("undefined" !== typeof(data) && null !== data) {
+    Utils.defaultJson = function(data) {
+        var json = "{}";
+        if (!Utils.undefinedOrNull(data)) {
             if ("string" === typeof(data)) {
-                dt = data;
+                json = data;
             } else {
-                dt = JSON.stringify(data);
+                json = JSON.stringify(data);
             }
         }
-        return dt;
-    }
+        return json;
+    };
     
-    function callOrThrow(onFailure, e, res) {        
+    Utils.callOrThrow = function(onFailure, e, res) {        
         if ("function" === typeof(onFailure)) {
             onFailure(e);
             if ("undefined" !== typeof(res)) {
@@ -70,9 +94,9 @@ define(function() {
         } else {
             throw e;
         }
-    }
+    };
     
-    function callOrIgnore(onSuccess, params) {
+    Utils.callOrIgnore = function(onSuccess, params) {
         if ("function" === typeof(onSuccess)) {
             if ("undefined" !== typeof(params)) {
                 onSuccess(params);
@@ -80,26 +104,68 @@ define(function() {
                 onSuccess();
             }
         }
-    }
+    };
     
-    function checkAttrType(obj, attr, type) {
-        // todo: obj check
-        var actual = typeof (obj[attr]);
-        if (type !== actual) {
-            throw new Error("Invalid attribute specified, name: [" + attr + "]," + 
-                    " required type: [" + type + "], actual type: [" + actual + "]");
+    Utils.listProperties = function(obj) {
+        var res = [];
+        if (!Utils.undefinedOrNull(obj)) {
+            for (var pr in obj) {
+                if (obj.hasOwnProperty(pr)) {
+                    res.push(pr);
+                }
+            }
         }
-    }
+        return res;
+    };
+
+    Utils.checkProperties = function(obj, props) {
+        if (Utils.undefinedOrNull(obj)) {
+            throw new Error("'checkProperties' error: specified object is invalid");
+        }
+        if (Utils.undefinedOrNull(props) || !(props instanceof Array) || 0 === props.length) {
+            throw new Error("'checkProperties' error: specified props are invalid");
+        }
+        for (var i = 0; i < props.length; i++) {
+            var pr = props[i];
+            if ("string" !== typeof(pr)) {
+                throw new Error("'checkProperties' error:" +
+                        " invalid non-string property name: [" + pr + "], object: [" + Utils.listProperties(obj) + "]");
+            }
+            if (!obj.hasOwnProperty(pr)) {
+                throw new Error("'checkProperties' error:" +
+                        " missed property name: [" + pr + "], object: [" + Utils.listProperties(obj) + "]");
+            }
+        }
+    };
+    
+    Utils.checkPropertyType = function(obj, prop, type) {
+        if (Utils.undefinedOrNull(obj)) {
+            throw new Error("'checkPropertyType' error: specified object is invalid");
+        }
+        if ("string" !== typeof(prop)) {
+            throw new Error("'checkPropertyType' error: specified prop is invalid");
+        }
+        if ("string" !== typeof(type)) {
+            throw new Error("'checkPropertyType' error: specified type is invalid");
+        }
+        var actual = typeof(obj[prop]);
+        if (type !== actual) {
+            throw new Error("Invalid attribute specified, name: [" + prop + "]," + 
+                    " required type: [" + type + "], actual type: [" + actual + "]," +
+                    " object: [" + listProperties(obj) + "]");
+        }
+    };
+
 
     // Logger
 
     var Logger = function(name) {
         this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
-        this.name = defaultString(name, "wilton");
+        this.name = Utils.defaultString(name, "wilton");
     };
     
     Logger.initialize = function(config) {
-        var opts = defaultObject(config);
+        var opts = Utils.defaultObject(config);
         var onSuccess = opts.onSuccess;
         var onFailure = opts.onFailure;
         delete opts.onSuccess;
@@ -107,20 +173,20 @@ define(function() {
         try {
             var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             jni.wiltoncall("logger_initialize", JSON.stringify(opts));
-            callOrIgnore(onSuccess);
+            Utils.callOrIgnore(onSuccess);
         } catch (e) {
-            callOrThrow(onFailure, e);
+            Utils.callOrThrow(onFailure, e);
         }
     };
     
     Logger.shutdown = function(options) {
-        var opts = defaultObject(options);
+        var opts = Utils.defaultObject(options);
         try {
             var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             jni.wiltoncall("logger_shutdown");
-            callOrIgnore(opts.onSuccess);
+            Utils.callOrIgnore(opts.onSuccess);
         } catch (e) {
-            callOrThrow(opts.onFailure, e);
+            Utils.callOrThrow(opts.onFailure, e);
         }
     };
 
@@ -186,47 +252,47 @@ define(function() {
 
     Response.prototype = {
         send: function(data, options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
                 this._setMeta(opts);
-                var dt = defaultJson(data);
+                var dt = Utils.defaultJson(data);
                 this.jni.wiltoncall("request_send_response", JSON.stringify({
                     requestHandle: this.handle,
                     data: dt
                 }));
-                callOrIgnore(opts.onSuccess);
+                Utils.callOrIgnore(opts.onSuccess);
             } catch (e) {
-                callOrThrow(opts.onFailure, e);
+                Utils.callOrThrow(opts.onFailure, e);
             }
         },
         
         sendTempFile: function(filePath, options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
                 this._setMeta(opts);
                 this.jni.wiltoncall("request_send_temp_file", JSON.stringify({
                     requestHandle: this.handle,
                     filePath: filePath
                 }));
-                callOrIgnore(opts.onSuccess);
+                Utils.callOrIgnore(opts.onSuccess);
             } catch (e) {
-                callOrThrow(opts.onFailure, e);
+                Utils.callOrThrow(opts.onFailure, e);
             }
         },
         
         sendMustache: function(filePath, values, options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
                 this._setMeta(opts);
-                var vals = defaultObject(values);
+                var vals = Utils.defaultObject(values);
                 this.jni.wiltoncall("request_send_mustache", JSON.stringify({
                     requestHandle: this.handle,
                     mustacheFilePath: this.server.mustacheTemplatesRootDir + filePath,
                     values: vals
                 }));
-                callOrIgnore(opts.onSuccess);
+                Utils.callOrIgnore(opts.onSuccess);
             } catch (e) {
-                callOrThrow(opts.onFailure, e);
+                Utils.callOrThrow(opts.onFailure, e);
             }
         },
         
@@ -244,7 +310,7 @@ define(function() {
     // Server
 
     var Server = function(config) {
-        var opts = defaultObject(config);
+        var opts = Utils.defaultObject(config);
         
         var _prepateViews = function(views) {
             if ("object" !== typeof(views)) {
@@ -298,9 +364,9 @@ define(function() {
             var handleJson = this.jni.wiltoncall("server_create", data, gatewayPass);
             var handleObj = JSON.parse(handleJson);
             this.handle = handleObj.serverHandle;
-            callOrIgnore(onSuccess);
+            Utils.callOrIgnore(onSuccess);
         } catch (e) {
-            callOrThrow(onFailure, e);
+            Utils.callOrThrow(onFailure, e);
         }
     };
 
@@ -357,14 +423,14 @@ define(function() {
         },
         
         stop: function(options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
                 this.jni.wiltoncall("server_stop", JSON.stringify({
                     serverHandle: this.handle
                 }));
-                callOrIgnore(opts.onSuccess);
+                Utils.callOrIgnore(opts.onSuccess);
             } catch (e) {
-                callOrThrow(opts.onFailure, e);
+                Utils.callOrThrow(opts.onFailure, e);
             }
         }
     };
@@ -378,38 +444,38 @@ define(function() {
     
     Mustache.prototype = {
         render: function(template, values, options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
-                var tp = defaultString(template);
-                var vals = defaultObject(values);
+                var tp = Utils.defaultString(template);
+                var vals = Utils.defaultObject(values);
                 var data = JSON.stringify({
                     template: tp,
                     values: vals
                 });
                 var res = this.jni.wiltoncall("mustache_render", data);
                 var resstr = String(res);
-                callOrIgnore(opts.onSuccess, resstr);
+                Utils.callOrIgnore(opts.onSuccess, resstr);
                 return resstr;
             } catch (e) {
-                callOrThrow(opts.onFailure, e, "");
+                Utils.callOrThrow(opts.onFailure, e, "");
             }
         },
         
         renderFile: function(templateFile, values, options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
-                var tpf = defaultString(templateFile);
-                var vals = defaultObject(values);
+                var tpf = Utils.defaultString(templateFile);
+                var vals = Utils.defaultObject(values);
                 var data = JSON.stringify({
                     file: tpf,
                     values: vals
                 });
                 var res = this.jni.wiltoncall("mustache_render_file", data);
                 var resstr = String(res);
-                callOrIgnore(opts.onSuccess, resstr);
+                Utils.callOrIgnore(opts.onSuccess, resstr);
                 return resstr;
             } catch (e) {
-                callOrThrow(opts.onFailure, e, "");
+                Utils.callOrThrow(opts.onFailure, e, "");
             }
         }
     };
@@ -418,56 +484,56 @@ define(function() {
     // Database
     
     var DBConnection = function(config) {
-        var opts = defaultObject(config);
+        var opts = Utils.defaultObject(config);
         try {
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             this.url = opts.url;
             var handleJson = this.jni.wiltoncall("db_connection_open", this.url);
             var handleParsed = JSON.parse(handleJson);
             this.handle = handleParsed.connectionHandle;
-            callOrIgnore(opts.onSuccess);
+            Utils.callOrIgnore(opts.onSuccess);
         } catch (e) {
-            callOrThrow(opts.onFailure, e);
+            Utils.callOrThrow(opts.onFailure, e);
         }
     };
     
     DBConnection.prototype = {
         execute: function(sql, params, options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
-                var sqlstr = defaultString(sql);
-                var pars = defaultObject(params);
+                var sqlstr = Utils.defaultString(sql);
+                var pars = Utils.defaultObject(params);
                 this.jni.wiltoncall("db_connection_execute", JSON.stringify({
                     connectionHandle: this.handle,
                     sql: sqlstr,
                     params: pars
                 }));
-                callOrIgnore(opts.onSuccess);
+                Utils.callOrIgnore(opts.onSuccess);
             } catch (e) {
-                callOrThrow(opts.onFailure, e);
+                Utils.callOrThrow(opts.onFailure, e);
             }
         },
         
         queryList: function(sql, params, options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
-                var sqlstr = defaultString(sql);
-                var pars = defaultObject(params);
+                var sqlstr = Utils.defaultString(sql);
+                var pars = Utils.defaultObject(params);
                 var json = this.jni.wiltoncall("db_connection_query", JSON.stringify({
                     connectionHandle: this.handle,
                     sql: sqlstr,
                     params: pars
                 }));
                 var res = JSON.parse(json);
-                callOrIgnore(opts.onSuccess, res);
+                Utils.callOrIgnore(opts.onSuccess, res);
                 return res;
             } catch (e) {
-                callOrThrow(opts.onFailure, e, []);
+                Utils.callOrThrow(opts.onFailure, e, []);
             }
         },
         
         query: function(sql, params, options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             var list = this.queryList(sql, params, {
                 onFailure: opts.onFailure
             });
@@ -478,7 +544,7 @@ define(function() {
                 } else if (1 === list.length) {
                     res = list[0];
                 }
-                callOrIgnore(opts.onSuccess, res);
+                Utils.callOrIgnore(opts.onSuccess, res);
                 return res;
             }
             // else error happened
@@ -486,7 +552,7 @@ define(function() {
         },
         
         doInTransaction: function(callback, options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
                 var tranJson = this.jni.wiltoncall("db_transaction_start", JSON.stringify({
                     connectionHandle: this.handle
@@ -501,23 +567,23 @@ define(function() {
                     this.jni.wiltoncall("db_transaction_rollback", JSON.stringify({
                         transactionHandle: tran.transactionHandle
                     }));
-                    callOrThrow(opts.onFailure, e);
+                    Utils.callOrThrow(opts.onFailure, e);
                 }
-                callOrIgnore(opts.onSuccess);
+                Utils.callOrIgnore(opts.onSuccess);
             } catch (e) {
-                callOrThrow(opts.onFailure, e);
+                Utils.callOrThrow(opts.onFailure, e);
             }
         },
         
         close: function(options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
                 this.jni.wiltoncall("db_connection_close", JSON.stringify({
                     connectionHandle: this.handle
                 }));
-                callOrIgnore(opts.onSuccess);
+                Utils.callOrIgnore(opts.onSuccess);
             } catch (e) {
-                callOrThrow(opts.onFailure, e);
+                Utils.callOrThrow(opts.onFailure, e);
             }
         }
     };
@@ -526,7 +592,7 @@ define(function() {
     // HttpClient
     
     var HttpClient = function(config) {
-        var opts = defaultObject(config);
+        var opts = Utils.defaultObject(config);
         var onSuccess = opts.onSuccess;
         var onFailure = opts.onFailure;
         delete opts.onSuccess;
@@ -537,19 +603,19 @@ define(function() {
             var json = this.jni.wiltoncall("httpclient_create", data);
             var out = JSON.parse(json);
             this.handle = out.httpclientHandle;
-            callOrIgnore(onSuccess);
+            Utils.callOrIgnore(onSuccess);
         } catch (e) {
-            callOrThrow(onFailure, e);
+            Utils.callOrThrow(onFailure, e);
         }
     };
     
     HttpClient.prototype = {
         execute: function(url, options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
-                var urlstr = defaultString(url);
-                var dt = defaultJson(opts.data);
-                var meta = defaultObject(opts.meta);
+                var urlstr = Utils.defaultString(url);
+                var dt = Utils.defaultJson(opts.data);
+                var meta = Utils.defaultObject(opts.meta);
                 var resp_json = this.jni.wiltoncall("httpclient_execute", JSON.stringify({
                     httpclientHandle: this.handle,
                     url: urlstr,
@@ -557,19 +623,19 @@ define(function() {
                     metadata: meta
                 }));
                 var resp = JSON.parse(resp_json);
-                callOrIgnore(opts.onSuccess, resp);
+                Utils.callOrIgnore(opts.onSuccess, resp);
                 return resp;
             } catch (e) {
-                callOrThrow(opts.onFailure, e);
+                Utils.callOrThrow(opts.onFailure, e);
             }
         },
         
         sendTempFile: function(url, options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
-                var urlstr = defaultString(url);
-                var fp = defaultJson(opts.filePath);
-                var meta = defaultObject(opts.meta);
+                var urlstr = Utils.defaultString(url);
+                var fp = Utils.defaultJson(opts.filePath);
+                var meta = Utils.defaultObject(opts.meta);
                 var resp_json = this.jni.wiltoncall("httpclient_send_temp_file", JSON.stringify({
                     httpclientHandle: this.handle,
                     url: urlstr,
@@ -577,22 +643,22 @@ define(function() {
                     metadata: meta
                 }));
                 var resp = JSON.parse(resp_json);
-                callOrIgnore(opts.onSuccess, resp);
+                Utils.callOrIgnore(opts.onSuccess, resp);
                 return resp;
             } catch (e) {
-                callOrThrow(opts.onFailure, e, {});
+                Utils.callOrThrow(opts.onFailure, e, {});
             }
         },
         
         close: function(options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
                 this.jni.wiltoncall("httpclient_close", JSON.stringify({
                     httpclientHandle: this.handle
                 }));
-                callOrIgnore(opts.onSuccess);
+                Utils.callOrIgnore(opts.onSuccess);
             } catch (e) {
-                callOrThrow(opts.onFailure, e);
+                Utils.callOrThrow(opts.onFailure, e);
             }
         }
     };
@@ -601,8 +667,8 @@ define(function() {
     // Cron
     
     var CronTask = function(config) {
-        var opts = defaultObject(config);
-        checkAttrType(opts, "callback", "function");
+        var opts = Utils.defaultObject(config);
+        Utils.checkPropertyType(opts, "callback", "function");
         var onSuccess = opts.onSuccess;
         var onFailure = opts.onFailure;
         delete opts.onSuccess;
@@ -620,22 +686,22 @@ define(function() {
             var handleJson = this.jni.wiltoncall("cron_start", data, runnable);
             var handleObj = JSON.parse(handleJson);
             this.handle = handleObj.cronHandle;
-            callOrIgnore(onSuccess);
+            Utils.callOrIgnore(onSuccess);
         } catch (e) {
-            callOrThrow(onFailure, e);
+            Utils.callOrThrow(onFailure, e);
         }
     };
     
     CronTask.prototype = {
         stop: function(options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
                 this.jni.wiltoncall("cron_stop", JSON.stringify({
                     cronHandle: this.handle
                 }));
-                callOrIgnore(opts.onSuccess);
+                Utils.callOrIgnore(opts.onSuccess);
             } catch (e) {
-                callOrThrow(opts.onFailure, e);
+                Utils.callOrThrow(opts.onFailure, e);
             }
         }
     };
@@ -644,22 +710,22 @@ define(function() {
     // Mutex
     
     var Mutex = function(options) {
-        var opts = defaultObject(options);
+        var opts = Utils.defaultObject(options);
         try {
             this.jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             var handleJson = this.jni.wiltoncall("mutex_create");
             var handleObj = JSON.parse(handleJson);
             this.handle = handleObj.mutexHandle;
-            callOrIgnore(opts.onSuccess);
+            Utils.callOrIgnore(opts.onSuccess);
         } catch (e) {
-            callOrThrow(opts.onFailure, e);
+            Utils.callOrThrow(opts.onFailure, e);
         }
     };
     
     Mutex.prototype = {
         synchronized: function(options) {
-            var opts = defaultObject(options);
-            checkAttrType(opts, "callback", "function");
+            var opts = Utils.defaultObject(options);
+            Utils.checkPropertyType(opts, "callback", "function");
             try {
                 var data = JSON.stringify({
                     mutexHandle: this.handle
@@ -671,10 +737,10 @@ define(function() {
                 } finally {
                     this.jni.wiltoncall("mutex_unlock", data);
                 }                
-                callOrIgnore(opts.onSuccess, res);
+                Utils.callOrIgnore(opts.onSuccess, res);
                 return res;
             } catch (e) {
-                callOrThrow(opts.onFailure, e, {});
+                Utils.callOrThrow(opts.onFailure, e, {});
             }
         },
         
@@ -691,14 +757,14 @@ define(function() {
         },
         
         _voidcall: function(name, options) {
-            var opts = defaultObject(options);
+            var opts = Utils.defaultObject(options);
             try {
                 this.jni.wiltoncall("mutex_" + name, JSON.stringify({
                     mutexHandle: this.handle
                 }));
-                callOrIgnore(opts.onSuccess);
+                Utils.callOrIgnore(opts.onSuccess);
             } catch (e) {
-                callOrThrow(opts.onFailure, e);
+                Utils.callOrThrow(opts.onFailure, e);
             }
         }
     };
@@ -711,20 +777,20 @@ define(function() {
     };
         
     Misc.threadSleepMillis = function(millis, options) {
-        var opts = defaultObject(options);
+        var opts = Utils.defaultObject(options);
         try {            
             var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             jni.wiltoncall("thread_sleep_millis", JSON.stringify({
                 millis: millis
             }));
-            callOrIgnore(opts.onSuccess);
+            Utils.callOrIgnore(opts.onSuccess);
         } catch (e) {
-            callOrThrow(opts.onFailure, e);
+            Utils.callOrThrow(opts.onFailure, e);
         }
     };
     
     Misc.tcpWaitForConnection = function(options) {
-        var opts = defaultObject(options);
+        var opts = Utils.defaultObject(options);
         var onSuccess = opts.onSuccess;
         var onFailure = opts.onFailure;
         delete opts.onSuccess;
@@ -732,11 +798,12 @@ define(function() {
         try {
             var jni = Packages.net.wiltonwebtoolkit.WiltonJni;
             jni.wiltoncall("tcp_wait_for_connection", JSON.stringify(opts));
-            callOrIgnore(onSuccess);
+            Utils.callOrIgnore(onSuccess);
         } catch (e) {
-            callOrThrow(onFailure, e);
+            Utils.callOrThrow(onFailure, e);
         }
     };
+    
     
     // export
     
@@ -748,7 +815,8 @@ define(function() {
         Server: Server,
         CronTask: CronTask,
         Mutex: Mutex,
-        Misc: Misc
+        Misc: Misc,
+        Utils: Utils
     };
     
 });
