@@ -33,6 +33,8 @@ jclass GATEWAY_INTERFACE_CLASS;
 jmethodID GATEWAY_CALLBACK_METHOD;
 jclass RUNNABLE_INTERFACE_CLASS;
 jmethodID RUNNABLE_CALLBACK_METHOD;
+jclass CALLABLE_INTERFACE_CLASS;
+jmethodID CALLABLE_CALLBACK_METHOD;
 jclass EXCEPTION_CLASS;
 
 std::string jstring_to_str(JNIEnv* env, jstring jstr) {
@@ -83,6 +85,8 @@ void register_wiltoncalls() {
     wj::put_wilton_function("mutex_create", wj::mutex_create);
     wj::put_wilton_function("mutex_lock", wj::mutex_lock);
     wj::put_wilton_function("mutex_unlock", wj::mutex_unlock);
+    wj::put_wilton_function("mutex_wait", wj::mutex_wait);
+    wj::put_wilton_function("mutex_notify_all", wj::mutex_notify_all);
     wj::put_wilton_function("mutex_destroy", wj::mutex_destroy);
     
     wj::put_wilton_function("thread_sleep_millis", wj::thread_sleep_millis);
@@ -120,6 +124,15 @@ void* /* jmethodID */ get_runnable_method() {
     return static_cast<void*> (RUNNABLE_CALLBACK_METHOD);
 }
 
+void* /* jmethodID */ get_callable_method() {
+    return static_cast<void*> (CALLABLE_CALLBACK_METHOD);
+}
+
+void throw_delayed(const std::string& message) {
+    JNIEnv* env = static_cast<JNIEnv*>(get_jni_env());
+    env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(message + "\nReporting delayed error").c_str());
+}
+
 } // namespace
 }
 
@@ -147,6 +160,13 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {
     if (nullptr == RUNNABLE_INTERFACE_CLASS) {return -1; }
     RUNNABLE_CALLBACK_METHOD = env->GetMethodID(RUNNABLE_INTERFACE_CLASS, "run", "()V");
     if (nullptr == RUNNABLE_CALLBACK_METHOD) { return -1; }
+    // callable
+    jclass callableClass = env->FindClass("java/util/concurrent/Callable");
+    if (nullptr == callableClass) { return -1; }
+    CALLABLE_INTERFACE_CLASS = static_cast<jclass> (env->NewGlobalRef(callableClass));
+    if (nullptr == CALLABLE_INTERFACE_CLASS) { return -1; }
+    CALLABLE_CALLBACK_METHOD = env->GetMethodID(CALLABLE_INTERFACE_CLASS, "call", "()Ljava/lang/Object;");
+    if (nullptr == CALLABLE_CALLBACK_METHOD) { return -1; }
     // exception
     jclass exClass = env->FindClass(WILTON_JNI_EXCEPTION_CLASS);
     if (nullptr == exClass) { return -1; }

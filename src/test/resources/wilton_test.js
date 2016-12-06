@@ -171,9 +171,26 @@ mutex.synchronized({
     }
 });
 assertTrue(1 === mholder[0]);
+new Packages.java.lang.Thread(
+    new Packages.java.lang.Runnable({
+        run: function() {
+            wilton.Misc.threadSleepMillis(100);
+            mutex.lock(); // pessimization       
+            mholder[0] += 1;
+            mutex.notifyAll();
+            mutex.unlock();
+        }
+    })
+).start();
 mutex.lock();
+mutex.wait({
+   callback: function() {
+       return 2 === mholder[0];
+   }
+});
 mutex.unlock();
 mutex.destroy();
+assertTrue(2 === mholder[0]);
 
 // shutdown
 wilton.Logger.shutdown();

@@ -50,6 +50,15 @@ int64_t get_json_int(const ss::JsonField& field) {
     return field.as_int64();
 }
 
+bool get_json_bool(const staticlib::serialization::JsonField& field) {
+    if (ss::JsonType::BOOLEAN != field.type()) {
+        throw WiltonJsException(TRACEMSG("Invalid '" + field.name() + "' field,"
+                " type: [" + ss::stringify_json_type(field.type()) + "]," +
+                " value: [" + ss::dump_json_to_string(field.value()) + "]"));
+    }
+    return field.as_bool();
+}
+
 const ss::JsonValue& get_json_object(
         const ss::JsonField& field) {
     if (ss::JsonType::OBJECT != field.type()) {

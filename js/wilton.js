@@ -753,6 +753,32 @@ define(function() {
             this._voidcall("unlock", options);
         },
         
+        wait: function(options) {
+            var opts = Utils.defaultObject(options);
+            Utils.checkPropertyType(opts, "callback", "function");
+            try {
+                var cond = new Packages.java.util.concurrent.Callable({
+                    call: function() {
+                        var res = opts.callback();
+                        var resbool = Boolean(res);
+                        return JSON.stringify({
+                            condition: resbool
+                        });
+                    }
+                });
+                this.jni.wiltoncall("mutex_wait", JSON.stringify({
+                    mutexHandle: this.handle
+                }), cond);
+                Utils.callOrIgnore(opts.onSuccess);
+            } catch (e) {
+                Utils.callOrThrow(opts.onFailure, e);
+            }
+        },
+        
+        notifyAll: function(options) {
+            this._voidcall("notify_all", options);
+        },
+        
         destroy: function(options) {
             this._voidcall("destroy", options);
         },

@@ -100,6 +100,10 @@ std::string mutex_lock(const std::string& data, void* object);
 
 std::string mutex_unlock(const std::string& data, void* object);
 
+std::string mutex_wait(const std::string& data, void* object);
+
+std::string mutex_notify_all(const std::string& data, void* object);
+
 std::string mutex_destroy(const std::string& data, void* object);
 
 // Misc
@@ -125,6 +129,8 @@ const std::string& get_json_string(const staticlib::serialization::JsonField& fi
 
 int64_t get_json_int(const staticlib::serialization::JsonField& field);
 
+bool get_json_bool(const staticlib::serialization::JsonField& field);
+
 const staticlib::serialization::JsonValue& get_json_object(
         const staticlib::serialization::JsonField& field);
 
@@ -135,6 +141,10 @@ void* /* JNIEnv* */ get_jni_env();
 void* /* jmethodID */ get_gateway_method();
 
 void* /* jmethodID */ get_runnable_method();
+
+void* /* jmethodID */ get_callable_method();
+
+void throw_delayed(const std::string& message);
 
 template<typename T>
 class handle_registry {
@@ -153,6 +163,13 @@ public:
         T* ptr = reinterpret_cast<T*> (handle);
         auto erased = registry.erase(ptr);
         return 1 == erased ? ptr : nullptr;
+    }
+    
+    T* peek(int64_t handle) {
+        std::lock_guard<std::mutex> lock(mutex);
+        T* ptr = reinterpret_cast<T*> (handle);
+        auto exists = registry.count(ptr);
+        return 1 == exists ? ptr : nullptr;
     }
 };
 
