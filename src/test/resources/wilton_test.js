@@ -184,9 +184,10 @@ new Packages.java.lang.Thread(
 ).start();
 mutex.lock();
 mutex.wait({
-   callback: function() {
-       return 2 === mholder[0];
-   }
+    timeoutMillis: 30000,
+    callback: function() {
+        return 2 === mholder[0];
+    }
 });
 mutex.unlock();
 mutex.destroy();

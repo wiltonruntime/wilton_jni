@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-// version 0.5.5
+// version 0.5.6
 
 if ("undefined" === typeof(Packages)) {
     console.log("Error: wilton.js requires Nashorn or Rhino JVM environment");
@@ -756,6 +756,7 @@ define(function() {
         wait: function(options) {
             var opts = Utils.defaultObject(options);
             Utils.checkPropertyType(opts, "callback", "function");
+            Utils.checkPropertyType(opts, "timeoutMillis", "number");
             try {
                 var cond = new Packages.java.util.concurrent.Callable({
                     call: function() {
@@ -767,7 +768,8 @@ define(function() {
                     }
                 });
                 this.jni.wiltoncall("mutex_wait", JSON.stringify({
-                    mutexHandle: this.handle
+                    mutexHandle: this.handle,
+                    timeoutMillis: opts.timeoutMillis
                 }), cond);
                 Utils.callOrIgnore(opts.onSuccess);
             } catch (e) {

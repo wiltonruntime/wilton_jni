@@ -131,25 +131,31 @@ std::string mutex_wait(const std::string& data, void* object) {
     // json parse
     ss::JsonValue json = ss::load_json_from_string(data);
     int64_t handle = -1;
+    int64_t timeout_millis = -1;
     for (const ss::JsonField& fi : json.as_object()) {
         auto& name = fi.name();
         if ("mutexHandle" == name) {
             handle = detail::get_json_int(fi);
+        } else if ("timeoutMillis" == name) {
+            timeout_millis = detail::get_json_int(fi);
         } else {
             throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
         }
     }
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
             "Required parameter 'mutexHandle' not specified"));
+    if (-1 == timeout_millis) throw WiltonJsException(TRACEMSG(
+            "Required parameter 'timeoutMillis' not specified"));
     // get handle
     wilton_Mutex* mutex = static_registry().peek(handle);
     if (nullptr == mutex) throw WiltonJsException(TRACEMSG(
             "Invalid 'mutexHandle' parameter specified"));
     // call wilton
-    char* err = wilton_Mutex_wait(mutex, object, [](void* passed) {
-        bool cond = call_condition(passed);
-        return cond ? 1 : 0;
-    });
+    char* err = wilton_Mutex_wait(mutex, static_cast<int> (timeout_millis), object,
+            [](void* passed) {
+                bool cond = call_condition(passed);
+                return cond ? 1 : 0;
+            });
     if (nullptr != err) {
         detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     }

@@ -1,4 +1,5 @@
 import com.google.common.collect.ImmutableMap;
+import net.wiltonwebtoolkit.WiltonException;
 import org.junit.Test;
 
 import java.util.Map;
@@ -71,6 +72,7 @@ public class MutexJniTest {
                         .build()));
                 wiltoncall("mutex_wait", GSON.toJson(ImmutableMap.builder()
                         .put("mutexHandle", mutexHandle)
+                        .put("timeoutMillis", 30000)
                         .build()), cond);
                 shared[0] = shared[0] + 1;
                 wiltoncall("mutex_unlock", GSON.toJson(ImmutableMap.builder()
@@ -103,7 +105,7 @@ public class MutexJniTest {
     }
 
     @Test(expected = TestException.class)
-    public void testWaitFail() throws Exception {
+    public void testWaitCondFail() throws Exception {
         String out = wiltoncall("mutex_create");
         Map<String, Long> hamap = GSON.fromJson(out, LONG_MAP_TYPE);
         final long mutexHandle = hamap.get("mutexHandle");
@@ -118,6 +120,7 @@ public class MutexJniTest {
                 .build()));
         wiltoncall("mutex_wait", GSON.toJson(ImmutableMap.builder()
                 .put("mutexHandle", mutexHandle)
+                .put("timeoutMillis", 30000)
                 .build()), cond);
         wiltoncall("mutex_unlock", GSON.toJson(ImmutableMap.builder()
                 .put("mutexHandle", mutexHandle)
@@ -128,9 +131,46 @@ public class MutexJniTest {
 
     }
 
+    @Test(expected = TestException.class)
+    public void testWaitTimeoutFail() throws Exception {
+        String out = wiltoncall("mutex_create");
+        Map<String, Long> hamap = GSON.fromJson(out, LONG_MAP_TYPE);
+        final long mutexHandle = hamap.get("mutexHandle");
+        final Callable<String> cond = new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                return GSON.toJson(ImmutableMap.builder()
+                        .put("condition", false)
+                        .build());
+            }
+        };
+        wiltoncall("mutex_lock", GSON.toJson(ImmutableMap.builder()
+                .put("mutexHandle", mutexHandle)
+                .build()));
+        try {
+            wiltoncall("mutex_wait", GSON.toJson(ImmutableMap.builder()
+                    .put("mutexHandle", mutexHandle)
+                    .put("timeoutMillis", 100)
+                    .build()), cond);
+        } catch (WiltonException e) {
+            throw new TestException(e);
+        }
+        wiltoncall("mutex_unlock", GSON.toJson(ImmutableMap.builder()
+                .put("mutexHandle", mutexHandle)
+                .build()));
+        wiltoncall("mutex_destroy", GSON.toJson(ImmutableMap.builder()
+                .put("mutexHandle", mutexHandle)
+                .build()));
+    }
+
+
     private static final class TestException extends RuntimeException {
         private TestException(String message) {
             super(message);
+        }
+
+        private TestException(Throwable cause) {
+            super(cause);
         }
     }
 
