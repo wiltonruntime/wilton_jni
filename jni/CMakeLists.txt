@@ -29,7 +29,7 @@ set ( CMAKE_TOOLCHAIN_FILE ${STATICLIB_CMAKE}/toolchains/${STATICLIB_TOOLCHAIN}.
 
 # project
 project ( wilton_jni CXX )
-set ( ${PROJECT_NAME}_STATICLIB_VERSION 0.7.0-SNAPSHOT )
+set ( ${PROJECT_NAME}_STATICLIB_VERSION 0.7.0 )
 set ( ${PROJECT_NAME}_DESCRIPTION "Wilton Web Toolkit JNI library" )
 set ( ${PROJECT_NAME}_URL https://github.com/wilton-web-toolkit/wilton.js )
 include ( ${STATICLIB_CMAKE}/staticlibs_common.cmake )
