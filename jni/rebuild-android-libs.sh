@@ -13,7 +13,7 @@ cmake ../jni \
     -DANDROID_TOOLCHAIN_DIR=$ANDROID_ARMEABI_TOOLCHAIN_DIR \
     -DCMAKE_BUILD_TYPE=Release
 make
-cp ./bin/libwilton_jni.so ../src/main/resources/lib/armeabi/
+make mvninstall_jar
 
 echo --- android_i386_gcc
 . creset
@@ -22,14 +22,6 @@ cmake ../jni \
     -DANDROID_TOOLCHAIN_DIR=$ANDROID_X86_TOOLCHAIN_DIR \
     -DCMAKE_BUILD_TYPE=Release
 make
-cp ./bin/libwilton_jni.so ../src/main/resources/lib/x86/
-
-echo --- linux_amd64_gcc
-. creset
-cmake ../jni \
-    -DSTATICLIB_TOOLCHAIN=linux_amd64_gcc \
-    -DCMAKE_BUILD_TYPE=Release
-make
-cp ./bin/libwilton_jni.so ../src/main/resources/lib/linux_amd64/
+make mvninstall_jar
 
 echo --- FINISH_SUCCESS

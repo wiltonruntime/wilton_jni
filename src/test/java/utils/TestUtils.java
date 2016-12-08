@@ -99,58 +99,6 @@ public class TestUtils {
         }
     }
 
-    public static void runRhinoFs(Context cx, Global gl, File file) {
-        InputStream is = null;
-        try {
-            is = new FileInputStream(file.getAbsolutePath());
-            Reader re = new InputStreamReader(is, "UTF-8");
-            cx.evaluateReader(gl, re, file.getName(), -1, null);
-        } catch(Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            closeQuietly(is);
-        }
-    }
-
-    public static void runRhinoClasspath(Context cx, Global gl, String path) {
-        InputStream is = null;
-        try {
-            is = TestUtils.class.getResourceAsStream(path);
-            Reader re = new InputStreamReader(is, "UTF-8");
-            cx.evaluateReader(gl, re, path, -1, null);
-        } catch(Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            closeQuietly(is);
-        }
-    }
-
-    public static void runNashornFs(ScriptEngine engine, File file) {
-        InputStream is = null;
-        try {
-            is = new FileInputStream(file.getAbsolutePath());
-            Reader re = new InputStreamReader(is, "UTF-8");
-            engine.eval(re);
-        } catch(Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            closeQuietly(is);
-        }
-    }
-
-    public static void runNashornClasspath(ScriptEngine engine, String path) {
-        InputStream is = null;
-        try {
-            is = TestUtils.class.getResourceAsStream(path);
-            Reader re = new InputStreamReader(is, "UTF-8");
-            engine.eval(re);
-        } catch(Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            closeQuietly(is);
-        }
-    }
-
     @SuppressWarnings("deprecation") // http api
     public static CloseableHttpClient createHttpsClient() {
         try {

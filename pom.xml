@@ -2,8 +2,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.wiltonwebtoolkit</groupId>
-    <artifactId>wilton.js</artifactId>
-    <version>0.5.7-SNAPSHOT</version>
+    <artifactId>wilton_jni</artifactId>
+    <version>0.7.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Wilton Web Toolkit JNI library</name>
 
@@ -14,14 +14,27 @@
     </properties>
 
     <scm>
-        <url>https://github.com/wilton-web-toolkit/wilton-jni</url>
-        <connection>scm:git:https://github.com/wilton-web-toolkit/wilton-jni.git</connection>
-        <developerConnection>scm:git:https://github.com/wilton-web-toolkit/wilton-jni.git</developerConnection>
+        <url>https://github.com/wilton-web-toolkit/wilton_jni</url>
+        <connection>scm:git:https://github.com/wilton-web-toolkit/wilton_jni.git</connection>
+        <developerConnection>scm:git:https://github.com/wilton-web-toolkit/wilton_jni.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
     <dependencies>
-        <!-- Nashorn can be used instead -->
+        <!-- native lib -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <version>${project.version}</version>
+            <classifier>android_armeabi.so</classifier>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <version>${project.version}</version>
+            <classifier>android_i386.so</classifier>
+        </dependency>
+        <!-- nashorn can be used instead -->
         <dependency>
             <groupId>org.mozilla</groupId>
             <artifactId>rhino</artifactId>
@@ -98,9 +111,6 @@
                 <version>2.3.2</version>
                 <configuration>
                     <archive>
-                        <manifest>
-                            <mainClass>${project.main_class}</mainClass>
-                        </manifest>
                         <manifestEntries>
                             <Specification-Title>${project.name}</Specification-Title>
                             <Specification-Version>${project.version}</Specification-Version>
@@ -114,6 +124,47 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>android</shadedClassifierName>
+                            <finalName>${project.artifactId}-android-${project.version}</finalName>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Specification-Title>${project.name}</Specification-Title>
+                                        <Specification-Version>${project.version}</Specification-Version>
+                                        <Specification-Vendor>${project.specification_vendor}</Specification-Vendor>
+                                        <Implementation-Title>${project.groupId}.${project.artifactId}</Implementation-Title>
+                                        <Implementation-Version>${git.revision}</Implementation-Version>
+                                        <Implementation-Vendor>${project.implementation_vendor}
+                                        </Implementation-Vendor>
+                                        <X-Git-Branch>${git.branch}</X-Git-Branch>
+                                        <X-Git-Tag>${git.tag}</X-Git-Tag>
+                                        <X-Git-Commits-Count>${git.commitsCount}</X-Git-Commits-Count>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                            <artifactSet>
+                                <includes>
+                                    <include>${project.groupId}:${project.artifactId}:jar:android_armeabi.so:${project.version}</include>
+                                    <include>${project.groupId}:${project.artifactId}:jar:android_i386.so:${project.version}</include>
+                                </includes>
+                            </artifactSet>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>ru.concerteza.buildnumber</groupId>
@@ -139,13 +190,6 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
-                        <configuration>
-                            <excludes>
-                                <exclude>lib/armeabi/libwilton_jni.so</exclude>
-                                <exclude>lib/linux_amd64/libwilton_jni.so</exclude>
-                                <exclude>lib/x86/libwilton_jni.so</exclude>
-                            </excludes>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

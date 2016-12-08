@@ -29,7 +29,7 @@ set ( CMAKE_TOOLCHAIN_FILE ${STATICLIB_CMAKE}/toolchains/${STATICLIB_TOOLCHAIN}.
 
 # project
 project ( wilton_jni CXX )
-set ( ${PROJECT_NAME}_STATICLIB_VERSION 1.0 )
+set ( ${PROJECT_NAME}_STATICLIB_VERSION 0.7.0-SNAPSHOT )
 set ( ${PROJECT_NAME}_DESCRIPTION "Wilton Web Toolkit JNI library" )
 set ( ${PROJECT_NAME}_URL https://github.com/wilton-web-toolkit/wilton.js )
 include ( ${STATICLIB_CMAKE}/staticlibs_common.cmake )
@@ -115,3 +115,57 @@ target_compile_options ( ${PROJECT_NAME} PRIVATE ${${PROJECT_NAME}_DEPS_PUBLIC_P
 target_link_libraries ( ${PROJECT_NAME} 
         ${${PROJECT_NAME}_DEPS_PUBLIC_PC_LIBRARIES}
         ${${PROJECT_NAME}_DEPS_PRIVATE_PC_LIBRARIES} )
+
+
+# maven install
+
+if ( STATICLIB_TOOLCHAIN MATCHES "android_armeabi_[^_]+" )
+    set ( ${PROJECT_NAME}_CLASSIFIER "android_armeabi" CACHE INTERNAL "" )
+    set ( ${PROJECT_NAME}_PACKAGING "so" CACHE INTERNAL "" )
+    set ( ${PROJECT_NAME}_JAR_LIB_DIR "armeabi" CACHE INTERNAL "" )
+elseif ( STATICLIB_TOOLCHAIN MATCHES "android_i386_[^_]+" )
+    set ( ${PROJECT_NAME}_CLASSIFIER "android_i386" CACHE INTERNAL "" )
+    set ( ${PROJECT_NAME}_PACKAGING "so" CACHE INTERNAL "" )
+    set ( ${PROJECT_NAME}_JAR_LIB_DIR "x86" CACHE INTERNAL "" )
+elseif ( STATICLIB_TOOLCHAIN MATCHES "linux_amd64_[^_]+" )
+    set ( ${PROJECT_NAME}_CLASSIFIER "linux_amd64" CACHE INTERNAL "" )
+    set ( ${PROJECT_NAME}_PACKAGING "so" CACHE INTERNAL "" )
+    set ( ${PROJECT_NAME}_JAR_LIB_DIR "linux_amd64" CACHE INTERNAL "" )
+else ( )
+    message ( FATAL_ERROR "Unsupported toolchain: [STATICLIB_TOOLCHAIN]" )
+endif ( )
+
+add_custom_target ( mvninstall_so
+        COMMAND mvn install:install-file
+                -Dfile=${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+                -DgroupId=net.wiltonwebtoolkit
+                -DartifactId=${PROJECT_NAME}
+                -Dversion=${${PROJECT_NAME}_STATICLIB_VERSION}
+                -Dclassifier=${${PROJECT_NAME}_CLASSIFIER}
+                -Dpackaging=${${PROJECT_NAME}_PACKAGING}
+        WORKING_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}        
+        COMMENT "Installing library into local Maven repository ..." )
+
+add_dependencies ( mvninstall_so ${PROJECT_NAME} )
+
+add_custom_target ( mvninstall_jar
+        COMMAND ${CMAKE_COMMAND} -E remove_directory lib
+        COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}.jar
+        COMMAND ${CMAKE_COMMAND} -E make_directory lib/${${PROJECT_NAME}_ADNROID_ARCH_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+                lib/${${PROJECT_NAME}_JAR_LIB_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+        COMMAND jar cf
+                ${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}.jar 
+                lib/${${PROJECT_NAME}_JAR_LIB_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+        COMMAND mvn install:install-file
+                -Dfile=${CMAKE_SHARED_LIBRARY_PREFIX}${PROJECT_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}.jar
+                -DgroupId=net.wiltonwebtoolkit
+                -DartifactId=${PROJECT_NAME}
+                -Dversion=${${PROJECT_NAME}_STATICLIB_VERSION}
+                -Dclassifier=${${PROJECT_NAME}_CLASSIFIER}.so
+                -Dpackaging=jar
+        WORKING_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}        
+        COMMENT "Installing library into local Maven repository as JAR ..." )
+
+add_dependencies ( mvninstall_jar ${PROJECT_NAME} )

@@ -4,36 +4,36 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.tools.shell.Global;
 
-import java.io.File;
+import java.io.*;
 
+import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.junit.Assert.assertEquals;
-import static utils.TestUtils.runRhinoFs;
-import static utils.TestUtils.runRhinoClasspath;
 
 /**
  * User: alexkasko
  * Date: 5/15/16
  */
 public class WiltonRhinoTest {
+    private static final File RUNTESTS_JS = new File("src/test/js/runtests.js");
+
 
     @Test
     public void test() throws Exception {
         Context cx = new WiltonContextFactory().enterContext();
         Global gl = new Global();
         gl.init(cx);
-        runRhinoFs(cx, gl, new File("js/wilton.js"));
-        runRhinoClasspath(cx, gl, "/wilton_test.js");
-        Context.exit();
-    }
 
-    @Test
-    public void testRequire() throws Exception {
-        Context cx = new WiltonContextFactory().enterContext();
-        Global gl = new Global();
-        gl.init(cx);
-        runRhinoFs(cx, gl, new File("js/require.js"));
-        runRhinoFs(cx, gl, new File("js/rhino.js"));
-        runRhinoClasspath(cx, gl, "/wilton-require_test.js");
+        InputStream is = null;
+        try {
+            is = new FileInputStream(RUNTESTS_JS.getAbsolutePath());
+            Reader re = new InputStreamReader(is, "UTF-8");
+            cx.evaluateReader(gl, re, RUNTESTS_JS.getName(), -1, null);
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            closeQuietly(is);
+        }
+
         Context.exit();
     }
 
