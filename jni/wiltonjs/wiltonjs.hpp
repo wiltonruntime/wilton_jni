@@ -106,9 +106,23 @@ std::string mutex_notify_all(const std::string& data, void* object);
 
 std::string mutex_destroy(const std::string& data, void* object);
 
-// Misc
+// shared
+
+std::string shared_put(const std::string& data, void* object);
+
+std::string shared_get(const std::string& data, void* object);
+
+std::string shared_wait_change(const std::string& data, void* object);
+
+std::string shared_remove(const std::string& data, void* object);
+
+// thread
+
+std::string thread_run(const std::string& data, void* object);
 
 std::string thread_sleep_millis(const std::string& data, void* object);
+
+// misc
 
 std::string tcp_wait_for_connection(const std::string& data, void* object);
 
@@ -134,6 +148,12 @@ bool get_json_bool(const staticlib::serialization::JsonField& field);
 const staticlib::serialization::JsonValue& get_json_object(
         const staticlib::serialization::JsonField& field);
 
+// error reporting
+
+void throw_delayed(const std::string& message);
+
+void log_error(const std::string& message);
+
 // JNI
 
 void* /* JNIEnv* */ get_jni_env();
@@ -143,8 +163,6 @@ void* /* jmethodID */ get_gateway_method();
 void* /* jmethodID */ get_runnable_method();
 
 void* /* jmethodID */ get_callable_method();
-
-void throw_delayed(const std::string& message);
 
 template<typename T>
 class handle_registry {

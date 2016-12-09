@@ -89,7 +89,14 @@ void register_wiltoncalls() {
     wj::put_wilton_function("mutex_notify_all", wj::mutex_notify_all);
     wj::put_wilton_function("mutex_destroy", wj::mutex_destroy);
     
+    wj::put_wilton_function("shared_put", wj::shared_put);
+    wj::put_wilton_function("shared_get", wj::shared_get);
+    wj::put_wilton_function("shared_wait_change", wj::shared_wait_change);
+    wj::put_wilton_function("shared_remove", wj::shared_remove);
+    
+    wj::put_wilton_function("thread_run", wj::thread_run);
     wj::put_wilton_function("thread_sleep_millis", wj::thread_sleep_millis);
+    
     wj::put_wilton_function("tcp_wait_for_connection", wj::tcp_wait_for_connection);
 }
 
@@ -131,6 +138,15 @@ void* /* jmethodID */ get_callable_method() {
 void throw_delayed(const std::string& message) {
     JNIEnv* env = static_cast<JNIEnv*>(get_jni_env());
     env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(message + "\nReporting delayed error").c_str());
+}
+
+// shouldn't be called before logging is initialized by app
+void log_error(const std::string& message) {
+    std::string level = "ERROR";
+    std::string logger = "wilton.jni";
+    // call wilton
+    wilton_logger_log(level.c_str(), level.length(), logger.c_str(), logger.length(),
+            message.c_str(), message.length());
 }
 
 } // namespace

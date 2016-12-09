@@ -7,8 +7,6 @@
 
 #include "wiltonjs/wiltonjs.hpp"
 
-#include <functional>
-
 #include "wilton/wilton.h"
 
 namespace wiltonjs {
@@ -21,29 +19,8 @@ const std::string EMPTY_STRING = "";
 
 } // namespace
 
-std::string thread_sleep_millis(const std::string& data, void*) {
-    // json parse
-    ss::JsonValue json = ss::load_json_from_string(data);
-    int64_t millis = -1;
-    for (const ss::JsonField& fi : json.as_object()) {
-        auto& name = fi.name();
-        if ("millis" == name) {
-            millis = detail::get_json_int(fi);
-        } else {
-            throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
-        }
-    }
-    if (-1 == millis) throw WiltonJsException(TRACEMSG(
-            "Required parameter 'millis' not specified"));
-    // call wilton
-    char* err = wilton_thread_sleep_millis(static_cast<int> (millis));
-    if (nullptr != err) {
-        detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
-    }
-    return "{}";
-}
-
 std::string tcp_wait_for_connection(const std::string& data, void*) {
+    // json parse
     ss::JsonValue json = ss::load_json_from_string(data);
     int64_t timeout = -1;
     auto rip = std::ref(EMPTY_STRING);
@@ -75,7 +52,6 @@ std::string tcp_wait_for_connection(const std::string& data, void*) {
     }
     return "{}";
 }
-
 
 } // namespace
 

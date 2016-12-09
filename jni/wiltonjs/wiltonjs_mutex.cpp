@@ -56,7 +56,7 @@ bool call_condition(void* cond) {
                 "Required parameter 'condition' not specified"));
         return 1 == tribool;
     } catch (const std::exception& e) {
-        detail::throw_delayed(e.what());
+        detail::throw_delayed(TRACEMSG(e.what()));
         // stop waiting on error
         return true;
     }

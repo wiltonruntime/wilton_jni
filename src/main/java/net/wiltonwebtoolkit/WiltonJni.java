@@ -18,7 +18,7 @@ package net.wiltonwebtoolkit;
 public class WiltonJni {
 
     static {
-        System.loadLibrary("wilton_jni");
+        System.loadLibrary("wiltonjs_jni");
         try {
             Class.forName("net.wiltonwebtoolkit.WiltonException");
             Class.forName("net.wiltonwebtoolkit.WiltonGateway");

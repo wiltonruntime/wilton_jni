@@ -54,11 +54,15 @@ void call_gateway(jobject gateway, int64_t requestHandle) {
         env = static_cast<JNIEnv*> (detail::get_jni_env());
         env->CallVoidMethod(gateway, static_cast<jmethodID> (detail::get_gateway_method()), requestHandle);
         if (env->ExceptionOccurred()) {
-            send_system_error(requestHandle, TRACEMSG("Gateway error"));
+            std::string msg = TRACEMSG("Gateway error");
+            detail::log_error(msg);
+            send_system_error(requestHandle, msg);
             env->ExceptionClear();
         }
     } catch (const std::exception& e) {
-        send_system_error(requestHandle, TRACEMSG(e.what() + "\nGateway error"));
+        std::string msg = TRACEMSG(e.what() + "\nGateway error");
+        detail::log_error(msg);
+        send_system_error(requestHandle, msg);
     }
 }
 
@@ -138,7 +142,9 @@ std::string request_get_metadata(const std::string& data, void*) {
     char* err = wilton_Request_get_request_metadata(request,
             std::addressof(out), std::addressof(out_len));
     static_request_registry().put(request);
-    if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
+    if (nullptr != err) {
+        detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
+    }
     return detail::wrap_wilton_output(out, out_len);
 }
 

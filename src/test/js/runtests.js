@@ -21,21 +21,26 @@ var assertTrue = Packages.org.junit.Assert.assertTrue;
     requirejs.config({
         baseUrl: "src/test/js/modules/"
     });
-    
-    // run tests   
-    require([
-        "tests/CronTaskTest",
-        "tests/DBConnectionTest",
-        "tests/HttpClientTest",
-        "tests/LoggerTest",
-        "tests/MutexTest",
-        "tests/ServerTest",
-        "tests/ThreadTest",
-        "tests/miscTest",
-        "tests/mustacheTest",
-        "tests/nativeLibTest",
-        "tests/sharedSpaceTest",
-        "tests/utilsTest"
-    ], function() { });
+
+    try {
+        // run tests
+        require([
+            "tests/CronTaskTest",
+            "tests/DBConnectionTest",
+            "tests/HttpClientTest",
+            "tests/LoggerTest",
+            "tests/MutexTest",
+            "tests/ServerTest",
+            "tests/ThreadTest",
+            "tests/miscTest",
+            "tests/mustacheTest",
+            "tests/nativeLibTest",
+            "tests/threadTest",
+            "tests/sharedTest",
+            "tests/utilsTest"
+        ], function() { });
+    } catch(e) {
+        throw new Error(e.message + "\n" + e.stack);
+    }
     
 }());

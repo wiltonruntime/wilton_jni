@@ -28,18 +28,18 @@ detail::handle_registry<wilton_CronTask>& static_registry() {
     return registry;
 }
 
-// todo: failures logging
 void call_runnable(jobject runnable) {
     JNIEnv* env = nullptr;
     try {
         env = static_cast<JNIEnv*> (detail::get_jni_env());
         env->CallVoidMethod(runnable, static_cast<jmethodID> (detail::get_runnable_method()));
         if (env->ExceptionOccurred()) {
-            // todo: report somehow
+            // todo: details
+            detail::log_error(TRACEMSG("Cron runnable Java exception caught, ignoring"));
             env->ExceptionClear();
         }
     } catch (const std::exception& e) {
-        // todo: report somehow
+        detail::log_error(TRACEMSG(e.what()));
     }
 }
 

@@ -24,4 +24,11 @@ cmake ../jni \
 make
 make mvninstall_jar
 
+echo --- linux_amd64_gcc
+. creset
+cmake ../jni \
+    -DSTATICLIB_TOOLCHAIN=linux_amd64_gcc \
+    -DCMAKE_BUILD_TYPE=Release
+make
+
 echo --- FINISH_SUCCESS
