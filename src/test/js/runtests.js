@@ -4,14 +4,6 @@
  * and open the template in the editor.
  */
 
-// todo: removeme
-var out = Packages.java.lang.System.out;
-var httpGet = Packages.utils.TestUtils.httpGet;
-var httpGetHeader = Packages.utils.TestUtils.httpGetHeader;
-var httpPost = Packages.utils.TestUtils.httpPost;
-var assertEquals = Packages.org.junit.Assert.assertEquals;
-var assertTrue = Packages.org.junit.Assert.assertTrue;
-
 (function() {
     "use strict";
 
@@ -31,7 +23,6 @@ var assertTrue = Packages.org.junit.Assert.assertTrue;
             "tests/LoggerTest",
             "tests/MutexTest",
             "tests/ServerTest",
-            "tests/ThreadTest",
             "tests/miscTest",
             "tests/mustacheTest",
             "tests/nativeLibTest",

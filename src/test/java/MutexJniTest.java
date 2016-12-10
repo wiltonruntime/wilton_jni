@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
 import static org.junit.Assert.assertEquals;
@@ -26,25 +28,25 @@ public class MutexJniTest {
         wiltoncall("mutex_lock", GSON.toJson(ImmutableMap.builder()
                 .put("mutexHandle", mutexHandle)
                 .build()));
-        final boolean [] shared = new boolean[]{false};
+        final AtomicBoolean shared = new AtomicBoolean(false);
         new Thread(new Runnable() {
             @Override
             public void run() {
                 wiltoncall("mutex_lock", GSON.toJson(ImmutableMap.builder()
                         .put("mutexHandle", mutexHandle)
                         .build()));
-                shared[0] = true;
+                shared.set(true);
                 wiltoncall("mutex_unlock", GSON.toJson(ImmutableMap.builder()
                         .put("mutexHandle", mutexHandle)
                         .build()));
             }
         }).start();
-        assertFalse(shared[0]);
+        assertFalse(shared.get());
         wiltoncall("mutex_unlock", GSON.toJson(ImmutableMap.builder()
                 .put("mutexHandle", mutexHandle)
                 .build()));
         Thread.sleep(100);
-        assertTrue(shared[0]);
+        assertTrue(shared.get());
         wiltoncall("mutex_destroy", GSON.toJson(ImmutableMap.builder()
                 .put("mutexHandle", mutexHandle)
                 .build()));
@@ -55,12 +57,12 @@ public class MutexJniTest {
         String out = wiltoncall("mutex_create");
         Map<String, Long> hamap = GSON.fromJson(out, LONG_MAP_TYPE);
         final long mutexHandle = hamap.get("mutexHandle");
-        final int [] shared = new int[]{-1};
+        final AtomicInteger shared = new AtomicInteger(-1);
         final Callable<String> cond = new Callable<String>() {
             @Override
             public String call() throws Exception {
                 return GSON.toJson(ImmutableMap.builder()
-                        .put("condition", shared[0] >= 0)
+                        .put("condition", shared.get() >= 0)
                         .build());
             }
         };
@@ -74,23 +76,23 @@ public class MutexJniTest {
                         .put("mutexHandle", mutexHandle)
                         .put("timeoutMillis", 30000)
                         .build()), cond);
-                shared[0] = shared[0] + 1;
+                shared.incrementAndGet();
                 wiltoncall("mutex_unlock", GSON.toJson(ImmutableMap.builder()
                         .put("mutexHandle", mutexHandle)
                         .build()));
             }
         };
-        assertEquals(-1, shared[0]);
+        assertEquals(-1, shared.get());
         new Thread(waiter).start();
         new Thread(waiter).start();
         new Thread(waiter).start();
-        assertEquals(-1, shared[0]);
+        assertEquals(-1, shared.get());
         Thread.sleep(100);
-        assertEquals(-1, shared[0]);
+        assertEquals(-1, shared.get());
         wiltoncall("mutex_lock", GSON.toJson(ImmutableMap.builder()
                 .put("mutexHandle", mutexHandle)
                 .build()));
-        shared[0] = 0;
+        shared.set(0);
         wiltoncall("mutex_notify_all", GSON.toJson(ImmutableMap.builder()
                         .put("mutexHandle", mutexHandle)
                         .build()));
@@ -98,7 +100,7 @@ public class MutexJniTest {
                 .put("mutexHandle", mutexHandle)
                 .build()));
         Thread.sleep(100);
-        assertEquals(3, shared[0]);
+        assertEquals(3, shared.get());
         wiltoncall("mutex_destroy", GSON.toJson(ImmutableMap.builder()
                 .put("mutexHandle", mutexHandle)
                 .build()));

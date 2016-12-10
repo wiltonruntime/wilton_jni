@@ -5,11 +5,8 @@ import utils.TestGateway;
 import java.util.Map;
 
 import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static utils.TestGateway.*;
-import static utils.TestGateway.QUERIES_RESP;
-import static utils.TestGateway.ROOT_URL;
 import static utils.TestUtils.*;
 
 /**
@@ -17,16 +14,6 @@ import static utils.TestUtils.*;
  * Date: 10/4/16
  */
 public class MiscJniTest {
-
-    @Test
-    public void testSleep() throws Exception {
-        long start = System.currentTimeMillis();
-        wiltoncall("thread_sleep_millis", GSON.toJson(ImmutableMap.builder()
-                .put("millis", 100)
-                .build()));
-        long stop = System.currentTimeMillis();
-        assertTrue((stop - start) > 70);
-    }
 
     @Test
     public void testWaitForConn() throws Exception {
