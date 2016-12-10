@@ -30,5 +30,6 @@ cmake ../jni \
     -DSTATICLIB_TOOLCHAIN=linux_amd64_gcc \
     -DCMAKE_BUILD_TYPE=Release
 make
+make mvninstall_so
 
 echo --- FINISH_SUCCESS

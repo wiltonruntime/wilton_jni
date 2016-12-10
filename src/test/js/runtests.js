@@ -17,10 +17,10 @@
     try {
         // run tests
         require([
+            "tests/LoggerTest",
             "tests/CronTaskTest",
             "tests/DBConnectionTest",
             "tests/HttpClientTest",
-            "tests/LoggerTest",
             "tests/MutexTest",
             "tests/ServerTest",
             "tests/miscTest",
