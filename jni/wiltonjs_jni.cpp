@@ -167,7 +167,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {
     if (nullptr == gatewayClass) { return -1; }
     GATEWAY_INTERFACE_CLASS = static_cast<jclass> (env->NewGlobalRef(gatewayClass));
     if (nullptr == GATEWAY_INTERFACE_CLASS) { return -1; }
-    GATEWAY_CALLBACK_METHOD = env->GetMethodID(GATEWAY_INTERFACE_CLASS, "gatewayCallback", "(J)V");
+    GATEWAY_CALLBACK_METHOD = env->GetMethodID(GATEWAY_INTERFACE_CLASS, "gatewayCallback", "(Ljava/lang/String;J)V");
     if (nullptr == GATEWAY_CALLBACK_METHOD) { return -1; }
     // runnable
     jclass runnableClass = env->FindClass("java/lang/Runnable");

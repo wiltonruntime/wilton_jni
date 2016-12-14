@@ -32,6 +32,7 @@ public class MiscJniTest {
             assertTrue(caught);
 
             String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+                   .put("views", TestGateway.views())
                    .put("tcpPort", TCP_PORT)
                    .build()), new TestGateway());
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);

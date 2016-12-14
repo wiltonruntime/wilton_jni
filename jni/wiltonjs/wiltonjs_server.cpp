@@ -8,9 +8,14 @@
 #include "wiltonjs/wiltonjs.hpp"
 
 #include <functional>
+#include <list>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 #include "jni.h"
 
+#include "staticlib/config.hpp"
 #include "staticlib/serialization.hpp"
 
 #include "wilton/wilton.h"
@@ -19,12 +24,151 @@ namespace wiltonjs {
 
 namespace { // anonymous
 
+namespace sc = staticlib::config;
 namespace ss = staticlib::serialization;
 
 const std::string EMPTY_STRING = "";
 
-detail::handle_registry<wilton_Server>& static_server_registry() {
-    static detail::handle_registry<wilton_Server> registry;
+class HttpView {
+public:    
+    std::string method;
+    std::string path;
+    std::string module;
+
+    HttpView(const HttpView&) = delete;
+
+    HttpView& operator=(const HttpView&) = delete;
+
+    HttpView(HttpView&& other) :
+    method(std::move(other.method)),
+    path(std::move(other.path)),
+    module(std::move(other.module)) { }
+
+    HttpView& operator=(HttpView&&) = delete;
+    
+    HttpView(const ss::JsonValue& json) {
+        if (ss::JsonType::OBJECT != json.type()) throw WiltonJsException(TRACEMSG(
+                "Invalid 'views' entry: must be an 'object'," +
+                " entry: [" + ss::dump_json_to_string(json) + "]"));
+        for (const ss::JsonField& fi : json.as_object()) {
+            auto& name = fi.name();
+            if ("method" == name) {
+                method = detail::get_json_string(fi);
+            } else if ("path" == name) {
+                path = detail::get_json_string(fi);
+            } else if ("module" == name) {
+                module = detail::get_json_string(fi);
+            } else {
+                throw WiltonJsException(TRACEMSG("Unknown data field: [" + name + "]"));
+            }
+        }
+    }
+};
+
+class HttpPathDeleter {
+public:
+    void operator()(wilton_HttpPath* path) {
+        wilton_HttpPath_destroy(path);
+    }
+};
+
+class GlobalRefDeleter {
+public:
+    void operator()(jobject ref) {
+        JNIEnv* env = static_cast<JNIEnv*> (detail::get_jni_env());
+        env->DeleteGlobalRef(ref);
+    }
+};
+
+class CtxEntry {
+public:    
+    jobject gateway;
+    jstring modname;
+
+    CtxEntry(const CtxEntry& other) :
+    gateway(other.gateway),
+    modname(other.modname) { }
+
+    CtxEntry& operator=(const CtxEntry&) = delete;
+    
+    CtxEntry(jobject gateway, jstring modname) :
+    gateway(gateway),
+    modname(modname) { }
+};
+
+class ServerJniCtx {
+    std::unique_ptr<_jobject, GlobalRefDeleter> gateway;
+    std::vector<std::unique_ptr<_jobject, GlobalRefDeleter>> modules;
+    // iterators must be permanent
+    std::list<CtxEntry> entries;
+
+public:
+    ServerJniCtx(const ServerJniCtx&) = delete;
+    
+    ServerJniCtx& operator=(const ServerJniCtx&) = delete;
+
+    ServerJniCtx(ServerJniCtx&& other) :
+    gateway(std::move(other.gateway)),
+    modules(std::move(other.modules)),
+    entries(std::move(other.entries)) { }
+
+    ServerJniCtx& operator=(ServerJniCtx&&) = delete;
+    
+    ServerJniCtx() { }
+    
+    ServerJniCtx(JNIEnv* env, jobject gateway, std::vector<HttpView>& views) :
+    gateway(env->NewGlobalRef(gateway), GlobalRefDeleter()) {
+        for (auto& vi : views) {
+            jstring str = env->NewStringUTF(vi.module.c_str());
+            modules.emplace_back(env->NewGlobalRef(str), GlobalRefDeleter());
+        }
+    }
+    
+    jobject get_gateway() {
+        return gateway.get();
+    }
+    
+    jstring get_modname(size_t idx) {
+        return static_cast<jstring> (modules[idx].get());
+    }
+    
+    void add_entry(jobject gateway, jstring modname) {
+        entries.emplace_back(CtxEntry(gateway, modname));
+    }
+    
+    CtxEntry* get_last_entry() {
+        return std::addressof(entries.back());
+    }
+    
+};
+
+class server_handle_registry {
+    std::unordered_map<wilton_Server*, ServerJniCtx> registry;
+    std::mutex mutex;
+
+public:
+    int64_t put(wilton_Server* ptr, ServerJniCtx&& ctx) {
+        std::lock_guard<std::mutex> lock(mutex);
+        auto pair = registry.emplace(ptr, std::move(ctx));
+        return pair.second ? reinterpret_cast<int64_t> (ptr) : 0;
+    }
+
+    std::pair<wilton_Server*, ServerJniCtx> remove(int64_t handle) {
+        std::lock_guard<std::mutex> lock(mutex);
+        wilton_Server* ptr = reinterpret_cast<wilton_Server*> (handle);
+        auto it = registry.find(ptr);
+        if (registry.end() != it) {
+            auto ctx = std::move(it->second);
+            registry.erase(ptr);
+            return std::make_pair(ptr, std::move(ctx));
+        } else {
+            return std::make_pair(nullptr, ServerJniCtx());
+        }
+    }
+};
+
+server_handle_registry& static_server_registry() {
+    static server_handle_registry registry;
     return registry;
 }
 
@@ -48,12 +192,48 @@ void send_system_error(int64_t requestHandle, std::string errmsg) {
     }
 }
 
-void call_gateway(jobject gateway, int64_t requestHandle) {
+std::vector<HttpView> extract_views(ss::JsonValue& conf) {
+    auto pair = conf.as_object_mutable();
+    if (!pair.second) throw WiltonJsException(TRACEMSG(
+            "Invalid configuration object specified: invalid type," +
+            " conf: [" + ss::dump_json_to_string(conf) + "]"));
+    std::vector<ss::JsonField>& fields = *pair.first;
+    std::vector<HttpView> views;
+    uint32_t i = 0;
+    for (auto it = fields.begin(); it != fields.end(); ++it) {
+        ss::JsonField& fi = *it;
+        if ("views" == fi.name()) {
+            if (ss::JsonType::ARRAY != fi.type()) throw WiltonJsException(TRACEMSG(
+                    "Invalid configuration object specified: 'views' attr is not a list," +
+                    " conf: [" + ss::dump_json_to_string(conf) + "]"));
+            if (0 == fi.as_array().size()) throw WiltonJsException(TRACEMSG(
+                    "Invalid configuration object specified: 'views' attr is am empty list," +
+                    " conf: [" + ss::dump_json_to_string(conf) + "]"));
+            for (auto& va : fi.as_array()) {
+                if (ss::JsonType::OBJECT != va.type()) throw WiltonJsException(TRACEMSG(
+                        "Invalid configuration object specified: 'views' is not a 'object'," +
+                        "index: [" + sc::to_string(i) + "], conf: [" + ss::dump_json_to_string(conf) + "]"));
+                views.emplace_back(HttpView(va));
+            }
+            // drop views attr and return immediately (iters are invalidated)
+            fields.erase(it);
+            return views;
+        }
+        i++;
+    }
+    throw WiltonJsException(TRACEMSG(
+            "Invalid configuration object specified: 'views' list not specified," +
+            " conf: [" + ss::dump_json_to_string(conf) + "]"));
+}
+
+void call_gateway(jobject gateway, jstring callbackModule, int64_t requestHandle) {
     JNIEnv* env = nullptr;
     try {
         env = static_cast<JNIEnv*> (detail::get_jni_env());
-        env->CallVoidMethod(gateway, static_cast<jmethodID> (detail::get_gateway_method()), requestHandle);
+        env->CallVoidMethod(gateway, static_cast<jmethodID> (detail::get_gateway_method()), 
+                callbackModule, requestHandle);
         if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
             std::string msg = TRACEMSG("Gateway error");
             detail::log_error(msg);
             send_system_error(requestHandle, msg);
@@ -66,26 +246,58 @@ void call_gateway(jobject gateway, int64_t requestHandle) {
     }
 }
 
+std::vector<std::unique_ptr<wilton_HttpPath, HttpPathDeleter>> create_paths(
+        const std::vector<HttpView>& views, ServerJniCtx& ctx) {
+    // assert(views.size() == ctx.get_modules_names().size())
+    std::vector<std::unique_ptr<wilton_HttpPath, HttpPathDeleter>> res;
+    size_t idx = 0;
+    for (auto& vi : views) {
+        jstring modname = ctx.get_modname(idx);
+        ctx.add_entry(ctx.get_gateway(), modname);
+        CtxEntry* ctx_to_pass = ctx.get_last_entry();
+        wilton_HttpPath* ptr = nullptr;
+        auto err = wilton_HttpPath_create(std::addressof(ptr), vi.method.c_str(), vi.method.length(),
+                vi.path.c_str(), vi.path.length(), static_cast<void*>(ctx_to_pass), 
+                [](void* vctx, wilton_Request* request) {
+                    auto ctx_passed = static_cast<CtxEntry*>(vctx);
+                    int64_t requestHandle = static_request_registry().put(request);
+                    call_gateway(ctx_passed->gateway, ctx_passed->modname, requestHandle);
+                    static_request_registry().remove(requestHandle);
+                });
+        if (nullptr != err) throw WiltonJsException(TRACEMSG(err));
+        res.emplace_back(ptr, HttpPathDeleter());
+        idx++;       
+    }
+    return res;
+}
+
+std::vector<wilton_HttpPath*> wrap_paths(std::vector<std::unique_ptr<wilton_HttpPath, HttpPathDeleter>>& paths) {
+    std::vector<wilton_HttpPath*> res;
+    for (auto& pa : paths) {
+        res.push_back(pa.get());
+    }
+    return res;
+}
+
 } // namespace
 
 std::string server_create(const std::string& data, void* object) {
     if (nullptr == object) throw WiltonJsException(TRACEMSG(
             "Required parameter 'gateway' not specified"));
     JNIEnv* env = static_cast<JNIEnv*> (detail::get_jni_env());
-    jobject gateway_local = static_cast<jobject> (object);
-    // todo: fixme - delete somehow on server stop
-    jobject gateway = env->NewGlobalRef(gateway_local);
-    wilton_Server* server;
+    jobject gateway = static_cast<jobject> (object);
+    ss::JsonValue json = ss::load_json_from_string(data);
+    auto conf_in = ss::load_json_from_string(data);
+    auto views = extract_views(conf_in);
+    auto conf = ss::dump_json_to_string(conf_in);
+    ServerJniCtx ctx{env, gateway, views};
+    auto paths = create_paths(views, ctx);
+    auto paths_pass = wrap_paths(paths);
+    wilton_Server* server = nullptr;
     char* err = wilton_Server_create(std::addressof(server),
-            gateway,
-            [](void* gateway_ctx, wilton_Request* request) {
-                jobject gateway = static_cast<jobject> (gateway_ctx);
-                int64_t requestHandle = static_request_registry().put(request);
-                call_gateway(gateway, requestHandle);
-                static_request_registry().remove(requestHandle);
-            }, data.c_str(), data.length());
+            conf.c_str(), conf.length(), paths_pass.data(), paths_pass.size());
     if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
-    int64_t handle = static_server_registry().put(server);
+    int64_t handle = static_server_registry().put(server, std::move(ctx));
     return ss::dump_json_to_string({
         { "serverHandle", handle}
     });
@@ -106,13 +318,13 @@ std::string server_stop(const std::string& data, void*) {
     if (-1 == handle) throw WiltonJsException(TRACEMSG(
             "Required parameter 'serverHandle' not specified"));
     // get handle
-    wilton_Server* server = static_server_registry().remove(handle);
-    if (nullptr == server) throw WiltonJsException(TRACEMSG(
+    auto pa = static_server_registry().remove(handle);
+    if (nullptr == pa.first) throw WiltonJsException(TRACEMSG(
             "Invalid 'serverHandle' parameter specified"));
     // call wilton
-    char* err = wilton_Server_stop(server);
+    char* err = wilton_Server_stop(pa.first);
     if (nullptr != err) {
-        static_server_registry().put(server);
+        static_server_registry().put(pa.first, std::move(pa.second));
         detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     }
     return "{}";

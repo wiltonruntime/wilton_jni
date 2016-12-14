@@ -1,6 +1,8 @@
 package utils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import net.wiltonwebtoolkit.WiltonException;
 import net.wiltonwebtoolkit.WiltonGateway;
 
 import java.util.Map;
@@ -14,8 +16,7 @@ import static utils.TestUtils.*;
  */
 public class TestGateway implements WiltonGateway {
 
-    public static final String ROOT_RESP = "Hello Java!\n";
-    public static final String NOT_FOUND_RESP = "Not found\n";
+    public static final String HELLO_RESP = "Hello Java!\n";
     public static final String ASYNC_RESP = "Hello from Async\n";
     public static final String QUERIES_RESP = "{\n" +
             "  \"foo\": \"baa,bar\",\n" +
@@ -31,17 +32,16 @@ public class TestGateway implements WiltonGateway {
 
     @SuppressWarnings("unchecked") // headers access
     @Override
-    public void gatewayCallback(long requestHandle) {
+    public void gatewayCallback(String callbackModule, long requestHandle) {
         try {
             String meta = wiltoncall("request_get_metadata", GSON.toJson(ImmutableMap.builder()
                     .put("requestHandle", requestHandle)
                     .build()));
             Map<String, Object> metaMap = GSON.fromJson(meta, MAP_TYPE);
-            String path = String.valueOf(metaMap.get("pathname"));
             final String resp;
-            if ("/".equalsIgnoreCase(path)) {
-                resp = ROOT_RESP;
-            } else if ("/headers".equalsIgnoreCase(path)) {
+            if ("/hello".equalsIgnoreCase(callbackModule)) {
+                resp = HELLO_RESP;
+            } else if ("/headers".equalsIgnoreCase(callbackModule)) {
                 wiltoncall("request_set_response_metadata", GSON.toJson(ImmutableMap.builder()
                         .put("requestHandle", requestHandle)
                         .put("metadata", ImmutableMap.builder()
@@ -53,13 +53,13 @@ public class TestGateway implements WiltonGateway {
                                 .build())
                         .build()));
                 resp = GSON.toJson(metaMap.get("headers"));
-            } else if ("/postmirror".equalsIgnoreCase(path)) {
+            } else if ("/postmirror".equalsIgnoreCase(callbackModule)) {
                 resp = wiltoncall("request_get_data", GSON.toJson(ImmutableMap.builder()
                         .put("requestHandle", requestHandle)
                         .build()));
-            } else if ("/querymirror".equalsIgnoreCase(path)) {
+            } else if ("/querymirror".equalsIgnoreCase(callbackModule)) {
                 resp = GSON.toJson(metaMap.get("queries"));
-            } else if ("/logger".equalsIgnoreCase(path)) {
+            } else if ("/logger".equalsIgnoreCase(callbackModule)) {
                 String msg = wiltoncall("request_get_data", GSON.toJson(ImmutableMap.builder()
                         .put("requestHandle", requestHandle)
                         .build()));
@@ -70,7 +70,7 @@ public class TestGateway implements WiltonGateway {
                         .build());
                 wiltoncall("logger_log", data);
                 resp = "";
-            } else if ("/sendfile".equalsIgnoreCase(path)) {
+            } else if ("/sendfile".equalsIgnoreCase(callbackModule)) {
                 String filename = wiltoncall("request_get_data", GSON.toJson(ImmutableMap.builder()
                         .put("requestHandle", requestHandle)
                         .build()));
@@ -79,7 +79,7 @@ public class TestGateway implements WiltonGateway {
                         .put("filePath", filename)
                         .build()));
                 resp = null;
-            } else if ("/mustache".equalsIgnoreCase(path)) {
+            } else if ("/mustache".equalsIgnoreCase(callbackModule)) {
                 Map<String, String> headers = (Map<String, String>) metaMap.get("headers");
                 String mustacheFile = headers.get("X-Mustache-File");
                 String valuesJson = wiltoncall("request_get_data", GSON.toJson(ImmutableMap.builder()
@@ -92,7 +92,7 @@ public class TestGateway implements WiltonGateway {
                         .put("values", values)
                         .build()));
                 resp = null;
-            } else if ("/async".equalsIgnoreCase(path)) {
+            } else if ("/async".equalsIgnoreCase(callbackModule)) {
                 String out = wiltoncall("request_send_later", GSON.toJson(ImmutableMap.builder()
                         .put("requestHandle", requestHandle)
                         .build()));
@@ -110,19 +110,12 @@ public class TestGateway implements WiltonGateway {
                     }
                 }).start();
                 resp = null;
-            } else if ("/reqfilename".equalsIgnoreCase(path)) {
+            } else if ("/reqfilename".equalsIgnoreCase(callbackModule)) {
                 resp = wiltoncall("request_get_data_filename", GSON.toJson(ImmutableMap.builder()
                         .put("requestHandle", requestHandle)
                         .build()));
             } else {
-                wiltoncall("request_set_response_metadata", GSON.toJson(ImmutableMap.builder()
-                        .put("requestHandle", requestHandle)
-                        .put("metadata", ImmutableMap.builder()
-                                .put("statusCode", 404)
-                                .put("statusMessage", "Not Found")
-                                .build())
-                        .build()));
-                resp = NOT_FOUND_RESP;
+                throw new WiltonException("Unregistered module name: [" + callbackModule + "]");
             }
             if (null != resp) { // sendfile case
                 wiltoncall("request_send_response", GSON.toJson(ImmutableMap.builder()
@@ -138,4 +131,55 @@ public class TestGateway implements WiltonGateway {
                     .build()));
         }
     }
+
+    public static ImmutableList<ImmutableMap<String, String>> views() {
+        return ImmutableList.<ImmutableMap<String, String>>builder()
+                .add(ImmutableMap.<String, String>builder()
+                        .put("method", "GET")
+                        .put("path", "/hello")
+                        .put("module", "/hello")
+                        .build())
+                .add(ImmutableMap.<String, String>builder()
+                        .put("method", "GET")
+                        .put("path", "/headers")
+                        .put("module", "/headers")
+                        .build())
+                .add(ImmutableMap.<String, String>builder()
+                        .put("method", "POST")
+                        .put("path", "/postmirror")
+                        .put("module", "/postmirror")
+                        .build())
+                .add(ImmutableMap.<String, String>builder()
+                        .put("method", "GET")
+                        .put("path", "/querymirror")
+                        .put("module", "/querymirror")
+                        .build())
+                .add(ImmutableMap.<String, String>builder()
+                        .put("method", "POST")
+                        .put("path", "/logger")
+                        .put("module", "/logger")
+                        .build())
+                .add(ImmutableMap.<String, String>builder()
+                        .put("method", "POST")
+                        .put("path", "/sendfile")
+                        .put("module", "/sendfile")
+                        .build())
+                .add(ImmutableMap.<String, String>builder()
+                        .put("method", "POST")
+                        .put("path", "/mustache")
+                        .put("module", "/mustache")
+                        .build())
+                .add(ImmutableMap.<String, String>builder()
+                        .put("method", "GET")
+                        .put("path", "/async")
+                        .put("module", "/async")
+                        .build())
+                .add(ImmutableMap.<String, String>builder()
+                        .put("method", "POST")
+                        .put("path", "/reqfilename")
+                        .put("module", "/reqfilename")
+                        .build())
+                .build();
+    }
+
 }

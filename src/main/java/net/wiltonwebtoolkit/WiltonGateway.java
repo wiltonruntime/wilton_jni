@@ -17,5 +17,5 @@ package net.wiltonwebtoolkit;
 
 public interface WiltonGateway {
 
-    void gatewayCallback(long requestHandle);
+    void gatewayCallback(String callbackModule, long requestHandle);
 }
