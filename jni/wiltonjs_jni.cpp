@@ -8,7 +8,11 @@
 
 #include "jni.h"
 
+#include <memory>
 #include <string>
+
+#include "staticlib/io.hpp"
+#include "staticlib/utils.hpp"
 
 #include "wilton/wilton.h"
 
@@ -18,6 +22,7 @@
 #define WILTON_JNI_CLASS net_wiltonwebtoolkit_WiltonJni
 #define WILTON_JNI_GATEWAY_INTERFACE "net/wiltonwebtoolkit/WiltonGateway"
 #define WILTON_JNI_EXCEPTION_CLASS "net/wiltonwebtoolkit/WiltonException"
+#define WILTON_STARTUP_ERR_DIR ""
 
 #define WILTON_JNI_PASTER(x,y) Java_ ## x ## _ ## y
 #define WILTON_JNI_EVALUATOR(x,y) WILTON_JNI_PASTER(x,y)
@@ -25,25 +30,9 @@
 
 namespace { // anonymous
 
+namespace si = staticlib::io;
+namespace su = staticlib::utils;
 namespace wj = wiltonjs;
-
-// globals
-JavaVM* JAVA_VM;
-jclass GATEWAY_INTERFACE_CLASS;
-jmethodID GATEWAY_CALLBACK_METHOD;
-jclass RUNNABLE_INTERFACE_CLASS;
-jmethodID RUNNABLE_CALLBACK_METHOD;
-jclass CALLABLE_INTERFACE_CLASS;
-jmethodID CALLABLE_CALLBACK_METHOD;
-jclass EXCEPTION_CLASS;
-
-std::string jstring_to_str(JNIEnv* env, jstring jstr) {
-    const char* cstr = env->GetStringUTFChars(jstr, 0);
-    size_t cstr_len = static_cast<size_t> (env->GetStringUTFLength(jstr));
-    std::string res{cstr, cstr_len};
-    env->ReleaseStringUTFChars(jstr, cstr);
-    return res;
-}
 
 void register_wiltoncalls() {
     wj::put_wilton_function("mustache_render", wj::mustache_render);
@@ -100,6 +89,126 @@ void register_wiltoncalls() {
     wj::put_wilton_function("tcp_wait_for_connection", wj::tcp_wait_for_connection);
 }
 
+std::string jstring_to_str(JNIEnv* env, jstring jstr) {
+    const char* cstr = env->GetStringUTFChars(jstr, 0);
+    size_t cstr_len = static_cast<size_t> (env->GetStringUTFLength(jstr));
+    std::string res{cstr, cstr_len};
+    env->ReleaseStringUTFChars(jstr, cstr);
+    return res;
+}
+
+class GlobalRefDeleter {
+public:
+    void operator()(jobject ref) {
+        JNIEnv* env = static_cast<JNIEnv*> (wj::detail::get_jni_env());
+        env->DeleteGlobalRef(ref);
+    }
+};
+
+std::unique_ptr<_jclass, GlobalRefDeleter> find_java_class(JNIEnv* env, const std::string& name) {
+    jclass local = env->FindClass(name.c_str());
+    if (nullptr == local) {
+        throw wiltonjs::WiltonJsException(TRACEMSG("Cannot load class, name: [" + name + "]"));
+    }
+    std::unique_ptr<_jclass, GlobalRefDeleter> res{static_cast<jclass>(env->NewGlobalRef(local)), GlobalRefDeleter()};
+    if (nullptr == res.get()) {
+        throw wiltonjs::WiltonJsException(TRACEMSG("Cannot create global ref for class, name: [" + name + "]"));
+    }
+    env->DeleteLocalRef(local);
+    return res;
+}
+
+jmethodID find_java_method(JNIEnv* env, jclass clazz, const std::string& name, const std::string& signature) {
+    jmethodID res = env->GetMethodID(clazz, name.c_str(), signature.c_str());
+    if (nullptr == res) {
+        throw wiltonjs::WiltonJsException(TRACEMSG("Cannot find method, name: [" + name + "]," +
+                " signature: [" + signature + "]"));
+    }
+    return res;
+}
+
+class JniCtx {
+public:
+    JavaVM* vm;
+    std::unique_ptr<_jclass, GlobalRefDeleter> gatewayInterface;
+    jmethodID gatewayCallbackMethod;
+    std::unique_ptr<_jclass, GlobalRefDeleter> runnableInterface;
+    jmethodID runnableMethod;
+    std::unique_ptr<_jclass, GlobalRefDeleter> callableInterface;
+    jmethodID callableMethod;
+    std::unique_ptr<_jclass, GlobalRefDeleter> wiltonExceptionClass;    
+
+    JniCtx(const JniCtx&) = delete;
+    
+    JniCtx& operator=(const JniCtx&) = delete;
+
+    JniCtx(JniCtx&&) = delete;
+
+    JniCtx& operator=(JniCtx&& other) {
+        this->vm = other.vm;
+        other.vm = nullptr;
+        this->gatewayInterface = std::move(other.gatewayInterface);
+        this->gatewayCallbackMethod = other.gatewayCallbackMethod;
+        other.gatewayCallbackMethod = nullptr;
+        this->runnableInterface = std::move(other.runnableInterface);
+        this->runnableMethod = other.runnableMethod;
+        other.runnableMethod = nullptr;
+        this->callableInterface = std::move(other.callableInterface);
+        this->callableMethod = other.callableMethod;
+        other.callableMethod = nullptr;
+        this->wiltonExceptionClass = std::move(other.wiltonExceptionClass);
+        return *this;
+    }
+    
+    JniCtx() { }
+    
+    JniCtx(JavaVM* vm) :
+    vm(vm) {
+        // env
+        JNIEnv* env;
+        auto err = vm->GetEnv(reinterpret_cast<void**> (std::addressof(env)), JNI_VERSION_1_6);
+        if (JNI_OK != err) {
+            throw wiltonjs::WiltonJsException(TRACEMSG("Cannot obtain JNI environment"));
+        }
+        // gateway
+        this->gatewayInterface = find_java_class(env, WILTON_JNI_GATEWAY_INTERFACE);
+        this->gatewayCallbackMethod = find_java_method(env, this->gatewayInterface.get(), 
+                "gatewayCallback", "(Ljava/lang/String;J)V");
+        // runnable
+        this->runnableInterface = find_java_class(env, "java/lang/Runnable");
+        this->runnableMethod = find_java_method(env, this->runnableInterface.get(), "run", "()V");
+        // callable
+        this->callableInterface = find_java_class(env, "java/util/concurrent/Callable");
+        this->callableMethod = find_java_method(env, this->callableInterface.get(), 
+                "call", "()Ljava/lang/Object;");
+        // exception
+        this->wiltonExceptionClass = find_java_class(env, WILTON_JNI_EXCEPTION_CLASS);
+    }
+};
+
+JniCtx& static_jni_ctx() {
+    static JniCtx* ctx = new JniCtx();
+    return *ctx;
+}
+
+void dump_startup_error(const std::string& msg) {
+    try {
+        // err file setup
+        auto errdir = std::string(WILTON_STARTUP_ERR_DIR);
+        if (errdir.empty()) {
+            auto exepath = su::current_executable_path();
+            errdir = su::strip_filename(exepath);
+        }
+        // random postfix
+        std::string id = su::RandomStringGenerator().generate(12);
+        auto errfile = errdir + "wilton_ERROR_" + id + ".txt";
+        auto fd = su::FileDescriptor(errfile, 'w');
+        si::write_all(fd, msg);
+    } catch(...) {
+        // give up
+    }
+}
+
 } // namespace
 
 // detail helpers
@@ -108,13 +217,14 @@ namespace wiltonjs {
 namespace detail {
 
 void* /* JNIEnv* */ get_jni_env() {
+    JavaVM* vm = static_jni_ctx().vm;
     JNIEnv* env;
-    auto getenv_err = JAVA_VM->GetEnv(reinterpret_cast<void**> (std::addressof(env)), JNI_VERSION_1_6);
+    auto getenv_err = vm->GetEnv(reinterpret_cast<void**> (std::addressof(env)), JNI_VERSION_1_6);
     switch (getenv_err) {
     case JNI_OK:
         return static_cast<void*> (env);
     case JNI_EDETACHED:
-        if (JNI_OK == JAVA_VM->AttachCurrentThread(std::addressof(env), nullptr)) {
+        if (JNI_OK == vm->AttachCurrentThread(std::addressof(env), nullptr)) {
             return static_cast<void*> (env);
         }
         // fall-through to report error to client
@@ -124,20 +234,21 @@ void* /* JNIEnv* */ get_jni_env() {
 }
 
 void* /* jmethodID */ get_gateway_method() {
-    return static_cast<void*> (GATEWAY_CALLBACK_METHOD);
+    return static_cast<void*> (static_jni_ctx().gatewayCallbackMethod);
 }
 
 void* /* jmethodID */ get_runnable_method() {
-    return static_cast<void*> (RUNNABLE_CALLBACK_METHOD);
+    return static_cast<void*> (static_jni_ctx().runnableMethod);
 }
 
 void* /* jmethodID */ get_callable_method() {
-    return static_cast<void*> (CALLABLE_CALLBACK_METHOD);
+    return static_cast<void*> (static_jni_ctx().callableMethod);
 }
 
 void throw_delayed(const std::string& message) {
     JNIEnv* env = static_cast<JNIEnv*>(get_jni_env());
-    env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(message + "\nReporting delayed error").c_str());
+    env->ThrowNew(static_jni_ctx().wiltonExceptionClass.get(),
+            TRACEMSG(message + "\nReporting delayed error").c_str());
 }
 
 // shouldn't be called before logging is initialized by app
@@ -155,49 +266,31 @@ void log_error(const std::string& message) {
 extern "C" {
 
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {
-    // wiltoncalls, will crash loudly on register error
-    register_wiltoncalls();
-    // env
-    JNIEnv* env;
-    auto err = vm->GetEnv(reinterpret_cast<void**>(std::addressof(env)), JNI_VERSION_1_6);
-    if (JNI_OK != err) { return -1; }
-    JAVA_VM = vm;
-    // gateway
-    jclass gatewayClass = env->FindClass(WILTON_JNI_GATEWAY_INTERFACE);
-    if (nullptr == gatewayClass) { return -1; }
-    GATEWAY_INTERFACE_CLASS = static_cast<jclass> (env->NewGlobalRef(gatewayClass));
-    if (nullptr == GATEWAY_INTERFACE_CLASS) { return -1; }
-    GATEWAY_CALLBACK_METHOD = env->GetMethodID(GATEWAY_INTERFACE_CLASS, "gatewayCallback", "(Ljava/lang/String;J)V");
-    if (nullptr == GATEWAY_CALLBACK_METHOD) { return -1; }
-    // runnable
-    jclass runnableClass = env->FindClass("java/lang/Runnable");
-    if (nullptr == runnableClass) { return -1; }
-    RUNNABLE_INTERFACE_CLASS = static_cast<jclass> (env->NewGlobalRef(runnableClass));
-    if (nullptr == RUNNABLE_INTERFACE_CLASS) {return -1; }
-    RUNNABLE_CALLBACK_METHOD = env->GetMethodID(RUNNABLE_INTERFACE_CLASS, "run", "()V");
-    if (nullptr == RUNNABLE_CALLBACK_METHOD) { return -1; }
-    // callable
-    jclass callableClass = env->FindClass("java/util/concurrent/Callable");
-    if (nullptr == callableClass) { return -1; }
-    CALLABLE_INTERFACE_CLASS = static_cast<jclass> (env->NewGlobalRef(callableClass));
-    if (nullptr == CALLABLE_INTERFACE_CLASS) { return -1; }
-    CALLABLE_CALLBACK_METHOD = env->GetMethodID(CALLABLE_INTERFACE_CLASS, "call", "()Ljava/lang/Object;");
-    if (nullptr == CALLABLE_CALLBACK_METHOD) { return -1; }
-    // exception
-    jclass exClass = env->FindClass(WILTON_JNI_EXCEPTION_CLASS);
-    if (nullptr == exClass) { return -1; }
-    EXCEPTION_CLASS = static_cast<jclass> (env->NewGlobalRef(exClass));    
-    return JNI_VERSION_1_6;
+    try {
+        // wiltoncalls
+        register_wiltoncalls();
+        // move-assign static ctx
+        static_jni_ctx() = JniCtx(vm);
+        return JNI_VERSION_1_6;
+    } catch (const std::exception e) {
+        dump_startup_error(TRACEMSG(e.what() + "\nInitialization error"));
+        return -1;
+    }    
+}
+
+JNIEXPORT void JNI_OnUnload(JavaVM*, void*) {
+    delete std::addressof(static_jni_ctx());
 }
 
 JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(wiltoncall)
 (JNIEnv* env, jclass, jstring name, jstring data, jobject object) {
+    jclass exclass = static_jni_ctx().wiltonExceptionClass.get();
     if (nullptr == name) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'name' parameter specified").c_str());
+        env->ThrowNew(exclass, TRACEMSG("Null 'name' parameter specified").c_str());
         return nullptr;
     }
     if (nullptr == data) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG("Null 'data' parameter specified").c_str());
+        env->ThrowNew(exclass, TRACEMSG("Null 'data' parameter specified").c_str());
         return nullptr;
     }
     std::string name_string = jstring_to_str(env, name);
@@ -206,11 +299,11 @@ JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(wiltoncall)
         std::string res = wj::invoke_wilton_function(name_string, data_string, static_cast<void*>(object));
         return env->NewStringUTF(res.c_str());
     } catch (const std::exception& e) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(e.what() + 
-                "\nwiltoncall error for name: [" + name_string + "], data: [" + data_string + "]").c_str());
+        env->ThrowNew(exclass, TRACEMSG(e.what() + 
+                "\n'wiltoncall' error for name: [" + name_string + "], data: [" + data_string + "]").c_str());
     } catch (...) {
-        env->ThrowNew(EXCEPTION_CLASS, TRACEMSG(
-                "\nwiltoncall error for name: [" + name_string + "], data: [" + data_string + "]").c_str());
+        env->ThrowNew(exclass, TRACEMSG(
+                "'wiltoncall' error for name: [" + name_string + "], data: [" + data_string + "]").c_str());
     }
     return nullptr;
 }
