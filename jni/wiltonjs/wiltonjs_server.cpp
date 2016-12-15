@@ -96,6 +96,7 @@ public:
     modname(modname) { }
 };
 
+
 class ServerJniCtx {
     std::unique_ptr<_jobject, GlobalRefDeleter> gateway;
     std::vector<std::unique_ptr<_jobject, GlobalRefDeleter>> modules;
@@ -143,10 +144,14 @@ public:
 };
 
 class server_handle_registry {
-    std::unordered_map<wilton_Server*, ServerJniCtx> registry;
+    // reference to permanent non-destructable heap object
+    std::unordered_map<wilton_Server*, ServerJniCtx>& registry;
     std::mutex mutex;
 
 public:
+    server_handle_registry() :
+    registry(*(new std::unordered_map<wilton_Server*, ServerJniCtx>())) {}
+    
     int64_t put(wilton_Server* ptr, ServerJniCtx&& ctx) {
         std::lock_guard<std::mutex> lock(mutex);
         auto pair = registry.emplace(ptr, std::move(ctx));
