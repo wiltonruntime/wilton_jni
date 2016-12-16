@@ -156,23 +156,13 @@ void log_error(const std::string& message);
 
 // JNI
 
-void invoke_runnable(void* runnable);
-
-std::string invoke_callable(void* callable);
+std::string invoke_callable(void* callable, bool allow_throw = false);
 
 void invoke_gateway(void* gateway, void* callbackModule, int64_t requestHandle);
 
 void* wrap_object_permanent(void* object);
 
 void delete_wrapped_object(void* object);
-
-void* /* JNIEnv* */ get_jni_env();
-
-void* /* jmethodID */ get_gateway_method();
-
-void* /* jmethodID */ get_runnable_method();
-
-void* /* jmethodID */ get_callable_method();
 
 void* /* jstring */ create_platform_string(const std::string& str);
 

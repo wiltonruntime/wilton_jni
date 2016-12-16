@@ -24,7 +24,7 @@ detail::handle_registry<wilton_Mutex>& static_registry() {
 bool call_condition(void* cond) {
     try {
         // call condition method
-        std::string str = detail::invoke_callable(cond);
+        std::string str = detail::invoke_callable(cond, true);
         if (str.empty()) { //exception occured
             return true;
         }

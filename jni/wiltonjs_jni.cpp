@@ -103,11 +103,14 @@ std::atomic<bool>& static_jvm_active() {
     return flag;
 }
 
+void* /* JNIEnv* */ get_jni_env();
+
+
 class GlobalRefDeleter {
 public:
     void operator()(jobject ref) {
         if (static_jvm_active().load()) {
-            JNIEnv* env = static_cast<JNIEnv*> (wj::detail::get_jni_env());
+            JNIEnv* env = static_cast<JNIEnv*> (get_jni_env());
             env->DeleteGlobalRef(ref);
         }
     }
@@ -141,8 +144,6 @@ public:
     JavaVM* vm;
     std::unique_ptr<_jclass, GlobalRefDeleter> gatewayInterface;
     jmethodID gatewayCallbackMethod;
-    std::unique_ptr<_jclass, GlobalRefDeleter> runnableInterface;
-    jmethodID runnableMethod;
     std::unique_ptr<_jclass, GlobalRefDeleter> callableInterface;
     jmethodID callableMethod;
     std::unique_ptr<_jclass, GlobalRefDeleter> wiltonExceptionClass;    
@@ -159,9 +160,6 @@ public:
         this->gatewayInterface = std::move(other.gatewayInterface);
         this->gatewayCallbackMethod = other.gatewayCallbackMethod;
         other.gatewayCallbackMethod = nullptr;
-        this->runnableInterface = std::move(other.runnableInterface);
-        this->runnableMethod = other.runnableMethod;
-        other.runnableMethod = nullptr;
         this->callableInterface = std::move(other.callableInterface);
         this->callableMethod = other.callableMethod;
         other.callableMethod = nullptr;
@@ -183,9 +181,6 @@ public:
         this->gatewayInterface = find_java_class(env, WILTON_JNI_GATEWAY_INTERFACE);
         this->gatewayCallbackMethod = find_java_method(env, this->gatewayInterface.get(), 
                 "gatewayCallback", "(Ljava/lang/String;J)V");
-        // runnable
-        this->runnableInterface = find_java_class(env, "java/lang/Runnable");
-        this->runnableMethod = find_java_method(env, this->runnableInterface.get(), "run", "()V");
         // callable
         this->callableInterface = find_java_class(env, "java/util/concurrent/Callable");
         this->callableMethod = find_java_method(env, this->callableInterface.get(), 
@@ -214,6 +209,23 @@ void dump_startup_error(const std::string& msg) {
     }
 }
 
+void* /* JNIEnv* */ get_jni_env() {
+    JavaVM* vm = static_jni_ctx().vm;
+    JNIEnv* env;
+    auto getenv_err = vm->GetEnv(reinterpret_cast<void**> (std::addressof(env)), JNI_VERSION_1_6);
+    switch (getenv_err) {
+    case JNI_OK:
+        return static_cast<void*> (env);
+    case JNI_EDETACHED:
+        if (JNI_OK == vm->AttachCurrentThread(std::addressof(env), nullptr)) {
+            return static_cast<void*> (env);
+        }
+        // fall-through to report error to client
+    default:
+        throw wj::WiltonJsException(TRACEMSG("System error: cannot obtain JNI environment"));
+    }
+}
+
 } // namespace
 
 // detail helpers
@@ -222,31 +234,24 @@ namespace wiltonjs {
 namespace detail {
 
 // todo: exceptions
-void invoke_runnable(void* runnable) {
-    JNIEnv* env = static_cast<JNIEnv*> (get_jni_env());
-    env->CallVoidMethod(static_cast<jobject> (runnable), static_jni_ctx().runnableMethod);
-    if (env->ExceptionOccurred()) {
-        detail::log_error(TRACEMSG("Cron runnable Java exception caught, ignoring"));
-        env->ExceptionClear();
-    }
-}
-
-// todo: exceptions
-std::string invoke_callable(void* callable) {
+std::string invoke_callable(void* callable, bool allow_throw) {
     JNIEnv* env = static_cast<JNIEnv*> (get_jni_env());
     jobject obj = env->CallObjectMethod(static_cast<jobject> (callable), static_jni_ctx().callableMethod);
     if (env->ExceptionOccurred()) {
-        // stop waiting - exception will be rethrown
+        if (!allow_throw) {
+            detail::log_error(TRACEMSG("Callable exception caught, ignoring"));
+            env->ExceptionClear();
+        }
         return "";
-    }
-    return jstring_to_str(env, static_cast<jstring> (obj));
+    }    
+    return nullptr != obj ? jstring_to_str(env, static_cast<jstring> (obj)) : "";
 }
 
 void invoke_gateway(void* gateway, void* callbackModule, int64_t requestHandle) {
     JNIEnv* env = nullptr;
     try {
-        env = static_cast<JNIEnv*> (detail::get_jni_env());
-        env->CallVoidMethod(static_cast<jobject>(gateway), static_cast<jmethodID> (detail::get_gateway_method()),
+        env = static_cast<JNIEnv*> (get_jni_env());
+        env->CallVoidMethod(static_cast<jobject>(gateway), static_jni_ctx().gatewayCallbackMethod,
                 callbackModule, requestHandle);
         if (env->ExceptionOccurred()) {
             env->ExceptionDescribe();
@@ -276,35 +281,6 @@ void delete_wrapped_object(void* object) {
         JNIEnv* env = static_cast<JNIEnv*> (get_jni_env());
         return env->DeleteGlobalRef(static_cast<jobject> (object));
     }
-}
-
-void* /* JNIEnv* */ get_jni_env() {
-    JavaVM* vm = static_jni_ctx().vm;
-    JNIEnv* env;
-    auto getenv_err = vm->GetEnv(reinterpret_cast<void**> (std::addressof(env)), JNI_VERSION_1_6);
-    switch (getenv_err) {
-    case JNI_OK:
-        return static_cast<void*> (env);
-    case JNI_EDETACHED:
-        if (JNI_OK == vm->AttachCurrentThread(std::addressof(env), nullptr)) {
-            return static_cast<void*> (env);
-        }
-        // fall-through to report error to client
-    default:
-        throw WiltonJsException(TRACEMSG("System error: cannot obtain JNI environment"));
-    }
-}
-
-void* /* jmethodID */ get_gateway_method() {
-    return static_cast<void*> (static_jni_ctx().gatewayCallbackMethod);
-}
-
-void* /* jmethodID */ get_runnable_method() {
-    return static_cast<void*> (static_jni_ctx().runnableMethod);
-}
-
-void* /* jmethodID */ get_callable_method() {
-    return static_cast<void*> (static_jni_ctx().callableMethod);
 }
 
 void* /* jstring */ create_platform_string(const std::string& str) {

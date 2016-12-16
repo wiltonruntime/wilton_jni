@@ -1,6 +1,7 @@
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -21,11 +22,12 @@ public class ThreadJniTest {
 
         final CountDownLatch latch = new CountDownLatch(1);
 
-        wiltoncall("thread_run", "{}", new Runnable() {
+        wiltoncall("thread_run", "{}", new Callable<String>() {
             @Override
-            public void run() {
+            public String call() {
                 shared.set(Thread.currentThread().getId());
                 latch.countDown();
+                return "";
             }
         });
         latch.await();
