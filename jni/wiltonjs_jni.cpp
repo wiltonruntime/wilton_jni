@@ -242,10 +242,40 @@ std::string invoke_callable(void* callable) {
     return jstring_to_str(env, static_cast<jstring> (obj));
 }
 
+void invoke_gateway(void* gateway, void* callbackModule, int64_t requestHandle) {
+    JNIEnv* env = nullptr;
+    try {
+        env = static_cast<JNIEnv*> (detail::get_jni_env());
+        env->CallVoidMethod(static_cast<jobject>(gateway), static_cast<jmethodID> (detail::get_gateway_method()),
+                callbackModule, requestHandle);
+        if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+            std::string msg = TRACEMSG("Gateway error");
+            detail::log_error(msg);
+            // todo
+            //send_system_error(requestHandle, msg);
+            env->ExceptionClear();
+        }
+    } catch (const std::exception& e) {
+        std::string msg = TRACEMSG(e.what() + "\nGateway error");
+        detail::log_error(msg);
+        // todo
+//        send_system_error(requestHandle, msg);
+    }
+}
+
 // todo: delete
 void* wrap_object_permanent(void* object) {
     JNIEnv* env = static_cast<JNIEnv*> (get_jni_env());
     return env->NewGlobalRef(static_cast<jobject>(object));
+}
+
+// todo: rework
+void delete_wrapped_object(void* object) {
+    if (static_jvm_active().load()) {
+        JNIEnv* env = static_cast<JNIEnv*> (get_jni_env());
+        return env->DeleteGlobalRef(static_cast<jobject> (object));
+    }
 }
 
 void* /* JNIEnv* */ get_jni_env() {
@@ -275,6 +305,11 @@ void* /* jmethodID */ get_runnable_method() {
 
 void* /* jmethodID */ get_callable_method() {
     return static_cast<void*> (static_jni_ctx().callableMethod);
+}
+
+void* /* jstring */ create_platform_string(const std::string& str) {
+    JNIEnv* env = static_cast<JNIEnv*> (get_jni_env());
+    return env->NewStringUTF(str.c_str());
 }
 
 void throw_delayed(const std::string& message) {

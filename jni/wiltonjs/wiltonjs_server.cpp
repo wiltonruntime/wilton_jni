@@ -13,8 +13,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "jni.h"
-
 #include "staticlib/config.hpp"
 #include "staticlib/serialization.hpp"
 
@@ -74,16 +72,15 @@ public:
 
 class GlobalRefDeleter {
 public:
-    void operator()(jobject ref) {
-        JNIEnv* env = static_cast<JNIEnv*> (detail::get_jni_env());
-        env->DeleteGlobalRef(ref);
+    void operator()(void* ref) {        
+        detail::delete_wrapped_object(ref);
     }
 };
 
 class CtxEntry {
 public:    
-    jobject gateway;
-    jstring modname;
+    void* gateway;
+    void* modname;
 
     CtxEntry(const CtxEntry& other) :
     gateway(other.gateway),
@@ -91,15 +88,15 @@ public:
 
     CtxEntry& operator=(const CtxEntry&) = delete;
     
-    CtxEntry(jobject gateway, jstring modname) :
+    CtxEntry(void* gateway, void* modname) :
     gateway(gateway),
     modname(modname) { }
 };
 
 
 class ServerJniCtx {
-    std::unique_ptr<_jobject, GlobalRefDeleter> gateway;
-    std::vector<std::unique_ptr<_jobject, GlobalRefDeleter>> modules;
+    std::unique_ptr<void, GlobalRefDeleter> gateway;
+    std::vector<std::unique_ptr<void, GlobalRefDeleter>> modules;
     // iterators must be permanent
     std::list<CtxEntry> entries;
 
@@ -117,23 +114,23 @@ public:
     
     ServerJniCtx() { }
     
-    ServerJniCtx(JNIEnv* env, jobject gateway, std::vector<HttpView>& views) :
-    gateway(env->NewGlobalRef(gateway), GlobalRefDeleter()) {
+    ServerJniCtx(void* gateway, std::vector<HttpView>& views) :
+    gateway(detail::wrap_object_permanent(gateway), GlobalRefDeleter()) {
         for (auto& vi : views) {
-            jstring str = env->NewStringUTF(vi.module.c_str());
-            modules.emplace_back(env->NewGlobalRef(str), GlobalRefDeleter());
+            void* str = detail::create_platform_string(vi.module);
+            modules.emplace_back(detail::wrap_object_permanent(str), GlobalRefDeleter());
         }
     }
     
-    jobject get_gateway() {
+    void* get_gateway() {
         return gateway.get();
     }
     
-    jstring get_modname(size_t idx) {
-        return static_cast<jstring> (modules[idx].get());
+    void* get_modname(size_t idx) {
+        return modules[idx].get();
     }
     
-    void add_entry(jobject gateway, jstring modname) {
+    void add_entry(void* gateway, void* modname) {
         entries.emplace_back(CtxEntry(gateway, modname));
     }
     
@@ -231,33 +228,13 @@ std::vector<HttpView> extract_views(ss::JsonValue& conf) {
             " conf: [" + ss::dump_json_to_string(conf) + "]"));
 }
 
-void call_gateway(jobject gateway, jstring callbackModule, int64_t requestHandle) {
-    JNIEnv* env = nullptr;
-    try {
-        env = static_cast<JNIEnv*> (detail::get_jni_env());
-        env->CallVoidMethod(gateway, static_cast<jmethodID> (detail::get_gateway_method()), 
-                callbackModule, requestHandle);
-        if (env->ExceptionOccurred()) {
-            env->ExceptionDescribe();
-            std::string msg = TRACEMSG("Gateway error");
-            detail::log_error(msg);
-            send_system_error(requestHandle, msg);
-            env->ExceptionClear();
-        }
-    } catch (const std::exception& e) {
-        std::string msg = TRACEMSG(e.what() + "\nGateway error");
-        detail::log_error(msg);
-        send_system_error(requestHandle, msg);
-    }
-}
-
 std::vector<std::unique_ptr<wilton_HttpPath, HttpPathDeleter>> create_paths(
         const std::vector<HttpView>& views, ServerJniCtx& ctx) {
     // assert(views.size() == ctx.get_modules_names().size())
     std::vector<std::unique_ptr<wilton_HttpPath, HttpPathDeleter>> res;
     size_t idx = 0;
     for (auto& vi : views) {
-        jstring modname = ctx.get_modname(idx);
+        void* modname = ctx.get_modname(idx);
         ctx.add_entry(ctx.get_gateway(), modname);
         CtxEntry* ctx_to_pass = ctx.get_last_entry();
         wilton_HttpPath* ptr = nullptr;
@@ -266,7 +243,7 @@ std::vector<std::unique_ptr<wilton_HttpPath, HttpPathDeleter>> create_paths(
                 [](void* vctx, wilton_Request* request) {
                     auto ctx_passed = static_cast<CtxEntry*>(vctx);
                     int64_t requestHandle = static_request_registry().put(request);
-                    call_gateway(ctx_passed->gateway, ctx_passed->modname, requestHandle);
+                    detail::invoke_gateway(ctx_passed->gateway, ctx_passed->modname, requestHandle);
                     static_request_registry().remove(requestHandle);
                 });
         if (nullptr != err) throw WiltonJsException(TRACEMSG(err));
@@ -289,13 +266,11 @@ std::vector<wilton_HttpPath*> wrap_paths(std::vector<std::unique_ptr<wilton_Http
 std::string server_create(const std::string& data, void* object) {
     if (nullptr == object) throw WiltonJsException(TRACEMSG(
             "Required parameter 'gateway' not specified"));
-    JNIEnv* env = static_cast<JNIEnv*> (detail::get_jni_env());
-    jobject gateway = static_cast<jobject> (object);
     ss::JsonValue json = ss::load_json_from_string(data);
     auto conf_in = ss::load_json_from_string(data);
     auto views = extract_views(conf_in);
     auto conf = ss::dump_json_to_string(conf_in);
-    ServerJniCtx ctx{env, gateway, views};
+    ServerJniCtx ctx{object, views};
     auto paths = create_paths(views, ctx);
     auto paths_pass = wrap_paths(paths);
     wilton_Server* server = nullptr;
