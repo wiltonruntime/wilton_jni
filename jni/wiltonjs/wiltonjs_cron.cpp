@@ -9,8 +9,6 @@
 
 #include <functional>
 
-#include "jni.h"
-
 #include "staticlib/serialization.hpp"
 
 #include "wilton/wilton.h"
@@ -26,21 +24,6 @@ const std::string EMPTY_STRING = "";
 detail::handle_registry<wilton_CronTask>& static_registry() {
     static detail::handle_registry<wilton_CronTask> registry;
     return registry;
-}
-
-void call_runnable(jobject runnable) {
-    JNIEnv* env = nullptr;
-    try {
-        env = static_cast<JNIEnv*> (detail::get_jni_env());
-        env->CallVoidMethod(runnable, static_cast<jmethodID> (detail::get_runnable_method()));
-        if (env->ExceptionOccurred()) {
-            // todo: details
-            detail::log_error(TRACEMSG("Cron runnable Java exception caught, ignoring"));
-            env->ExceptionClear();
-        }
-    } catch (const std::exception& e) {
-        detail::log_error(TRACEMSG(e.what()));
-    }
 }
 
 } // namespace
@@ -63,17 +46,13 @@ std::string cron_start(const std::string& data, void* object) {
     // get runnable
     if (nullptr == object) throw WiltonJsException(TRACEMSG(
             "Required parameter 'runnable' not specified"));
-    JNIEnv* env = static_cast<JNIEnv*> (detail::get_jni_env());
-    jobject runnable_local = static_cast<jobject> (object);
-    // todo: fixme - delete somehow on server stop
-    jobject runnable = env->NewGlobalRef(runnable_local);
+    void* runnable = detail::wrap_object_permanent(object);
     // call wilton
     wilton_CronTask* cron;
     char* err = wilton_CronTask_start(std::addressof(cron), expr.c_str(), expr.length(),
             runnable,
             [](void* runnable_passed) {
-                jobject runnable = static_cast<jobject>(runnable_passed);
-                call_runnable(runnable);
+                detail::invoke_runnable(runnable_passed);
             });
     if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     int64_t handle = static_registry().put(cron);

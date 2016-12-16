@@ -26,13 +26,13 @@ public class CronJniTest {
         long handle = shamap.get("cronHandle");
         assertEquals(0, runnable.getCount());
         // slow, uncomment for re-test
-//        Thread.sleep(1500);
-//        Assert.assertTrue(1 == runnable.getCount() || 2 == runnable.getCount());
+        Thread.sleep(1500);
+        Assert.assertTrue(1 == runnable.getCount() || 2 == runnable.getCount());
         wiltoncall("cron_stop", GSON.toJson(ImmutableMap.builder()
                 .put("cronHandle", handle)
                 .build()));
-//        Thread.sleep(1000);
-//        assertTrue(2 == runnable.getCount() || 3 == runnable.getCount());
+        Thread.sleep(1000);
+        assertTrue(2 == runnable.getCount() || 3 == runnable.getCount());
     }
 
     private static class TestRunnable implements Runnable {

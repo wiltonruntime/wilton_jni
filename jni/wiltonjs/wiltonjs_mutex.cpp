@@ -7,8 +7,6 @@
 
 #include "wiltonjs/wiltonjs.hpp"
 
-#include "jni.h"
-
 #include "wilton/wilton.h"
 
 namespace wiltonjs {
@@ -22,25 +20,14 @@ detail::handle_registry<wilton_Mutex>& static_registry() {
     return registry;
 }
 
-std::string jstring_to_str(JNIEnv* env, jstring jstr) {
-    const char* cstr = env->GetStringUTFChars(jstr, 0);
-    size_t cstr_len = static_cast<size_t> (env->GetStringUTFLength(jstr));
-    std::string res{cstr, cstr_len};
-    env->ReleaseStringUTFChars(jstr, cstr);
-    return res;
-}
-
+// todo: error reporting
 bool call_condition(void* cond) {
-    JNIEnv* env = nullptr;
     try {
         // call condition method
-        env = static_cast<JNIEnv*> (detail::get_jni_env());
-        jobject obj = env->CallObjectMethod(static_cast<jobject>(cond), static_cast<jmethodID>(detail::get_callable_method()));
-        if (env->ExceptionOccurred()) {
-            // stop waiting - exception will be rethrown
+        std::string str = detail::invoke_callable(cond);
+        if (str.empty()) { //exception occured
             return true;
         }
-        std::string str = jstring_to_str(env, static_cast<jstring>(obj));
         // json parse
         ss::JsonValue json = ss::load_json_from_string(str);
         int32_t tribool = -1;

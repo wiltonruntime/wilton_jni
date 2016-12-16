@@ -9,8 +9,6 @@
 
 #include <functional>
 
-#include "jni.h"
-
 #include "wilton/wilton.h"
 
 namespace wiltonjs {
@@ -21,32 +19,16 @@ namespace ss = staticlib::serialization;
 
 const std::string EMPTY_STRING = "";
 
-void call_runnable(JNIEnv* env, jobject runnable) {
-    try {
-        env->CallVoidMethod(runnable, static_cast<jmethodID> (detail::get_runnable_method()));
-        if (env->ExceptionOccurred()) {
-            // todo: details
-            detail::log_error(TRACEMSG("Tread runnable Java exception caught, ignoring"));
-            env->ExceptionClear();
-        }
-    } catch (const std::exception& e) {
-        detail::log_error(TRACEMSG(e.what()));
-    }
-}
-
 } // namespace
 
+// todo: delete
 std::string thread_run(const std::string&, void* object) {
-    JNIEnv* env = static_cast<JNIEnv*> (detail::get_jni_env());
-    jobject runnable_local = static_cast<jobject> (object);
-    jobject runnable = env->NewGlobalRef(runnable_local);
+    void* runnable = detail::wrap_object_permanent(object);
     // call wilton
     char* err = wilton_thread_run(runnable,
-            [](void* passed) {
-                JNIEnv* env = static_cast<JNIEnv*> (detail::get_jni_env());
-                jobject runnable_passed = static_cast<jobject> (passed);
-                        call_runnable(env, runnable_passed);
-                        env->DeleteGlobalRef(runnable_passed);
+            [](void* runnable_passed) {
+                detail::invoke_runnable(runnable_passed);
+                // env->DeleteGlobalRef(runnable_passed);
             });
     if (nullptr != err) {
         detail::throw_wilton_error(err, TRACEMSG(std::string(err)));

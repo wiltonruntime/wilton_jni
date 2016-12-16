@@ -8,6 +8,7 @@
 
 #include "jni.h"
 
+#include <atomic>
 #include <memory>
 #include <string>
 
@@ -97,11 +98,18 @@ std::string jstring_to_str(JNIEnv* env, jstring jstr) {
     return res;
 }
 
+std::atomic<bool>& static_jvm_active() {
+    static std::atomic<bool> flag{false};
+    return flag;
+}
+
 class GlobalRefDeleter {
 public:
     void operator()(jobject ref) {
-        JNIEnv* env = static_cast<JNIEnv*> (wj::detail::get_jni_env());
-        env->DeleteGlobalRef(ref);
+        if (static_jvm_active().load()) {
+            JNIEnv* env = static_cast<JNIEnv*> (wj::detail::get_jni_env());
+            env->DeleteGlobalRef(ref);
+        }
     }
 };
 
@@ -127,8 +135,9 @@ jmethodID find_java_method(JNIEnv* env, jclass clazz, const std::string& name, c
     return res;
 }
 
+
 class JniCtx {
-public:
+public:    
     JavaVM* vm;
     std::unique_ptr<_jclass, GlobalRefDeleter> gatewayInterface;
     jmethodID gatewayCallbackMethod;
@@ -195,10 +204,6 @@ void dump_startup_error(const std::string& msg) {
     try {
         // err file setup
         auto errdir = std::string(WILTON_STARTUP_ERR_DIR);
-        if (errdir.empty()) {
-            auto exepath = su::current_executable_path();
-            errdir = su::strip_filename(exepath);
-        }
         // random postfix
         std::string id = su::RandomStringGenerator().generate(12);
         auto errfile = errdir + "wilton_ERROR_" + id + ".txt";
@@ -215,6 +220,33 @@ void dump_startup_error(const std::string& msg) {
 
 namespace wiltonjs {
 namespace detail {
+
+// todo: exceptions
+void invoke_runnable(void* runnable) {
+    JNIEnv* env = static_cast<JNIEnv*> (get_jni_env());
+    env->CallVoidMethod(static_cast<jobject> (runnable), static_jni_ctx().runnableMethod);
+    if (env->ExceptionOccurred()) {
+        detail::log_error(TRACEMSG("Cron runnable Java exception caught, ignoring"));
+        env->ExceptionClear();
+    }
+}
+
+// todo: exceptions
+std::string invoke_callable(void* callable) {
+    JNIEnv* env = static_cast<JNIEnv*> (get_jni_env());
+    jobject obj = env->CallObjectMethod(static_cast<jobject> (callable), static_jni_ctx().callableMethod);
+    if (env->ExceptionOccurred()) {
+        // stop waiting - exception will be rethrown
+        return "";
+    }
+    return jstring_to_str(env, static_cast<jstring> (obj));
+}
+
+// todo: delete
+void* wrap_object_permanent(void* object) {
+    JNIEnv* env = static_cast<JNIEnv*> (get_jni_env());
+    return env->NewGlobalRef(static_cast<jobject>(object));
+}
 
 void* /* JNIEnv* */ get_jni_env() {
     JavaVM* vm = static_jni_ctx().vm;
@@ -271,8 +303,10 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {
         register_wiltoncalls();
         // move-assign static ctx
         static_jni_ctx() = JniCtx(vm);
+        // set init flag
+        static_jvm_active().store(true);
         return JNI_VERSION_1_6;
-    } catch (const std::exception e) {
+    } catch (const std::exception& e) {
         dump_startup_error(TRACEMSG(e.what() + "\nInitialization error"));
         return -1;
     }    
@@ -280,6 +314,8 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {
 
 JNIEXPORT void JNI_OnUnload(JavaVM*, void*) {
     delete std::addressof(static_jni_ctx());
+    // flip init flag
+    static_jvm_active().store(false);
 }
 
 JNIEXPORT jstring JNICALL WILTON_JNI_FUNCTION(wiltoncall)
