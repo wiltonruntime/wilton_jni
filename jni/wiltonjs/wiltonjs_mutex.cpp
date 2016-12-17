@@ -24,7 +24,7 @@ detail::handle_registry<wilton_Mutex>& static_registry() {
 bool call_condition(void* cond) {
     try {
         // call condition method
-        std::string str = detail::invoke_callable(cond, true);
+        std::string str = detail::invoke_js_callable(cond, false);
         if (str.empty()) { //exception occured
             return true;
         }
@@ -43,7 +43,7 @@ bool call_condition(void* cond) {
                 "Required parameter 'condition' not specified"));
         return 1 == tribool;
     } catch (const std::exception& e) {
-        detail::throw_delayed(TRACEMSG(e.what()));
+        detail::throw_js_exception(TRACEMSG(e.what()));
         // stop waiting on error
         return true;
     }

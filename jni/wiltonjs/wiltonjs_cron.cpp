@@ -52,7 +52,7 @@ std::string cron_start(const std::string& data, void* object) {
     char* err = wilton_CronTask_start(std::addressof(cron), expr.c_str(), expr.length(),
             runnable,
             [](void* runnable_passed) {
-                detail::invoke_callable(runnable_passed);
+                detail::invoke_js_callable(runnable_passed);
             });
     if (nullptr != err) detail::throw_wilton_error(err, TRACEMSG(std::string(err)));
     int64_t handle = static_registry().put(cron);

@@ -148,15 +148,13 @@ bool get_json_bool(const staticlib::serialization::JsonField& field);
 const staticlib::serialization::JsonValue& get_json_object(
         const staticlib::serialization::JsonField& field);
 
-// error reporting
 
-void throw_delayed(const std::string& message);
 
-void log_error(const std::string& message);
+// platform api
 
-// JNI
+void throw_js_exception(const std::string& message);
 
-std::string invoke_callable(void* callable, bool allow_throw = false);
+std::string invoke_js_callable(void* callable, bool suppress_js_exception = true);
 
 void invoke_gateway(void* gateway, void* callbackModule, int64_t requestHandle);
 

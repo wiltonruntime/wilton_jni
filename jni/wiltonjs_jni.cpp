@@ -90,6 +90,16 @@ void register_wiltoncalls() {
     wj::put_wilton_function("tcp_wait_for_connection", wj::tcp_wait_for_connection);
 }
 
+// shouldn't be called before logging is initialized by app
+
+void log_error(const std::string& message) {
+    std::string level = "ERROR";
+    std::string logger = "wilton.jni";
+    // call wilton
+    wilton_logger_log(level.c_str(), level.length(), logger.c_str(), logger.length(),
+            message.c_str(), message.length());
+}
+
 std::string jstring_to_str(JNIEnv* env, jstring jstr) {
     const char* cstr = env->GetStringUTFChars(jstr, 0);
     size_t cstr_len = static_cast<size_t> (env->GetStringUTFLength(jstr));
@@ -234,12 +244,12 @@ namespace wiltonjs {
 namespace detail {
 
 // todo: exceptions
-std::string invoke_callable(void* callable, bool allow_throw) {
+std::string invoke_js_callable(void* callable, bool suppress_js_exception) {
     JNIEnv* env = static_cast<JNIEnv*> (get_jni_env());
     jobject obj = env->CallObjectMethod(static_cast<jobject> (callable), static_jni_ctx().callableMethod);
     if (env->ExceptionOccurred()) {
-        if (!allow_throw) {
-            detail::log_error(TRACEMSG("Callable exception caught, ignoring"));
+        if (suppress_js_exception) {
+            log_error(TRACEMSG("Callable exception caught, ignoring"));
             env->ExceptionClear();
         }
         return "";
@@ -256,14 +266,14 @@ void invoke_gateway(void* gateway, void* callbackModule, int64_t requestHandle) 
         if (env->ExceptionOccurred()) {
             env->ExceptionDescribe();
             std::string msg = TRACEMSG("Gateway error");
-            detail::log_error(msg);
+            log_error(msg);
             // todo
             //send_system_error(requestHandle, msg);
             env->ExceptionClear();
         }
     } catch (const std::exception& e) {
         std::string msg = TRACEMSG(e.what() + "\nGateway error");
-        detail::log_error(msg);
+        log_error(msg);
         // todo
 //        send_system_error(requestHandle, msg);
     }
@@ -288,19 +298,10 @@ void* /* jstring */ create_platform_string(const std::string& str) {
     return env->NewStringUTF(str.c_str());
 }
 
-void throw_delayed(const std::string& message) {
+void throw_js_exception(const std::string& message) {
     JNIEnv* env = static_cast<JNIEnv*>(get_jni_env());
     env->ThrowNew(static_jni_ctx().wiltonExceptionClass.get(),
             TRACEMSG(message + "\nReporting delayed error").c_str());
-}
-
-// shouldn't be called before logging is initialized by app
-void log_error(const std::string& message) {
-    std::string level = "ERROR";
-    std::string logger = "wilton.jni";
-    // call wilton
-    wilton_logger_log(level.c_str(), level.length(), logger.c_str(), logger.length(),
-            message.c_str(), message.length());
 }
 
 } // namespace

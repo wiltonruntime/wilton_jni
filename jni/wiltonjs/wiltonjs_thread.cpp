@@ -27,7 +27,7 @@ std::string thread_run(const std::string&, void* object) {
     // call wilton
     char* err = wilton_thread_run(runnable,
             [](void* runnable_passed) {
-                detail::invoke_callable(runnable_passed);
+                detail::invoke_js_callable(runnable_passed);
                 // env->DeleteGlobalRef(runnable_passed);
             });
     if (nullptr != err) {
