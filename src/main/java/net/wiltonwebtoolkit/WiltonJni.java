@@ -15,28 +15,40 @@
  */
 package net.wiltonwebtoolkit;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 public class WiltonJni {
 
+    public static final String LOGGING_DISABLE = "{\"appenders\":[{\"appenderType\":\"NULL\"}]}";
+    public static final String LOGGING_CONSOLE = "{\"appenders\":[{\"appenderType\":\"CONSOLE\"}]}";
+
     static {
-        System.loadLibrary("wiltonjs_jni");
-        try {
-            Class.forName("net.wiltonwebtoolkit.WiltonException");
-            Class.forName("net.wiltonwebtoolkit.WiltonGateway");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+        System.loadLibrary("wilton");
+    }
+
+    public static String describeThrowable(Throwable throwable) {
+        if (null == throwable) {
+            return "";
         }
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw, true);
+        throwable.printStackTrace(pw);
+        return sw.getBuffer().toString();
     }
 
-    // unified jni access point
+    // jni access points
 
-    public static String wiltoncall(String name) {
-        return wiltoncall(name, "{}", null);
+    public static void wiltoninit(WiltonGateway gateway) throws WiltonException {
+        wiltoninit(gateway, LOGGING_DISABLE);
     }
 
-    public static String wiltoncall(String name, String data) {
-        return wiltoncall(name, data, null);
+    public static native void wiltoninit(WiltonGateway gateway, String loggingConfig) throws WiltonException;
+
+    public static String wiltoncall(String name) throws WiltonException {
+        return wiltoncall(name, "{}");
     }
 
-    public static native String wiltoncall(String name, String data, Object object);
+    public static native String wiltoncall(String name, String data) throws WiltonException;
 
 }

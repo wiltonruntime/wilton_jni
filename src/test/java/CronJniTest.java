@@ -19,9 +19,11 @@ public class CronJniTest {
     @Test
     public void test() throws Exception {
         TestCallable runnable = new TestCallable();
-        String out = wiltoncall("cron_start", GSON.toJson(ImmutableMap.builder()
-                .put("expression", "* * * * * *") // every second
-                .build()), runnable);
+        // todo
+//        String out = wiltoncall("cron_start", GSON.toJson(ImmutableMap.builder()
+//                .put("expression", "* * * * * *") // every second
+//                .build()), runnable);
+        String out = null;
         Map<String, Long> shamap = GSON.fromJson(out, LONG_MAP_TYPE);
         long handle = shamap.get("cronHandle");
         assertEquals(0, runnable.getCount());

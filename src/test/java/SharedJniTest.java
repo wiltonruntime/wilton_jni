@@ -1,19 +1,29 @@
 import com.google.common.collect.ImmutableMap;
 import net.wiltonwebtoolkit.WiltonException;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import utils.TestGateway;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
 import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
 import static org.junit.Assert.assertEquals;
 import static utils.TestUtils.GSON;
+import static utils.TestUtils.initWiltonOnce;
 
 /**
  * User: alexkasko
  * Date: 12/10/16
  */
 public class SharedJniTest {
+
+    @BeforeClass
+    public static void init() {
+        // init, no logging by default, enable it when needed
+        initWiltonOnce(new TestGateway(), LOGGING_DISABLE);
+    }
 
     @Test
     public void testPut() {

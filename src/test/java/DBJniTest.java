@@ -2,7 +2,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import utils.TestGateway;
 
 import java.io.File;
 import java.util.LinkedHashMap;
@@ -18,6 +20,12 @@ import static utils.TestUtils.*;
  * Date: 6/13/16
  */
 public class DBJniTest {
+
+    @BeforeClass
+    public static void init() {
+        // init, no logging by default, enable it when needed
+        initWiltonOnce(new TestGateway(), LOGGING_DISABLE);
+    }
 
     @Test
     public void testDb() throws Exception {
@@ -78,7 +86,7 @@ public class DBJniTest {
                     .put("connectionHandle", connectionHandle)
                     .build()));
         } finally {
-            FileUtils.deleteDirectory(dir);
+            deleteDirQuietly(dir);
         }
     }
 
@@ -160,7 +168,7 @@ public class DBJniTest {
                     .put("connectionHandle", connectionHandle)
                     .build()));
         } finally {
-            FileUtils.deleteDirectory(dir);
+            deleteDirQuietly(dir);
         }
     }
 }

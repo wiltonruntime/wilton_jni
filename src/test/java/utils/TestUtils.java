@@ -4,7 +4,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import net.wiltonwebtoolkit.WiltonGateway;
 import net.wiltonwebtoolkit.WiltonJni;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -36,8 +38,10 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
+import static net.wiltonwebtoolkit.WiltonJni.wiltoninit;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
 /**
@@ -53,6 +57,23 @@ public class TestUtils {
     public static final Type STRING_MAP_TYPE = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
     public static final Type LIST_MAP_TYPE = new TypeToken<ArrayList<LinkedHashMap<String, String>>>() {}.getType();
     public static final Type LONG_MAP_TYPE = new TypeToken<LinkedHashMap<String, Long>>() {}.getType();
+    public static final AtomicBoolean INITTED = new AtomicBoolean(false);
+
+    public static void initWiltonOnce(WiltonGateway gateway, String loggingConfig) {
+        if (INITTED.compareAndSet(false, true)) {
+            wiltoninit(gateway, loggingConfig);
+        }
+    }
+
+    public static void deleteDirQuietly(File dir) {
+        try {
+            if (null != dir) {
+                FileUtils.deleteDirectory(dir);
+            }
+        } catch (Exception e) {
+//            e.printStackTrace();
+        }
+    }
 
     public static String httpGet(String url) throws Exception {
         CloseableHttpResponse resp = null;

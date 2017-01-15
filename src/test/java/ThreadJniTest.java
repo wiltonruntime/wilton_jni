@@ -22,14 +22,15 @@ public class ThreadJniTest {
 
         final CountDownLatch latch = new CountDownLatch(1);
 
-        wiltoncall("thread_run", "{}", new Callable<String>() {
-            @Override
-            public String call() {
-                shared.set(Thread.currentThread().getId());
-                latch.countDown();
-                return "";
-            }
-        });
+        // todo
+//        wiltoncall("thread_run", "{}", new Callable<String>() {
+//            @Override
+//            public String call() {
+//                shared.set(Thread.currentThread().getId());
+//                latch.countDown();
+//                return "";
+//            }
+//        });
         latch.await();
         assertTrue(shared.get() != id);
     }

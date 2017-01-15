@@ -53,10 +53,12 @@ public class ServerJniTest {
     public void testSimple() throws Exception {
         long handle = 0;
         try {
-            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-                   .put("views", TestGateway.views())
-                   .put("tcpPort", TCP_PORT)
-                   .build()), new TestGateway());
+            // todo
+//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+//                   .put("views", TestGateway.views())
+//                   .put("tcpPort", TCP_PORT)
+//                   .build()), new TestGateway());
+            String sout = null;
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             assertEquals(HELLO_RESP, httpGet(ROOT_URL + "hello"));
@@ -75,26 +77,28 @@ public class ServerJniTest {
         try {
             dir = Files.createTempDir();
             File logfile = new File(dir, "test.log");
-            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-                    .put("views", TestGateway.views())
-                    .put("tcpPort", TCP_PORT)
-                    .put("logging", ImmutableMap.builder()
-                            .put("appenders", ImmutableList.builder()
-                                    .add(ImmutableMap.builder()
-                                            .put("appenderType", "FILE")
-                                            .put("thresholdLevel", "DEBUG")
-                                            .put("filePath", logfile.getAbsolutePath())
-                                            .put("layout", "%m")
-                                            .build())
-                                    .build())
-                            .put("loggers", ImmutableList.builder()
-                                    .add(ImmutableMap.builder()
-                                            .put("name", "staticlib.httpserver")
-                                            .put("level", "WARN")
-                                            .build())
-                                    .build())
-                            .build())
-                    .build()), new TestGateway());
+            // todo
+//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+//                    .put("views", TestGateway.views())
+//                    .put("tcpPort", TCP_PORT)
+//                    .put("logging", ImmutableMap.builder()
+//                            .put("appenders", ImmutableList.builder()
+//                                    .add(ImmutableMap.builder()
+//                                            .put("appenderType", "FILE")
+//                                            .put("thresholdLevel", "DEBUG")
+//                                            .put("filePath", logfile.getAbsolutePath())
+//                                            .put("layout", "%m")
+//                                            .build())
+//                                    .build())
+//                            .put("loggers", ImmutableList.builder()
+//                                    .add(ImmutableMap.builder()
+//                                            .put("name", "staticlib.httpserver")
+//                                            .put("level", "WARN")
+//                                            .build())
+//                                    .build())
+//                            .build())
+//                    .build()), new TestGateway());
+            String sout = null;
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             assertEquals(HELLO_RESP, httpGet(ROOT_URL + "hello"));
@@ -105,7 +109,7 @@ public class ServerJniTest {
 //            assertEquals(LOG_DATA, FileUtils.readFileToString(logfile, "UTF-8"));
         } finally {
             stopServerQuietly(handle);
-            FileUtils.deleteDirectory(dir);
+            deleteDirQuietly(dir);
         }
     }
 
@@ -125,27 +129,29 @@ public class ServerJniTest {
             zipper.write(STATIC_ZIP_DATA.getBytes("UTF-8"));
             zipper.close();
             FileUtils.writeByteArrayToFile(zipFile, baos.toByteArray());
-            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-                    .put("views", TestGateway.views())
-                    .put("tcpPort", TCP_PORT)
-                    .put("documentRoots", ImmutableList.builder()
-                            .add(ImmutableMap.builder()
-                                    .put("resource", "/static/files/")
-                                    .put("dirPath", dir.getAbsolutePath())
-                                    .put("mimeTypes", ImmutableList.builder()
-                                            .add(ImmutableMap.builder()
-                                                    .put("extension", "boo")
-                                                    .put("mime", "text/x-boo")
-                                                    .build())
-                                            .build())
-                                    .build())
-                            .add(ImmutableMap.builder()
-                                    .put("resource", "/static/")
-                                    .put("zipPath", zipFile.getAbsolutePath())
-                                    .put("zipInnerPrefix", "test/")
-                                    .build())
-                            .build())
-                    .build()), new TestGateway());
+            // todo
+//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+//                    .put("views", TestGateway.views())
+//                    .put("tcpPort", TCP_PORT)
+//                    .put("documentRoots", ImmutableList.builder()
+//                            .add(ImmutableMap.builder()
+//                                    .put("resource", "/static/files/")
+//                                    .put("dirPath", dir.getAbsolutePath())
+//                                    .put("mimeTypes", ImmutableList.builder()
+//                                            .add(ImmutableMap.builder()
+//                                                    .put("extension", "boo")
+//                                                    .put("mime", "text/x-boo")
+//                                                    .build())
+//                                            .build())
+//                                    .build())
+//                            .add(ImmutableMap.builder()
+//                                    .put("resource", "/static/")
+//                                    .put("zipPath", zipFile.getAbsolutePath())
+//                                    .put("zipInnerPrefix", "test/")
+//                                    .build())
+//                            .build())
+//                    .build()), new TestGateway());
+            String sout = null;
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             assertEquals(HELLO_RESP, httpGet(ROOT_URL + "hello"));
@@ -161,7 +167,7 @@ public class ServerJniTest {
             assertEquals(STATIC_ZIP_DATA, httpGet(ROOT_URL + "static/zipped.txt"));
         } finally {
             stopServerQuietly(handle);
-            FileUtils.deleteDirectory(dir);
+            deleteDirQuietly(dir);
         }
     }
 
@@ -174,10 +180,12 @@ public class ServerJniTest {
     public void testHeaders() throws Exception {
         long handle = 0;
         try {
-            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-                   .put("views", TestGateway.views())
-                   .put("tcpPort", TCP_PORT)
-                   .build()), new TestGateway());
+            // todo
+//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+//                   .put("views", TestGateway.views())
+//                   .put("tcpPort", TCP_PORT)
+//                   .build()), new TestGateway());
+            String sout = null;
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             assertEquals(HELLO_RESP, httpGet(ROOT_URL + "hello"));
@@ -225,10 +233,12 @@ public class ServerJniTest {
             dir = Files.createTempDir();
             File file = new File(dir, "test.txt");
             FileUtils.writeStringToFile(file, STATIC_FILE_DATA);
-            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-                   .put("views", TestGateway.views())
-                   .put("tcpPort", TCP_PORT)
-                   .build()), new TestGateway());
+            // todo
+//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+//                   .put("views", TestGateway.views())
+//                   .put("tcpPort", TCP_PORT)
+//                   .build()), new TestGateway());
+            String sout = null;
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             assertEquals(HELLO_RESP, httpGet(ROOT_URL + "hello"));
@@ -239,7 +249,7 @@ public class ServerJniTest {
             assertFalse(file.exists());
         } finally {
             stopServerQuietly(handle);
-            FileUtils.deleteDirectory(dir);
+            deleteDirQuietly(dir);
         }
     }
 
@@ -279,10 +289,12 @@ public class ServerJniTest {
                     .build()));
             assertEquals(expected, fprocessed);
 
-            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-                   .put("views", TestGateway.views())
-                   .put("tcpPort", TCP_PORT)
-                   .build()), new TestGateway());
+            // todo
+//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+//                   .put("views", TestGateway.views())
+//                   .put("tcpPort", TCP_PORT)
+//                   .build()), new TestGateway());
+            String sout = null;
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             assertEquals(HELLO_RESP, httpGet(ROOT_URL + "hello"));
@@ -299,7 +311,7 @@ public class ServerJniTest {
         } finally {
             closeQuietly(resp);
             stopServerQuietly(handle);
-            FileUtils.deleteDirectory(dir);
+            deleteDirQuietly(dir);
         }
     }
 
@@ -316,15 +328,17 @@ public class ServerJniTest {
             partialsDir.mkdirs();
             File part = new File(partialsDir, "user.mustache");
             FileUtils.writeStringToFile(part, "<strong>{{name}}</strong>");
-            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-                    .put("views", TestGateway.views())
-                    .put("tcpPort", TCP_PORT)
-                    .put("mustache", ImmutableMap.builder()
-                            .put("partialsDirs", ImmutableList.builder()
-                                    .add(partialsDir.getAbsolutePath())
-                                    .build())
-                            .build())
-                    .build()), new TestGateway());
+            // todo
+//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+//                    .put("views", TestGateway.views())
+//                    .put("tcpPort", TCP_PORT)
+//                    .put("mustache", ImmutableMap.builder()
+//                            .put("partialsDirs", ImmutableList.builder()
+//                                    .add(partialsDir.getAbsolutePath())
+//                                    .build())
+//                            .build())
+//                    .build()), new TestGateway());
+            String sout = null;
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             assertEquals(HELLO_RESP, httpGet(ROOT_URL + "hello"));
@@ -344,7 +358,7 @@ public class ServerJniTest {
         } finally {
             closeQuietly(resp);
             stopServerQuietly(handle);
-            FileUtils.deleteDirectory(dir);
+            deleteDirQuietly(dir);
         }
     }
 
@@ -354,14 +368,16 @@ public class ServerJniTest {
         CloseableHttpClient https = null;
         CloseableHttpResponse resp = null;
         try {
-            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-                    .put("views", TestGateway.views())
-                    .put("tcpPort", TCP_PORT_HTTPS)
-                    .put("ssl", ImmutableMap.builder()
-                            .put("keyFile", "src/test/resources/certificates/server/localhost.pem")
-                            .put("keyPassword", "test")
-                            .build())
-                    .build()), new TestGateway());
+            // todo
+//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+//                    .put("views", TestGateway.views())
+//                    .put("tcpPort", TCP_PORT_HTTPS)
+//                    .put("ssl", ImmutableMap.builder()
+//                            .put("keyFile", "src/test/resources/certificates/server/localhost.pem")
+//                            .put("keyPassword", "test")
+//                            .build())
+//                    .build()), new TestGateway());
+            String sout = null;
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             https = createHttpsClient();
@@ -379,10 +395,12 @@ public class ServerJniTest {
     public void testAsync() throws Exception {
         long handle = 0;
         try {
-            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-                   .put("views", TestGateway.views())
-                   .put("tcpPort", TCP_PORT)
-                   .build()), new TestGateway());
+            // todo
+//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+//                   .put("views", TestGateway.views())
+//                   .put("tcpPort", TCP_PORT)
+//                   .build()), new TestGateway());
+            String sout = null;
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             assertEquals(HELLO_RESP, httpGet(ROOT_URL + "hello"));
@@ -398,15 +416,17 @@ public class ServerJniTest {
         File dir = null;
         try {
             dir = Files.createTempDir();
-            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-                    .put("views", TestGateway.views())
-                    .put("tcpPort", TCP_PORT)
-                    .put("requestPayload", ImmutableMap.builder()
-                            .put("tmpDirPath", dir.getAbsolutePath())
-                            .put("tmpFilenameLength", 32)
-                            .put("memoryLimitBytes", 4)
-                            .build())
-                    .build()), new TestGateway());
+            // todo
+//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+//                    .put("views", TestGateway.views())
+//                    .put("tcpPort", TCP_PORT)
+//                    .put("requestPayload", ImmutableMap.builder()
+//                            .put("tmpDirPath", dir.getAbsolutePath())
+//                            .put("tmpFilenameLength", 32)
+//                            .put("memoryLimitBytes", 4)
+//                            .build())
+//                    .build()), new TestGateway());
+            String sout = null;
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             assertEquals(HELLO_RESP, httpGet(ROOT_URL + "hello"));
@@ -428,7 +448,7 @@ public class ServerJniTest {
             }
         } finally {
             stopServerQuietly(handle);
-            FileUtils.deleteDirectory(dir);
+            deleteDirQuietly(dir);
         }
     }
 

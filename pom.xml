@@ -102,7 +102,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.12.4</version>
                 <configuration>
-                    <argLine>-Djava.library.path=${project.basedir}/build/bin</argLine>
+                    <argLine>-Djava.library.path=${project.basedir}/../libwilton/build/bin</argLine>
                 </configuration>
             </plugin>
             <plugin>
