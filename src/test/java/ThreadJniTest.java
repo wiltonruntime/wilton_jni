@@ -8,7 +8,6 @@ import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
 import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
 import static org.junit.Assert.assertTrue;
 import static utils.TestUtils.GSON;
-import static utils.TestUtils.LONG_MAP_TYPE;
 import static utils.TestUtils.initWiltonOnce;
 
 /**

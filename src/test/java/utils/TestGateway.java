@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import net.wiltonwebtoolkit.WiltonException;
 import net.wiltonwebtoolkit.WiltonGateway;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -37,8 +38,11 @@ public class TestGateway implements WiltonGateway {
     public static final String MOCK_FUNC = "mock_func";
 
     // thread/test
-    public static CountDownLatch threadTestLatch = new CountDownLatch(1);
-    public static AtomicLong threadTestId = new AtomicLong(Thread.currentThread().getId());
+    public static final CountDownLatch threadTestLatch = new CountDownLatch(1);
+    public static final AtomicLong threadTestId = new AtomicLong(Thread.currentThread().getId());
+
+    // mutex/test
+    public static final AtomicInteger mutexTestShared = new AtomicInteger(-1);
 
     @SuppressWarnings("unchecked") // headers access
     @Override
@@ -154,6 +158,18 @@ public class TestGateway implements WiltonGateway {
                 threadTestId.set(Thread.currentThread().getId());
                 threadTestLatch.countDown();
                 return null;
+            } else throw new WiltonException("Unknown 'thread/test' func: [" + func + "]");
+        } else if (module.equals("mutex/test")) {
+            if (func.equals("testWaitNotify")) {
+                return GSON.toJson(ImmutableMap.builder()
+                        .put("condition", mutexTestShared.get() >= 0)
+                        .build());
+            } else if (func.equals("testWaitCondFail")) {
+                throw new IOException("Deliberate exception");
+            } else if (func.equals("testWaitTimeoutFail")) {
+                return GSON.toJson(ImmutableMap.builder()
+                        .put("condition", false)
+                        .build());
             } else throw new WiltonException("Unknown 'thread/test' func: [" + func + "]");
         } else {
             return "";
