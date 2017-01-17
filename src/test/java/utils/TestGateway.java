@@ -44,6 +44,9 @@ public class TestGateway implements WiltonGateway {
     // mutex/test
     public static final AtomicInteger mutexTestShared = new AtomicInteger(-1);
 
+    // cron/test
+    public static final AtomicInteger cronCounter = new AtomicInteger(0);
+
     @SuppressWarnings("unchecked") // headers access
     @Override
     public String runScript(String callbackScript) throws Exception {
@@ -170,9 +173,14 @@ public class TestGateway implements WiltonGateway {
                 return GSON.toJson(ImmutableMap.builder()
                         .put("condition", false)
                         .build());
-            } else throw new WiltonException("Unknown 'thread/test' func: [" + func + "]");
+            } else throw new WiltonException("Unknown 'mutex/test' func: [" + func + "]");
+        } else if(module.equals("cron/test")) {
+            if (func.equals("test")) {
+                cronCounter.incrementAndGet();
+                return null;
+            } else throw new WiltonException("Unknown 'cron/test' func: [" + func + "]");
         } else {
-            return "";
+            return null;
         }
     }
 
