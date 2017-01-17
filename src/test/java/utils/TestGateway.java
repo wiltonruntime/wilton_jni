@@ -7,6 +7,9 @@ import net.wiltonwebtoolkit.WiltonGateway;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
 import static utils.TestUtils.*;
@@ -33,9 +36,13 @@ public class TestGateway implements WiltonGateway {
     public static final String MOCK_MODULE_PREFIX = "mock/gateway";
     public static final String MOCK_FUNC = "mock_func";
 
+    // thread/test
+    public static CountDownLatch threadTestLatch = new CountDownLatch(1);
+    public static AtomicLong threadTestId = new AtomicLong(Thread.currentThread().getId());
+
     @SuppressWarnings("unchecked") // headers access
     @Override
-    public String runScript(String callbackScript) {
+    public String runScript(String callbackScript) throws Exception {
         Map<String, Object> csjson = GSON.fromJson(callbackScript, MAP_TYPE);
         String module = (String) csjson.get("module");
         String func = (String) csjson.get("func");
@@ -142,8 +149,13 @@ public class TestGateway implements WiltonGateway {
                         .build()));
             }
             return null;
-        } else { // callback runner
-            //TODO
+        } else if (module.equals("thread/test")) {
+            if (func.equals("testRun")) {
+                threadTestId.set(Thread.currentThread().getId());
+                threadTestLatch.countDown();
+                return null;
+            } else throw new WiltonException("Unknown 'thread/test' func: [" + func + "]");
+        } else {
             return "";
         }
     }

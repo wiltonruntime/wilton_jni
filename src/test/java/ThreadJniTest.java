@@ -1,13 +1,15 @@
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import utils.TestGateway;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicLong;
-
+import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
 import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
 import static org.junit.Assert.assertTrue;
 import static utils.TestUtils.GSON;
+import static utils.TestUtils.LONG_MAP_TYPE;
+import static utils.TestUtils.initWiltonOnce;
 
 /**
  * User: alexkasko
@@ -15,24 +17,23 @@ import static utils.TestUtils.GSON;
  */
 public class ThreadJniTest {
 
+    @BeforeClass
+    public static void init() {
+        // init, no logging by default, enable it when needed
+        initWiltonOnce(new TestGateway(), LOGGING_DISABLE);
+    }
+
     @Test
     public void testRun() throws Exception {
-        long id = Thread.currentThread().getId();
-        final AtomicLong shared = new AtomicLong(id);
-
-        final CountDownLatch latch = new CountDownLatch(1);
-
-        // todo
-//        wiltoncall("thread_run", "{}", new Callable<String>() {
-//            @Override
-//            public String call() {
-//                shared.set(Thread.currentThread().getId());
-//                latch.countDown();
-//                return "";
-//            }
-//        });
-        latch.await();
-        assertTrue(shared.get() != id);
+        wiltoncall("thread_run", GSON.toJson(ImmutableMap.builder()
+                .put("callbackScript", ImmutableMap.builder()
+                        .put("module", "thread/test")
+                        .put("func", "testRun")
+                        .put("args", ImmutableList.of())
+                        .build())
+                .build()));
+        TestGateway.threadTestLatch.await();
+        assertTrue(Thread.currentThread().getId() != TestGateway.threadTestId.get());
     }
 
     @Test
