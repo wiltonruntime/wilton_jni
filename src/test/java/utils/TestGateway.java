@@ -50,6 +50,7 @@ public class TestGateway implements WiltonGateway {
     @SuppressWarnings("unchecked") // headers access
     @Override
     public String runScript(String callbackScript) throws Exception {
+        System.out.println("[" + callbackScript + "]");
         Map<String, Object> csjson = GSON.fromJson(callbackScript, MAP_TYPE);
         String module = (String) csjson.get("module");
         String func = (String) csjson.get("func");
@@ -57,7 +58,7 @@ public class TestGateway implements WiltonGateway {
         // mock gateway impl
         if (module.startsWith(MOCK_MODULE_PREFIX)) {
             String path = module.substring(MOCK_MODULE_PREFIX.length());
-            long requestHandle = (Long) args.get(0);
+            long requestHandle = ((Number) args.get(0)).longValue();
             try {
                 String meta = wiltoncall("request_get_metadata", GSON.toJson(ImmutableMap.builder()
                         .put("requestHandle", requestHandle)
@@ -195,21 +196,33 @@ public class TestGateway implements WiltonGateway {
                                 .put("args", ImmutableList.of())
                                 .build())
                         .build())
-//                .add(ImmutableMap.<String, Object>builder()
-//                        .put("method", "GET")
-//                        .put("path", "/headers")
-//                        .put("module", "/headers")
-//                        .build())
-//                .add(ImmutableMap.<String, Object>builder()
-//                        .put("method", "POST")
-//                        .put("path", "/postmirror")
-//                        .put("module", "/postmirror")
-//                        .build())
-//                .add(ImmutableMap.<String, Object>builder()
-//                        .put("method", "GET")
-//                        .put("path", "/querymirror")
-//                        .put("module", "/querymirror")
-//                        .build())
+                .add(ImmutableMap.<String, Object>builder()
+                        .put("method", "GET")
+                        .put("path", "/headers")
+                        .put("callbackScript", ImmutableMap.builder()
+                                .put("module", MOCK_MODULE_PREFIX + "/headers")
+                                .put("func", MOCK_FUNC)
+                                .put("args", ImmutableList.of())
+                                .build())
+                        .build())
+                .add(ImmutableMap.<String, Object>builder()
+                        .put("method", "POST")
+                        .put("path", "/postmirror")
+                        .put("callbackScript", ImmutableMap.builder()
+                                .put("module", MOCK_MODULE_PREFIX + "/postmirror")
+                                .put("func", MOCK_FUNC)
+                                .put("args", ImmutableList.of())
+                                .build())
+                        .build())
+                .add(ImmutableMap.<String, Object>builder()
+                        .put("method", "GET")
+                        .put("path", "/querymirror")
+                        .put("callbackScript", ImmutableMap.builder()
+                                .put("module", MOCK_MODULE_PREFIX + "/querymirror")
+                                .put("func", MOCK_FUNC)
+                                .put("args", ImmutableList.of())
+                                .build())
+                        .build())
 //                .add(ImmutableMap.<String, Object>builder()
 //                        .put("method", "POST")
 //                        .put("path", "/logger")
