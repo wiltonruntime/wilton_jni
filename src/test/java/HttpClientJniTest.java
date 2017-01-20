@@ -1,12 +1,14 @@
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import utils.TestGateway;
 
 import java.io.File;
 import java.util.Map;
 
+import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
 import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
 import static org.junit.Assert.*;
 import static utils.TestGateway.*;
@@ -18,16 +20,21 @@ import static utils.TestUtils.*;
  */
 public class HttpClientJniTest {
 
+    @BeforeClass
+    public static void init() {
+        // init, no logging by default, enable it when needed
+        initWiltonOnce(new TestGateway(), LOGGING_DISABLE);
+    }
+
     @Test
     public void testSimple() throws Exception {
         long handle = 0;
         long http = 0;
         try {
-//             String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-//                     .put("views", TestGateway.views())
-//                     .put("tcpPort", TCP_PORT)
-//                     .build()), new TestGateway());
-            String sout = null;
+             String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+                     .put("views", TestGateway.views())
+                     .put("tcpPort", TCP_PORT)
+                     .build()));
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             String out = wiltoncall("httpclient_create");
@@ -59,11 +66,10 @@ public class HttpClientJniTest {
         long handle = 0;
         long http = 0;
         try {
-//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-//                   .put("views", TestGateway.views())
-//                   .put("tcpPort", TCP_PORT)
-//                   .build()), new TestGateway());
-            String sout = null;
+            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+                   .put("views", TestGateway.views())
+                   .put("tcpPort", TCP_PORT)
+                   .build()));
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             String out = wiltoncall("httpclient_create");
@@ -98,11 +104,10 @@ public class HttpClientJniTest {
         long handle = 0;
         long http = 0;
         try {
-//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-//                   .put("views", TestGateway.views())
-//                   .put("tcpPort", TCP_PORT)
-//                   .build()), new TestGateway());
-            String sout = null;
+            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+                   .put("views", TestGateway.views())
+                   .put("tcpPort", TCP_PORT)
+                   .build()));
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             String out = wiltoncall("httpclient_create");
@@ -137,12 +142,10 @@ public class HttpClientJniTest {
             dir = Files.createTempDir();
             File file = new File(dir, "test.txt");
             FileUtils.writeStringToFile(file, STATIC_FILE_DATA);
-            //todo
-//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-//                   .put("views", TestGateway.views())
-//                   .put("tcpPort", TCP_PORT)
-//                   .build()), new TestGateway());
-            String sout = null;
+            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+                   .put("views", TestGateway.views())
+                   .put("tcpPort", TCP_PORT)
+                   .build()));
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             assertTrue(file.exists());
@@ -177,18 +180,16 @@ public class HttpClientJniTest {
         long handle = 0;
         long http = 0;
         try {
-            // todo
-//            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
-//                    .put("views", TestGateway.views())
-//                    .put("tcpPort", TCP_PORT_HTTPS)
-//                    .put("ssl", ImmutableMap.builder()
-//                            .put("keyFile", "src/test/resources/certificates/server/localhost.pem")
-//                            .put("keyPassword", "test")
-//                            .put("verifyFile", "src/test/resources/certificates/server/staticlibs_test_ca.cer")
-//                            .put("verifySubjectSubstr", "CN=testclient")
-//                            .build())
-//                    .build()), new TestGateway());
-            String sout = null;
+            String sout = wiltoncall("server_create", GSON.toJson(ImmutableMap.builder()
+                    .put("views", TestGateway.views())
+                    .put("tcpPort", TCP_PORT_HTTPS)
+                    .put("ssl", ImmutableMap.builder()
+                            .put("keyFile", "src/test/resources/certificates/server/localhost.pem")
+                            .put("keyPassword", "test")
+                            .put("verifyFile", "src/test/resources/certificates/server/staticlibs_test_ca.cer")
+                            .put("verifySubjectSubstr", "CN=testclient")
+                            .build())
+                    .build()));
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             String out = wiltoncall("httpclient_create");
