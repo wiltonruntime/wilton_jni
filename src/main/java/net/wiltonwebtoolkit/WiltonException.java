@@ -31,4 +31,8 @@ public class WiltonException extends RuntimeException {
     public WiltonException(String message) {
         super(message);
     }
+
+    public WiltonException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

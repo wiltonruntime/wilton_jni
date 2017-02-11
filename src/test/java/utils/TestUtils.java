@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import net.wiltonwebtoolkit.WiltonGateway;
 import net.wiltonwebtoolkit.WiltonJni;
+import net.wiltonwebtoolkit.support.rhino.WiltonRhinoEnvironment;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -34,6 +35,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -62,6 +65,7 @@ public class TestUtils {
     public static void initWiltonOnce(WiltonGateway gateway, String loggingConfig) {
         if (INITTED.compareAndSet(false, true)) {
             wiltoninit(gateway, loggingConfig);
+            WiltonRhinoEnvironment.initialize(getJsDir().getAbsolutePath());
         }
     }
 
@@ -153,6 +157,24 @@ public class TestUtils {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private static File getJsDir() {
+        File testClasses = codeSourceDir(TestUtils.class);
+        File project = testClasses.getParentFile().getParentFile();
+        return new File(project, "src" + File.separator + "test" + File.separator + "js");
+    }
+
+    // points to <project>/target/test-classes
+    private static File codeSourceDir(Class<?> clazz) {
+        URI uri = null;
+        try {
+            uri = clazz.getProtectionDomain().getCodeSource().getLocation().toURI();
+            File jarOrDir = new File(uri);
+            return jarOrDir.isDirectory() ? jarOrDir : jarOrDir.getParentFile();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 

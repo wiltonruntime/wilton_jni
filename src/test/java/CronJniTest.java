@@ -5,8 +5,6 @@ import org.junit.Test;
 import utils.TestGateway;
 
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static junit.framework.Assert.assertEquals;
 import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;

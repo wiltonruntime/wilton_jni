@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.wiltonwebtoolkit.WiltonException;
 import net.wiltonwebtoolkit.WiltonGateway;
+import net.wiltonwebtoolkit.support.rhino.WiltonRhinoEnvironment;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,8 +50,8 @@ public class TestGateway implements WiltonGateway {
 
     @SuppressWarnings("unchecked") // headers access
     @Override
-    public String runScript(String callbackScript) throws Exception {
-        Map<String, Object> csjson = GSON.fromJson(callbackScript, MAP_TYPE);
+    public String runScript(String callbackScriptJson) throws Exception {
+        Map<String, Object> csjson = GSON.fromJson(callbackScriptJson, MAP_TYPE);
         String module = (String) csjson.get("module");
         String func = (String) csjson.get("func");
         ArrayList<Object> args = (ArrayList<Object>) csjson.get("args");
@@ -180,7 +181,8 @@ public class TestGateway implements WiltonGateway {
                 return null;
             } else throw new WiltonException("Unknown 'cron/test' func: [" + func + "]");
         } else {
-            return null;
+            // actual script call
+            return WiltonRhinoEnvironment.gateway().runScript(callbackScriptJson);
         }
     }
 

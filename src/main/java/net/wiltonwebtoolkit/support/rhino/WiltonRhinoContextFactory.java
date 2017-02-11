@@ -9,7 +9,7 @@ import org.mozilla.javascript.ContextFactory;
  * User: alexkasko
  * Date: 10/17/16
  */
-public class WiltonContextFactory extends ContextFactory {
+class WiltonRhinoContextFactory extends ContextFactory {
     @Override
     protected boolean hasFeature(Context cx, int featureIndex) {
         if (Context.FEATURE_LOCATION_INFORMATION_IN_ERROR == featureIndex) {
