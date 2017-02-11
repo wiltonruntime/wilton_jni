@@ -16,7 +16,6 @@ public class WiltonRhinoEnvironment {
     private static final WiltonGateway GATEWAY = new WiltonRhinoGateway();
     private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
     private static ScriptableObject RHINO_GLOBAL_SCOPE = null;
-    private static String PATH_TO_SCRIPTS_DIR = "SPECIFY_ME";
     private static String INIT_THREAD = "";
 
     public static void initialize(String pathToScriptsDir) {
@@ -25,15 +24,14 @@ public class WiltonRhinoEnvironment {
         }
         try {
             INIT_THREAD = Thread.currentThread().getName();
-            PATH_TO_SCRIPTS_DIR = pathToScriptsDir;
             ContextFactory.initGlobal(new WiltonRhinoContextFactory());
             Context cx = Context.enter();
             RHINO_GLOBAL_SCOPE = cx.initStandardObjects();
             FunctionObject loadFunc = new FunctionObject("load", WiltonRhinoScriptLoader.getLoadMethod(), RHINO_GLOBAL_SCOPE);
             RHINO_GLOBAL_SCOPE.put("load", RHINO_GLOBAL_SCOPE, loadFunc);
             RHINO_GLOBAL_SCOPE.setAttributes("load", ScriptableObject.DONTENUM);
-            String reqjsPath = new File(PATH_TO_SCRIPTS_DIR, "requirejs").getAbsolutePath() + File.separator;
-            String modulesPath = new File(PATH_TO_SCRIPTS_DIR, "modules").getAbsolutePath() + File.separator;
+            String reqjsPath = new File(pathToScriptsDir, "requirejs").getAbsolutePath() + File.separator;
+            String modulesPath = new File(pathToScriptsDir, "modules").getAbsolutePath() + File.separator;
             cx.evaluateString(RHINO_GLOBAL_SCOPE,
                     "(function() {" +
                     "   load('" + reqjsPath + "require.js');" +

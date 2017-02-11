@@ -1,39 +1,38 @@
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import net.wiltonwebtoolkit.support.nashorn.WiltonNashornEnvironment;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import utils.TestGateway;
+import utils.TestUtils;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import java.io.*;
-
-import static org.apache.commons.io.IOUtils.closeQuietly;
+import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
+import static utils.TestUtils.GSON;
+import static utils.TestUtils.getJsDir;
+import static utils.TestUtils.initWiltonOnce;
 
 /**
  * User: alexkasko
  * Date: 5/15/16
  */
 public class WiltonNashornTest {
-    private static final File RUNTESTS_JS = new File("src/test/js/runtests.js");
 
-    @Test
-    public void dummy() {
-
+    @BeforeClass
+    public static void init() {
+        // init, no logging by default, enable it when needed
+        initWiltonOnce(new TestGateway(), LOGGING_DISABLE);
+        TestGateway tg = (TestGateway) TestUtils.GATEWAY;
+        WiltonNashornEnvironment.initialize(getJsDir().getAbsolutePath());
+        tg.setScriptGateway(WiltonNashornEnvironment.gateway());
     }
 
-//    @Test
+    @Test
     public void test() throws Exception {
-        ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
-        if (null == engine) {
-            System.out.println("ERROR: Nashorn is not available, probably running on jdk7, skipping test");
-            return;
-        }
-        InputStream is = null;
-        try {
-            is = new FileInputStream(RUNTESTS_JS);
-            Reader re = new InputStreamReader(is, "UTF-8");
-            engine.eval(re);
-        } catch(Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            closeQuietly(is);
-        }
+        WiltonNashornEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
+                .put("module", "tests/runtests")
+                .put("func", "runTests")
+                .put("args", ImmutableList.of())
+                .build()
+        ));
     }
 }

@@ -5,14 +5,17 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mozilla.javascript.*;
 import utils.TestGateway;
+import utils.TestUtils;
 
 import java.io.*;
 
 import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
 import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.commons.io.IOUtils.closeQuietly;
+import static org.apache.commons.io.IOUtils.toString;
 import static org.junit.Assert.assertEquals;
 import static utils.TestUtils.GSON;
+import static utils.TestUtils.getJsDir;
 import static utils.TestUtils.initWiltonOnce;
 
 /**
@@ -20,12 +23,14 @@ import static utils.TestUtils.initWiltonOnce;
  * Date: 5/15/16
  */
 public class WiltonRhinoTest {
-    private static final File RUNTESTS_JS = new File("src/test/js/runtests.js");
 
     @BeforeClass
     public static void init() {
         // init, no logging by default, enable it when needed
         initWiltonOnce(new TestGateway(), LOGGING_DISABLE);
+        WiltonRhinoEnvironment.initialize(getJsDir().getAbsolutePath());
+        TestGateway tg = (TestGateway) TestUtils.GATEWAY;
+        tg.setScriptGateway(WiltonRhinoEnvironment.gateway());
     }
 
     @Test

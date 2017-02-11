@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import net.wiltonwebtoolkit.WiltonGateway;
 import net.wiltonwebtoolkit.WiltonJni;
+import net.wiltonwebtoolkit.support.nashorn.WiltonNashornEnvironment;
 import net.wiltonwebtoolkit.support.rhino.WiltonRhinoEnvironment;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -61,11 +62,12 @@ public class TestUtils {
     public static final Type LIST_MAP_TYPE = new TypeToken<ArrayList<LinkedHashMap<String, String>>>() {}.getType();
     public static final Type LONG_MAP_TYPE = new TypeToken<LinkedHashMap<String, Long>>() {}.getType();
     public static final AtomicBoolean INITTED = new AtomicBoolean(false);
+    public static WiltonGateway GATEWAY;
 
     public static void initWiltonOnce(WiltonGateway gateway, String loggingConfig) {
         if (INITTED.compareAndSet(false, true)) {
             wiltoninit(gateway, loggingConfig);
-            WiltonRhinoEnvironment.initialize(getJsDir().getAbsolutePath());
+            GATEWAY = gateway;
         }
     }
 
@@ -160,7 +162,7 @@ public class TestUtils {
         }
     }
 
-    private static File getJsDir() {
+    public static File getJsDir() {
         File testClasses = codeSourceDir(TestUtils.class);
         File project = testClasses.getParentFile().getParentFile();
         return new File(project, "src" + File.separator + "test" + File.separator + "js");

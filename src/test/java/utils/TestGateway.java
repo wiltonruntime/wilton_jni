@@ -48,6 +48,8 @@ public class TestGateway implements WiltonGateway {
     // cron/test
     public static final AtomicInteger cronCounter = new AtomicInteger(0);
 
+    private WiltonGateway scriptGateway;
+
     @SuppressWarnings("unchecked") // headers access
     @Override
     public String runScript(String callbackScriptJson) throws Exception {
@@ -182,8 +184,15 @@ public class TestGateway implements WiltonGateway {
             } else throw new WiltonException("Unknown 'cron/test' func: [" + func + "]");
         } else {
             // actual script call
-            return WiltonRhinoEnvironment.gateway().runScript(callbackScriptJson);
+            if (null != scriptGateway) {
+                return scriptGateway.runScript(callbackScriptJson);
+            }
+            return null;
         }
+    }
+
+    public void setScriptGateway(WiltonGateway scriptGateway) {
+        this.scriptGateway = scriptGateway;
     }
 
     public static ImmutableList<ImmutableMap<String, Object>> views() {
