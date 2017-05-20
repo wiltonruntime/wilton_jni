@@ -58,6 +58,12 @@ public class WiltonNashornEnvironment {
                         "       baseUrl: '" + modulesPath + "'" +
                         "   });" +
                         "}());", context);
+                // wiltoncall function
+                ENGINE.eval(
+                    "function wiltoncall(name, data) {" +
+                    "    var res = Packages.net.wiltonwebtoolkit.WiltonJni.wiltoncall(name, data);" +
+                    "    return null != res ? String(res) : null;" +
+                    "}", context);
             } catch (Exception e) {
                 throw new WiltonException("Nashorn environment thread initialization error," +
                         " thread: [" + Thread.currentThread().getName() + "]", e);

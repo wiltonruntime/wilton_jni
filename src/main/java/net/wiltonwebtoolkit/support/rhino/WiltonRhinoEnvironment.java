@@ -41,6 +41,17 @@ public class WiltonRhinoEnvironment {
                     "       baseUrl: '" + modulesPath + "'" +
                     "   });" +
                     "}());", "WiltonRhinoEnvironment::initialize", -1, null);
+            // print() function
+            cx.evaluateString(RHINO_GLOBAL_SCOPE,
+                    "function print(msg) {" +
+                     "    Packages.java.lang.System.out.println(msg);" +
+                     "}", "WiltonRhinoEnvironment::initialize", -1, null);
+            // wiltoncall function
+            cx.evaluateString(RHINO_GLOBAL_SCOPE,
+                    "function wiltoncall(name, data) {" +
+                    "    var res = Packages.net.wiltonwebtoolkit.WiltonJni.wiltoncall(name, data);" +
+                    "    return null != res ? String(res) : null;" +
+                    "}", "WiltonRhinoEnvironment::initialize", -1, null);
             Context.exit();
         } catch (Exception e) {
             throw new WiltonException("Rhino environment initialization error", e);
