@@ -16,12 +16,12 @@ class WiltonNashornGateway implements WiltonGateway {
     public String runScript(String callbackScriptJson) throws Exception {
         WiltonNashornEnvironment.checkInitialized();
         ScriptContext context = WiltonNashornEnvironment.scriptContext();
-        JSObject jsObject = (JSObject) context.getAttribute("runScript", ScriptContext.ENGINE_SCOPE);
+        JSObject jsObject = (JSObject) context.getAttribute("WILTON_run", ScriptContext.ENGINE_SCOPE);
         if (null != jsObject) {
             Object result = jsObject.call(null, callbackScriptJson);
             return result.toString();
         } else {
-            throw new WiltonException("Cannot access 'runScript' function in thread-local Nashorn scope," +
+            throw new WiltonException("Cannot access 'WILTON_run' function in thread-local Nashorn scope," +
                     " call data: [" + callbackScriptJson + "], current thread: [" + Thread.currentThread().getName() + "]");
         }
     }

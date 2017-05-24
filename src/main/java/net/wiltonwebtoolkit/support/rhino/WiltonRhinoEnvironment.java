@@ -2,6 +2,7 @@ package net.wiltonwebtoolkit.support.rhino;
 
 import net.wiltonwebtoolkit.WiltonException;
 import net.wiltonwebtoolkit.WiltonGateway;
+import net.wiltonwebtoolkit.support.common.Utils;
 import org.mozilla.javascript.*;
 
 import java.io.*;
@@ -28,30 +29,25 @@ public class WiltonRhinoEnvironment {
             Context cx = Context.enter();
             RHINO_GLOBAL_SCOPE = cx.initStandardObjects();
             FunctionObject loadFunc = new FunctionObject("load", WiltonRhinoScriptLoader.getLoadMethod(), RHINO_GLOBAL_SCOPE);
-            RHINO_GLOBAL_SCOPE.put("load", RHINO_GLOBAL_SCOPE, loadFunc);
-            RHINO_GLOBAL_SCOPE.setAttributes("load", ScriptableObject.DONTENUM);
+            RHINO_GLOBAL_SCOPE.put("WILTON_load", RHINO_GLOBAL_SCOPE, loadFunc);
+            RHINO_GLOBAL_SCOPE.setAttributes("WILTON_load", ScriptableObject.DONTENUM);
             String reqjsPath = new File(pathToScriptsDir, "requirejs").getAbsolutePath() + File.separator;
+            cx.evaluateString(RHINO_GLOBAL_SCOPE,
+                    "WILTON_REQUIREJS_DIRECTORY = \"" + reqjsPath + "\"",
+                    "WiltonRhinoEnvironment::initialize", -1, null);
             String modulesPath = new File(pathToScriptsDir, "modules").getAbsolutePath() + File.separator;
             cx.evaluateString(RHINO_GLOBAL_SCOPE,
-                    "(function() {" +
-                    "   load('" + reqjsPath + "require.js');" +
-                    "   load('" + reqjsPath + "loader.js');" +
-                    "   load('" + reqjsPath + "runner.js');" +
-                    "   requirejs.config({" +
-                    "       baseUrl: '" + modulesPath + "'" +
-                    "   });" +
-                    "}());", "WiltonRhinoEnvironment::initialize", -1, null);
+                    "WILTON_REQUIREJS_CONFIG = '{" +
+                        " \"baseUrl\": \"" + modulesPath + "\"" +
+                    "}'",
+                    "WiltonRhinoEnvironment::initialize", -1, null);
             // print() function
             cx.evaluateString(RHINO_GLOBAL_SCOPE,
                     "function print(msg) {" +
                      "    Packages.java.lang.System.out.println(msg);" +
                      "}", "WiltonRhinoEnvironment::initialize", -1, null);
-            // wiltoncall function
-            cx.evaluateString(RHINO_GLOBAL_SCOPE,
-                    "function wiltoncall(name, data) {" +
-                    "    var res = Packages.net.wiltonwebtoolkit.WiltonJni.wiltoncall(name, data);" +
-                    "    return null != res ? String(res) : null;" +
-                    "}", "WiltonRhinoEnvironment::initialize", -1, null);
+            String code = Utils.readFileToString(new File(reqjsPath + "wilton-jni.js"));
+            cx.evaluateString(RHINO_GLOBAL_SCOPE, code, "WiltonRhinoEnvironment::initialize", -1, null);
             Context.exit();
         } catch (Exception e) {
             throw new WiltonException("Rhino environment initialization error", e);

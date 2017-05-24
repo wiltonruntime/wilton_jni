@@ -18,14 +18,14 @@ class WiltonRhinoGateway implements WiltonGateway {
         Scriptable scope = WiltonRhinoEnvironment.globalScope();
         Context cx = Context.enter();
         try {
-            Object funObj = scope.get("runScript", scope);
+            Object funObj = scope.get("WILTON_run", scope);
             if (funObj instanceof Function) {
                 Object args[] = {callbackScriptJson};
                 Function fun = (Function) funObj;
                 Object result = fun.call(cx, scope, scope, args);
                 return Context.toString(result);
             } else {
-                throw new WiltonException("Cannot access 'runScript' function in global Rhino scope," +
+                throw new WiltonException("Cannot access 'WILTON_run' function in global Rhino scope," +
                         " call data: [" + callbackScriptJson + "]");
             }
         } finally {
