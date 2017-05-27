@@ -8,6 +8,7 @@ import javax.script.ScriptEngine;
 import java.io.File;
 import java.util.Arrays;
 
+import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
 import static net.wiltonwebtoolkit.support.common.Utils.readFileToString;
 
 /**
@@ -16,7 +17,12 @@ import static net.wiltonwebtoolkit.support.common.Utils.readFileToString;
  */
 public class WiltonNashornScriptLoader extends AbstractJSObject {
 
-    public WiltonNashornScriptLoader() {
+    private final ScriptEngine engine;
+    private final ScriptContext context;
+
+    public WiltonNashornScriptLoader(ScriptEngine engine, ScriptContext context) {
+        this.engine = engine;
+        this.context = context;
     }
 
     @Override
@@ -27,12 +33,10 @@ public class WiltonNashornScriptLoader extends AbstractJSObject {
     @Override
     public Object call(Object thiz, Object... args) {
         try {
-            WiltonNashornEnvironment.checkInitialized();
-            ScriptEngine engine = WiltonNashornEnvironment.engine();
-            ScriptContext context = WiltonNashornEnvironment.scriptContext();
             for (Object arg : args) {
                 String filePath = String.valueOf(arg);
-                String sourceCode = readFileToString(new File(filePath));
+                File file = new File(filePath);
+                String sourceCode = wiltoncall("fs_read_script_file_or_module", file.getAbsolutePath());
                 engine.eval(sourceCode, context);
             }
             return null;

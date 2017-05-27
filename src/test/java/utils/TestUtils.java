@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
 import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
 import static net.wiltonwebtoolkit.WiltonJni.wiltoninit;
 import static org.apache.commons.io.IOUtils.closeQuietly;
@@ -64,9 +65,18 @@ public class TestUtils {
     public static final AtomicBoolean INITTED = new AtomicBoolean(false);
     public static WiltonGateway GATEWAY;
 
-    public static void initWiltonOnce(WiltonGateway gateway, String loggingConfig) {
+    public static void initWiltonOnce(WiltonGateway gateway, String loggingConf) {
+        String config = GSON.toJson(ImmutableMap.builder()
+                .put("defaultScriptEngine", "jni")
+//                .put("requireJsDirPath", "../libwilton/test/js/requirejs")
+//                .put("requireJsConfig", ImmutableMap.builder()
+//                        .put("waitSeconds", 10)
+//                        .put("baseUrl", "../libwilton/test/js/modules")
+//                        .build())
+                .build());
         if (INITTED.compareAndSet(false, true)) {
-            wiltoninit(gateway, loggingConfig);
+            wiltoninit(gateway, config);
+            wiltoncall("logging_initialize", loggingConf);
             GATEWAY = gateway;
         }
     }
@@ -165,7 +175,7 @@ public class TestUtils {
     public static File getJsDir() {
         File testClasses = codeSourceDir(TestUtils.class);
         File project = testClasses.getParentFile().getParentFile();
-        return new File(project, "src" + File.separator + "test" + File.separator + "js");
+        return new File(project, "../libwilton/test/js");
     }
 
     // points to <project>/target/test-classes

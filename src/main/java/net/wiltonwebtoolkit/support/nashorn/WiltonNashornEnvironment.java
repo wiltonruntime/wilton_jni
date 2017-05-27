@@ -29,7 +29,6 @@ public class WiltonNashornEnvironment {
             INIT_THREAD = Thread.currentThread().getName();
             SCRIPTS_DIR_PATH = pathToScriptsDir;
             ENGINE = new ScriptEngineManager().getEngineByName("nashorn");
-//            ENGINE.put("load", new WiltonNashornScriptLoader());
         } catch (Exception e) {
             throw new WiltonException("Nashorn environment initialization error", e);
         }
@@ -46,7 +45,9 @@ public class WiltonNashornEnvironment {
     static ScriptContext scriptContext() {
         if (null == THREAD_CONTEXT.get()) {
             ScriptContext context = new SimpleScriptContext();
-            context.setBindings(ENGINE.createBindings(), ScriptContext.ENGINE_SCOPE);
+            Bindings bind = ENGINE.createBindings();
+            bind.put("WILTON_load", new WiltonNashornScriptLoader(ENGINE, context));
+            context.setBindings(bind, ScriptContext.ENGINE_SCOPE);
             String reqjsPath = new File(SCRIPTS_DIR_PATH, "requirejs").getAbsolutePath() + File.separator;
             String modulesPath = new File(SCRIPTS_DIR_PATH, "modules").getAbsolutePath() + File.separator;
             try {
@@ -54,8 +55,6 @@ public class WiltonNashornEnvironment {
                 ENGINE.eval("WILTON_REQUIREJS_CONFIG = '{" +
                         " \"baseUrl\": \"" + modulesPath + "\"" +
                         "}'", context);
-                // todo: fixme
-                ENGINE.eval("WILTON_load = load", context);
                 String code = Utils.readFileToString(new File(reqjsPath + "wilton-jni.js"));
                 ENGINE.eval(code, context);
             } catch (Exception e) {

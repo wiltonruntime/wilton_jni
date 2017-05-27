@@ -6,6 +6,7 @@ import org.junit.Test;
 import utils.TestGateway;
 import utils.TestUtils;
 
+import static net.wiltonwebtoolkit.WiltonJni.LOGGING_CONSOLE;
 import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
 import static utils.TestUtils.GSON;
 import static utils.TestUtils.getJsDir;

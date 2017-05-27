@@ -39,11 +39,11 @@ public class WiltonJni {
 
     // jni access points
 
-    public static void wiltoninit(WiltonGateway gateway) throws WiltonException {
-        wiltoninit(gateway, LOGGING_DISABLE);
-    }
+//    public static void wiltoninit(WiltonGateway gateway) throws WiltonException {
+//        wiltoninit(gateway, LOGGING_DISABLE);
+//    }
 
-    public static native void wiltoninit(WiltonGateway gateway, String loggingConfig) throws WiltonException;
+    public static native void wiltoninit(WiltonGateway gateway, String config) throws WiltonException;
 
     public static String wiltoncall(String name) throws WiltonException {
         return wiltoncall(name, "{}");

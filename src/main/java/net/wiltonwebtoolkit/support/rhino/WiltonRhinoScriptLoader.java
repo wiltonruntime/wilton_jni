@@ -1,5 +1,6 @@
 package net.wiltonwebtoolkit.support.rhino;
 
+import net.wiltonwebtoolkit.WiltonJni;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Script;
@@ -8,7 +9,7 @@ import org.mozilla.javascript.Scriptable;
 import java.io.*;
 import java.lang.reflect.Method;
 
-import static net.wiltonwebtoolkit.support.common.Utils.readFileToString;
+import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
 
 /**
  * User: alexkasko
@@ -20,7 +21,8 @@ class WiltonRhinoScriptLoader {
         WiltonRhinoEnvironment.checkInitialized();
         for (Object arg : args) {
             String filePath = Context.toString(arg);
-            String sourceCode = readFileToString(new File(filePath));
+            File file = new File(filePath);
+            String sourceCode = wiltoncall("fs_read_script_file_or_module", file.getAbsolutePath());
             Script script = cx.compileString(sourceCode, filePath, 1, null);
             if (script != null) {
                 script.exec(cx, WiltonRhinoEnvironment.globalScope());
