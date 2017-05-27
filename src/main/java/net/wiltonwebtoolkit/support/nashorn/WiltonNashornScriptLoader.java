@@ -36,12 +36,28 @@ public class WiltonNashornScriptLoader extends AbstractJSObject {
             for (Object arg : args) {
                 String filePath = String.valueOf(arg);
                 File file = new File(filePath);
-                String sourceCode = wiltoncall("fs_read_script_file_or_module", file.getAbsolutePath());
-                engine.eval(sourceCode, context);
+                String path = file.getAbsolutePath();
+                String sourceCode = wiltoncall("fs_read_script_file_or_module", path);
+                StringBuilder wrapper = new StringBuilder();
+                // todo: check why e.stack is undefined in WILTON_run
+//                wrapper.append("try {")
+//                        .append(sourceCode)
+//                        .append("\n} catch(e) {\n")
+//                        .append("throw new Error(e.stack);\n")
+//                        .append("}\n")
+//                        .append("//# sourceURL=")
+//                        .append(path);
+                wrapper.append(sourceCode)
+                        // see https://bugs.openjdk.java.net/browse/JDK-8032068
+                        .append("\n//# sourceURL=")
+                        .append(path);
+                engine.eval(wrapper.toString(), context);
             }
             return null;
         } catch (Exception e) {
-            throw new WiltonException("Error loading script: " + Arrays.toString(args), e);
+//            e.printStackTrace();
+            throw new WiltonException("Error loading script: " + Arrays.toString(args) +
+                    "\n" + e.getMessage(), e);
         }
     }
 

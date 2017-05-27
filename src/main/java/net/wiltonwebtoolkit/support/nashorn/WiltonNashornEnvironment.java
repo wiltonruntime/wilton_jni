@@ -53,6 +53,7 @@ public class WiltonNashornEnvironment {
             try {
                 ENGINE.eval("WILTON_REQUIREJS_DIRECTORY = \"" + reqjsPath + "\"", context);
                 ENGINE.eval("WILTON_REQUIREJS_CONFIG = '{" +
+                        " \"waitSeconds\": 30," +
                         " \"baseUrl\": \"" + modulesPath + "\"" +
                         "}'", context);
                 String code = Utils.readFileToString(new File(reqjsPath + "wilton-jni.js"));
