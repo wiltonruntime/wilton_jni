@@ -30,11 +30,11 @@ public class WiltonNashornTest {
     @Test
     public void test() throws Exception {
         // wilton test suite
-//        WiltonNashornEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
-//                .put("module", "tests/runtests")
-//                .put("func", "runTests")
-//                .put("args", ImmutableList.of())
-//                .build()));
+        WiltonNashornEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
+                .put("module", "tests/runtests")
+                .put("func", "runTests")
+                .put("args", ImmutableList.of())
+                .build()));
         // node modules tests
         WiltonNashornEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
                 .put("module", "tests/runNodeTests")

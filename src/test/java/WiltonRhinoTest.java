@@ -36,11 +36,11 @@ public class WiltonRhinoTest {
     @Test
     public void test() throws Exception {
         // wilton test suite
-//        WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
-//                .put("module", "tests/runtests")
-//                .put("func", "runTests")
-//                .put("args", ImmutableList.of())
-//                .build()));
+        WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
+                .put("module", "tests/runtests")
+                .put("func", "runTests")
+                .put("args", ImmutableList.of())
+                .build()));
         // node modules tests
         WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
                 .put("module", "tests/runNodeTests")
