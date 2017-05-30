@@ -164,7 +164,7 @@ public class TestUtils {
     public static File getJsDir() {
         File testClasses = codeSourceDir(TestUtils.class);
         File project = testClasses.getParentFile().getParentFile();
-        return new File(project, "../libwilton/test/js");
+        return new File(project, "..");
     }
 
     // points to <project>/target/test-classes

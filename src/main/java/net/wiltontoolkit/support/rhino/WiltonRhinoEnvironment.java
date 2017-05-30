@@ -31,11 +31,11 @@ public class WiltonRhinoEnvironment {
             FunctionObject loadFunc = new FunctionObject("load", WiltonRhinoScriptLoader.getLoadMethod(), RHINO_GLOBAL_SCOPE);
             RHINO_GLOBAL_SCOPE.put("WILTON_load", RHINO_GLOBAL_SCOPE, loadFunc);
             RHINO_GLOBAL_SCOPE.setAttributes("WILTON_load", ScriptableObject.DONTENUM);
-            String reqjsPath = new File(pathToScriptsDir, "requirejs").getAbsolutePath() + File.separator;
+            String reqjsPath = new File(pathToScriptsDir, "wilton-requirejs").getAbsolutePath() + File.separator;
             cx.evaluateString(RHINO_GLOBAL_SCOPE,
                     "WILTON_REQUIREJS_DIRECTORY = \"" + reqjsPath + "\"",
                     "WiltonRhinoEnvironment::initialize", -1, null);
-            String modulesPath = new File(pathToScriptsDir, "modules").getAbsolutePath() + File.separator;
+            String modulesPath = new File(pathToScriptsDir, "wilton_modules").getAbsolutePath() + File.separator;
             cx.evaluateString(RHINO_GLOBAL_SCOPE,
                     "WILTON_REQUIREJS_CONFIG = '{" +
                         " \"waitSeconds\": 0," +
