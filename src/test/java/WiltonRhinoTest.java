@@ -1,15 +1,13 @@
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import net.wiltonwebtoolkit.support.rhino.WiltonRhinoEnvironment;
+import net.wiltontoolkit.support.rhino.WiltonRhinoEnvironment;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mozilla.javascript.*;
 import utils.TestGateway;
 import utils.TestUtils;
 
-import java.io.*;
-
-import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
+import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
 import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.toString;
@@ -37,13 +35,13 @@ public class WiltonRhinoTest {
     public void test() throws Exception {
         // wilton test suite
         WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
-                .put("module", "tests/runtests")
+                .put("module", "runWiltonTests")
                 .put("func", "runTests")
                 .put("args", ImmutableList.of())
                 .build()));
         // node modules tests
         WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
-                .put("module", "tests/runNodeTests")
+                .put("module", "runNodeTests")
                 .put("func", "")
                 .put("args", ImmutableList.of())
                 .build()));

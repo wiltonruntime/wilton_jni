@@ -1,4 +1,4 @@
-package net.wiltonwebtoolkit.support.jgit;
+package net.wiltontoolkit.support.jgit;
 
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;

@@ -1,4 +1,4 @@
-package net.wiltonwebtoolkit.support.common;
+package net.wiltontoolkit.support.common;
 
 import java.io.*;
 

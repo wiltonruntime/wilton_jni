@@ -1,6 +1,5 @@
-package net.wiltonwebtoolkit.support.rhino;
+package net.wiltontoolkit.support.rhino;
 
-import net.wiltonwebtoolkit.WiltonJni;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Script;
@@ -9,7 +8,7 @@ import org.mozilla.javascript.Scriptable;
 import java.io.*;
 import java.lang.reflect.Method;
 
-import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
+import static net.wiltontoolkit.WiltonJni.wiltoncall;
 
 /**
  * User: alexkasko

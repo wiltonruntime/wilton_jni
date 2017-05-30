@@ -1,12 +1,12 @@
 import com.google.common.collect.ImmutableMap;
-import net.wiltonwebtoolkit.WiltonException;
+import net.wiltontoolkit.WiltonException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import utils.TestGateway;
 
 import java.util.Map;
 
-import static net.wiltonwebtoolkit.WiltonJni.*;
+import static net.wiltontoolkit.WiltonJni.*;
 import static org.junit.Assert.assertTrue;
 import static utils.TestGateway.*;
 import static utils.TestUtils.*;

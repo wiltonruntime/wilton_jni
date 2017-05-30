@@ -1,4 +1,4 @@
-package net.wiltonwebtoolkit;
+package net.wiltontoolkit;
 
 /**
  * User: alexkasko

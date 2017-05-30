@@ -1,6 +1,6 @@
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import net.wiltonwebtoolkit.WiltonException;
+import net.wiltontoolkit.WiltonException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import utils.TestGateway;
@@ -8,8 +8,8 @@ import utils.TestGateway;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
-import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
+import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
+import static net.wiltontoolkit.WiltonJni.wiltoncall;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

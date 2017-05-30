@@ -1,8 +1,8 @@
-package net.wiltonwebtoolkit.support.rhino;
+package net.wiltontoolkit.support.rhino;
 
-import net.wiltonwebtoolkit.WiltonException;
-import net.wiltonwebtoolkit.WiltonGateway;
-import net.wiltonwebtoolkit.support.common.Utils;
+import net.wiltontoolkit.WiltonException;
+import net.wiltontoolkit.WiltonGateway;
+import net.wiltontoolkit.support.common.Utils;
 import org.mozilla.javascript.*;
 
 import java.io.*;
@@ -38,6 +38,9 @@ public class WiltonRhinoEnvironment {
             String modulesPath = new File(pathToScriptsDir, "modules").getAbsolutePath() + File.separator;
             cx.evaluateString(RHINO_GLOBAL_SCOPE,
                     "WILTON_REQUIREJS_CONFIG = '{" +
+                        " \"waitSeconds\": 0," +
+                        " \"enforceDefine\": true," +
+                        " \"nodeIdCompat\": true," +
                         " \"baseUrl\": \"" + modulesPath + "\"" +
                     "}'",
                     "WiltonRhinoEnvironment::initialize", -1, null);

@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
-import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
+import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
+import static net.wiltontoolkit.WiltonJni.wiltoncall;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;

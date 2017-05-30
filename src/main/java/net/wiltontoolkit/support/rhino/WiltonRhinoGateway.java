@@ -1,7 +1,7 @@
-package net.wiltonwebtoolkit.support.rhino;
+package net.wiltontoolkit.support.rhino;
 
-import net.wiltonwebtoolkit.WiltonException;
-import net.wiltonwebtoolkit.WiltonGateway;
+import net.wiltontoolkit.WiltonException;
+import net.wiltontoolkit.WiltonGateway;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;

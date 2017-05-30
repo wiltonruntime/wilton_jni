@@ -2,9 +2,8 @@ package utils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import net.wiltonwebtoolkit.WiltonException;
-import net.wiltonwebtoolkit.WiltonGateway;
-import net.wiltonwebtoolkit.support.rhino.WiltonRhinoEnvironment;
+import net.wiltontoolkit.WiltonException;
+import net.wiltontoolkit.WiltonGateway;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,7 +12,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
+import static net.wiltontoolkit.WiltonJni.wiltoncall;
 import static utils.TestUtils.*;
 
 /**

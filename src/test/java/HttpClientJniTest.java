@@ -8,8 +8,8 @@ import utils.TestGateway;
 import java.io.File;
 import java.util.Map;
 
-import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
-import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
+import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
+import static net.wiltontoolkit.WiltonJni.wiltoncall;
 import static org.junit.Assert.*;
 import static utils.TestGateway.*;
 import static utils.TestUtils.*;

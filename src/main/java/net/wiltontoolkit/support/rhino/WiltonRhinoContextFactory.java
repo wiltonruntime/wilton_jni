@@ -1,4 +1,4 @@
-package net.wiltonwebtoolkit.support.rhino;
+package net.wiltontoolkit.support.rhino;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;

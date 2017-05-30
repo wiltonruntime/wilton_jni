@@ -1,8 +1,8 @@
-package net.wiltonwebtoolkit.support.nashorn;
+package net.wiltontoolkit.support.nashorn;
 
-import net.wiltonwebtoolkit.WiltonException;
-import net.wiltonwebtoolkit.WiltonGateway;
-import net.wiltonwebtoolkit.support.common.Utils;
+import net.wiltontoolkit.WiltonException;
+import net.wiltontoolkit.WiltonGateway;
+import net.wiltontoolkit.support.common.Utils;
 
 import javax.script.*;
 import java.io.File;
@@ -53,7 +53,9 @@ public class WiltonNashornEnvironment {
             try {
                 ENGINE.eval("WILTON_REQUIREJS_DIRECTORY = \"" + reqjsPath + "\"", context);
                 ENGINE.eval("WILTON_REQUIREJS_CONFIG = '{" +
-                        " \"waitSeconds\": 30," +
+                        " \"waitSeconds\": 0," +
+                        " \"enforceDefine\": true," +
+                        " \"nodeIdCompat\": true," +
                         " \"baseUrl\": \"" + modulesPath + "\"" +
                         "}'", context);
                 String code = Utils.readFileToString(new File(reqjsPath + "wilton-jni.js"));

@@ -4,8 +4,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import utils.TestGateway;
 
-import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
-import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
+import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
+import static net.wiltontoolkit.WiltonJni.wiltoncall;
 import static org.junit.Assert.assertTrue;
 import static utils.TestUtils.GSON;
 import static utils.TestUtils.initWiltonOnce;

@@ -1,8 +1,8 @@
-package net.wiltonwebtoolkit.support.nashorn;
+package net.wiltontoolkit.support.nashorn;
 
 import jdk.nashorn.api.scripting.JSObject;
-import net.wiltonwebtoolkit.WiltonException;
-import net.wiltonwebtoolkit.WiltonGateway;
+import net.wiltontoolkit.WiltonException;
+import net.wiltontoolkit.WiltonGateway;
 
 import javax.script.*;
 

@@ -1,13 +1,12 @@
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import net.wiltonwebtoolkit.support.nashorn.WiltonNashornEnvironment;
+import net.wiltontoolkit.support.nashorn.WiltonNashornEnvironment;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import utils.TestGateway;
 import utils.TestUtils;
 
-import static net.wiltonwebtoolkit.WiltonJni.LOGGING_CONSOLE;
-import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
+import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
 import static utils.TestUtils.GSON;
 import static utils.TestUtils.getJsDir;
 import static utils.TestUtils.initWiltonOnce;
@@ -31,13 +30,13 @@ public class WiltonNashornTest {
     public void test() throws Exception {
         // wilton test suite
         WiltonNashornEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
-                .put("module", "tests/runtests")
+                .put("module", "runWiltonTests")
                 .put("func", "runTests")
                 .put("args", ImmutableList.of())
                 .build()));
         // node modules tests
         WiltonNashornEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
-                .put("module", "tests/runNodeTests")
+                .put("module", "runNodeTests")
                 .put("func", "")
                 .put("args", ImmutableList.of())
                 .build()));

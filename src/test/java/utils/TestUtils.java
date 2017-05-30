@@ -4,10 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import net.wiltonwebtoolkit.WiltonGateway;
-import net.wiltonwebtoolkit.WiltonJni;
-import net.wiltonwebtoolkit.support.nashorn.WiltonNashornEnvironment;
-import net.wiltonwebtoolkit.support.rhino.WiltonRhinoEnvironment;
+import net.wiltontoolkit.WiltonGateway;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -20,8 +17,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.tools.shell.Global;
 
 //import java.lang.RuntimeExcetion;
 
@@ -29,12 +24,7 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import javax.script.ScriptEngine;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -44,9 +34,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static net.wiltonwebtoolkit.WiltonJni.LOGGING_DISABLE;
-import static net.wiltonwebtoolkit.WiltonJni.wiltoncall;
-import static net.wiltonwebtoolkit.WiltonJni.wiltoninit;
+import static net.wiltontoolkit.WiltonJni.wiltoncall;
+import static net.wiltontoolkit.WiltonJni.wiltoninit;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
 /**
