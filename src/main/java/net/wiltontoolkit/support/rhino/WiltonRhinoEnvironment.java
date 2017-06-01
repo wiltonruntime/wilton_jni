@@ -35,7 +35,7 @@ public class WiltonRhinoEnvironment {
             cx.evaluateString(RHINO_GLOBAL_SCOPE,
                     "WILTON_REQUIREJS_DIRECTORY = \"" + reqjsPath + "\"",
                     "WiltonRhinoEnvironment::initialize", -1, null);
-            String modulesPath = new File(pathToScriptsDir, "wilton_modules").getAbsolutePath() + File.separator;
+            String modulesPath = new File(pathToScriptsDir, "modules").getAbsolutePath() + File.separator;
             cx.evaluateString(RHINO_GLOBAL_SCOPE,
                     "WILTON_REQUIREJS_CONFIG = '{" +
                         " \"waitSeconds\": 0," +

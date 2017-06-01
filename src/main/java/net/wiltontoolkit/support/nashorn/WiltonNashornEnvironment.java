@@ -49,7 +49,7 @@ public class WiltonNashornEnvironment {
             bind.put("WILTON_load", new WiltonNashornScriptLoader(ENGINE, context));
             context.setBindings(bind, ScriptContext.ENGINE_SCOPE);
             String reqjsPath = new File(SCRIPTS_DIR_PATH, "wilton-requirejs").getAbsolutePath() + File.separator;
-            String modulesPath = new File(SCRIPTS_DIR_PATH, "wilton_modules").getAbsolutePath() + File.separator;
+            String modulesPath = new File(SCRIPTS_DIR_PATH, "modules").getAbsolutePath() + File.separator;
             try {
                 ENGINE.eval("WILTON_REQUIREJS_DIRECTORY = \"" + reqjsPath + "\"", context);
                 ENGINE.eval("WILTON_REQUIREJS_CONFIG = '{" +
