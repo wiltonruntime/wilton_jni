@@ -31,7 +31,7 @@ public class WiltonNashornTest {
         // wilton test suite
         WiltonNashornEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
                 .put("module", "runWiltonTests")
-                .put("func", "runTests")
+                .put("func", "main")
                 .put("args", ImmutableList.of())
                 .build()));
         // node modules tests

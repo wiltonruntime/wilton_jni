@@ -36,7 +36,7 @@ public class WiltonRhinoTest {
         // wilton test suite
         WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
                 .put("module", "runWiltonTests")
-                .put("func", "runTests")
+                .put("func", "main")
                 .put("args", ImmutableList.of())
                 .build()));
         // node modules tests
