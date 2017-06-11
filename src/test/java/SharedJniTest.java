@@ -27,10 +27,10 @@ public class SharedJniTest {
 
     @Test
     public void testPut() {
-        assertEquals("{}", wiltoncall("shared_get", GSON.toJson(ImmutableMap.builder()
+        assertEquals(null, wiltoncall("shared_get", GSON.toJson(ImmutableMap.builder()
                 .put("key", "foo")
                 .build())));
-        assertEquals("{}", wiltoncall("shared_put", GSON.toJson(ImmutableMap.builder()
+        assertEquals(null, wiltoncall("shared_put", GSON.toJson(ImmutableMap.builder()
                 .put("key", "foo")
                 .put("value", "bar")
                 .build())));
@@ -44,7 +44,7 @@ public class SharedJniTest {
         assertEquals("baz", wiltoncall("shared_remove", GSON.toJson(ImmutableMap.builder()
                 .put("key", "foo")
                 .build())));
-        assertEquals("{}", wiltoncall("shared_get", GSON.toJson(ImmutableMap.builder()
+        assertEquals(null, wiltoncall("shared_get", GSON.toJson(ImmutableMap.builder()
                 .put("key", "foo")
                 .build())));
     }
