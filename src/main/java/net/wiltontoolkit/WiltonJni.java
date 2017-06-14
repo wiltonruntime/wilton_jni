@@ -24,7 +24,7 @@ public class WiltonJni {
     public static final String LOGGING_CONSOLE = "{\"appenders\":[{\"appenderType\":\"CONSOLE\"}]}";
 
     static {
-        System.loadLibrary("wilton");
+        System.loadLibrary("wilton_core");
     }
 
     public static String describeThrowable(Throwable throwable) {
