@@ -34,15 +34,11 @@ public class WiltonNashornEnvironment {
         }
     }
 
-    public static ScriptEngine engine() {
-        return ENGINE;
-    }
-
     public static WiltonGateway gateway() {
         return GATEWAY;
     }
 
-    static ScriptContext scriptContext() {
+    static ScriptContext threadScriptContext() {
         if (null == THREAD_CONTEXT.get()) {
             ScriptContext context = new SimpleScriptContext();
             Bindings bind = ENGINE.createBindings();

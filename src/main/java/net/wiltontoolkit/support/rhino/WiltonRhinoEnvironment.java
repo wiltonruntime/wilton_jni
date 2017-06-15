@@ -16,8 +16,9 @@ public class WiltonRhinoEnvironment {
 
     private static final WiltonGateway GATEWAY = new WiltonRhinoGateway();
     private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
-    private static ScriptableObject RHINO_GLOBAL_SCOPE = null;
+    private static ThreadLocal<ScriptableObject> RHINO_THREAD_SCOPE = new ThreadLocal<ScriptableObject>();
     private static String INIT_THREAD = "";
+    private static String PATH_TO_SCRIPTS_DIR;
 
     public static void initialize(String pathToScriptsDir) {
         if (!INITIALIZED.compareAndSet(false, true)) {
@@ -25,40 +26,49 @@ public class WiltonRhinoEnvironment {
         }
         try {
             INIT_THREAD = Thread.currentThread().getName();
+            PATH_TO_SCRIPTS_DIR = pathToScriptsDir;
             ContextFactory.initGlobal(new WiltonRhinoContextFactory());
-            Context cx = Context.enter();
-            RHINO_GLOBAL_SCOPE = cx.initStandardObjects();
-            FunctionObject loadFunc = new FunctionObject("load", WiltonRhinoScriptLoader.getLoadMethod(), RHINO_GLOBAL_SCOPE);
-            RHINO_GLOBAL_SCOPE.put("WILTON_load", RHINO_GLOBAL_SCOPE, loadFunc);
-            RHINO_GLOBAL_SCOPE.setAttributes("WILTON_load", ScriptableObject.DONTENUM);
-            String reqjsPath = new File(pathToScriptsDir, "wilton-requirejs").getAbsolutePath() + File.separator;
-            cx.evaluateString(RHINO_GLOBAL_SCOPE,
-                    "WILTON_REQUIREJS_DIRECTORY = \"" + reqjsPath + "\"",
-                    "WiltonRhinoEnvironment::initialize", -1, null);
-            String modulesPath = new File(pathToScriptsDir, "modules").getAbsolutePath() + File.separator;
-            cx.evaluateString(RHINO_GLOBAL_SCOPE,
-                    "WILTON_REQUIREJS_CONFIG = '{" +
-                        " \"waitSeconds\": 0," +
-                        " \"enforceDefine\": true," +
-                        " \"nodeIdCompat\": true," +
-                        " \"baseUrl\": \"" + modulesPath + "\"" +
-                    "}'",
-                    "WiltonRhinoEnvironment::initialize", -1, null);
-            // print() function
-            cx.evaluateString(RHINO_GLOBAL_SCOPE,
-                    "function print(msg) {" +
-                     "    Packages.java.lang.System.out.println(msg);" +
-                     "}", "WiltonRhinoEnvironment::initialize", -1, null);
-            String code = Utils.readFileToString(new File(reqjsPath + "wilton-jni.js"));
-            cx.evaluateString(RHINO_GLOBAL_SCOPE, code, "WiltonRhinoEnvironment::initialize", -1, null);
-            Context.exit();
         } catch (Exception e) {
             throw new WiltonException("Rhino environment initialization error", e);
         }
     }
 
-    public static Scriptable globalScope() {
-        return RHINO_GLOBAL_SCOPE;
+    public static Scriptable threadScope() {
+        if (null == RHINO_THREAD_SCOPE.get()) {
+            try {
+                Context cx = Context.enter();
+                ScriptableObject scope = cx.initStandardObjects();
+                RHINO_THREAD_SCOPE.set(scope); // set early for loader
+                FunctionObject loadFunc = new FunctionObject("load", WiltonRhinoScriptLoader.getLoadMethod(), scope);
+                scope.put("WILTON_load", scope, loadFunc);
+                scope.setAttributes("WILTON_load", ScriptableObject.DONTENUM);
+                String reqjsPath = new File(PATH_TO_SCRIPTS_DIR, "wilton-requirejs").getAbsolutePath() + File.separator;
+                cx.evaluateString(scope,
+                        "WILTON_REQUIREJS_DIRECTORY = \"" + reqjsPath + "\"",
+                        "WiltonRhinoEnvironment::initialize", -1, null);
+                String modulesPath = new File(PATH_TO_SCRIPTS_DIR, "modules").getAbsolutePath() + File.separator;
+                cx.evaluateString(scope,
+                        "WILTON_REQUIREJS_CONFIG = '{" +
+                                " \"waitSeconds\": 0," +
+                                " \"enforceDefine\": true," +
+                                " \"nodeIdCompat\": true," +
+                                " \"baseUrl\": \"" + modulesPath + "\"" +
+                                "}'",
+                        "WiltonRhinoEnvironment::initialize", -1, null);
+                // print() function
+                cx.evaluateString(scope,
+                        "function print(msg) {" +
+                                "    Packages.java.lang.System.out.println(msg);" +
+                                "}", "WiltonRhinoEnvironment::initialize", -1, null);
+                String code = Utils.readFileToString(new File(reqjsPath + "wilton-jni.js"));
+                cx.evaluateString(scope, code, "WiltonRhinoEnvironment::initialize", -1, null);
+                Context.exit();
+            } catch (Exception e) {
+                throw new WiltonException("Rhino environment thread initialization error," +
+                        " thread: [" + Thread.currentThread().getName() + "]", e);
+            }
+        }
+        return RHINO_THREAD_SCOPE.get();
     }
 
     public static WiltonGateway gateway() {

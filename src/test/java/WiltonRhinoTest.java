@@ -1,4 +1,3 @@
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.wiltontoolkit.support.rhino.WiltonRhinoEnvironment;
 import org.junit.BeforeClass;
@@ -37,24 +36,18 @@ public class WiltonRhinoTest {
         WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
                 .put("module", "runWiltonTests")
                 .put("func", "main")
-                .put("args", ImmutableList.builder()
-                        .add(ImmutableMap.builder()
-                                .put("core", true)
-                                .build())
-                        .build())
                 .build()));
         // node modules tests
         WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
                 .put("module", "runNodeTests")
                 .put("func", "")
-                .put("args", ImmutableList.of())
                 .build()));
     }
 
     @Test
     // https://github.com/mozilla/rhino/issues/153
     public void testStacktrace() throws Exception {
-        Scriptable scope = WiltonRhinoEnvironment.globalScope();
+        Scriptable scope = WiltonRhinoEnvironment.threadScope();
         Context cx = Context.enter();
         Object[] holder = new Object[1];
         ScriptableObject.putProperty(scope, "holder", Context.javaToJS(holder, scope));

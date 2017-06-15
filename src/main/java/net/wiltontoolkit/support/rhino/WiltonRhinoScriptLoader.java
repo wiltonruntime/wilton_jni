@@ -24,7 +24,7 @@ class WiltonRhinoScriptLoader {
             String sourceCode = wiltoncall("fs_read_script_file_or_module", file.getAbsolutePath());
             Script script = cx.compileString(sourceCode, filePath, 1, null);
             if (script != null) {
-                script.exec(cx, WiltonRhinoEnvironment.globalScope());
+                script.exec(cx, WiltonRhinoEnvironment.threadScope());
             }
         }
     }

@@ -15,7 +15,7 @@ class WiltonNashornGateway implements WiltonGateway {
     @Override
     public String runScript(String callbackScriptJson) throws Exception {
         WiltonNashornEnvironment.checkInitialized();
-        ScriptContext context = WiltonNashornEnvironment.scriptContext();
+        ScriptContext context = WiltonNashornEnvironment.threadScriptContext();
         JSObject jsObject = (JSObject) context.getAttribute("WILTON_run", ScriptContext.ENGINE_SCOPE);
         if (null != jsObject) {
             Object result = jsObject.call(null, callbackScriptJson);
