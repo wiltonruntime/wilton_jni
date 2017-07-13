@@ -54,16 +54,22 @@ public class TestUtils {
     public static final AtomicBoolean INITTED = new AtomicBoolean(false);
     public static WiltonGateway GATEWAY;
 
-    public static void initWiltonOnce(WiltonGateway gateway, String loggingConf) {
-        String config = GSON.toJson(ImmutableMap.builder()
-                .put("defaultScriptEngine", "jni")
-//                .put("requireJsDirPath", "../libwilton/test/js/requirejs")
-//                .put("requireJsConfig", ImmutableMap.builder()
-//                        .put("waitSeconds", 10)
-//                        .put("baseUrl", "../libwilton/test/js/modules")
-//                        .build())
-                .build());
+    public static void initWiltonOnce(WiltonGateway gateway, String loggingConf, String pathToWiltonDir) {
         if (INITTED.compareAndSet(false, true)) {
+            String reqjsPath = new File(pathToWiltonDir, "wilton-requirejs").getAbsolutePath() + File.separator;
+            String modulesPath = new File(pathToWiltonDir, "modules").getAbsolutePath() + File.separator;
+
+            String config = GSON.toJson(ImmutableMap.builder()
+                    .put("defaultScriptEngine", "jni")
+                    .put("requireJsDirPath", reqjsPath)
+                    .put("requireJsConfig", ImmutableMap.builder()
+                            .put("waitSeconds", 0)
+                            .put("enforceDefine", true)
+                            .put("nodeIdCompat", true)
+                            .put("baseUrl", modulesPath)
+                            .build())
+                    .build());
+
             wiltoninit(gateway, config);
             wiltoncall("logging_initialize", loggingConf);
             GATEWAY = gateway;

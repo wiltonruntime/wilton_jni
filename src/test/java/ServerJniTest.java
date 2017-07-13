@@ -54,7 +54,7 @@ public class ServerJniTest {
     @BeforeClass
     public static void init() {
         // init, no logging by default, enable it when needed
-        initWiltonOnce(new TestGateway(), LOGGING_DISABLE);
+        initWiltonOnce(new TestGateway(), LOGGING_DISABLE, getJsDir().getAbsolutePath());
     }
 
     @Test

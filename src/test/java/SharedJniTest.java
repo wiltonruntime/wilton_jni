@@ -11,6 +11,7 @@ import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
 import static net.wiltontoolkit.WiltonJni.wiltoncall;
 import static org.junit.Assert.assertEquals;
 import static utils.TestUtils.GSON;
+import static utils.TestUtils.getJsDir;
 import static utils.TestUtils.initWiltonOnce;
 
 /**
@@ -22,7 +23,7 @@ public class SharedJniTest {
     @BeforeClass
     public static void init() {
         // init, no logging by default, enable it when needed
-        initWiltonOnce(new TestGateway(), LOGGING_DISABLE);
+        initWiltonOnce(new TestGateway(), LOGGING_DISABLE, getJsDir().getAbsolutePath());
     }
 
     @Test

@@ -45,17 +45,11 @@ public class WiltonNashornEnvironment {
             bind.put("WILTON_load", new WiltonNashornScriptLoader(ENGINE, context));
             context.setBindings(bind, ScriptContext.ENGINE_SCOPE);
             String reqjsPath = new File(SCRIPTS_DIR_PATH, "wilton-requirejs").getAbsolutePath() + File.separator;
-            String modulesPath = new File(SCRIPTS_DIR_PATH, "modules").getAbsolutePath() + File.separator;
             try {
-                ENGINE.eval("WILTON_REQUIREJS_DIRECTORY = \"" + reqjsPath + "\"", context);
-                ENGINE.eval("WILTON_REQUIREJS_CONFIG = '{" +
-                        " \"waitSeconds\": 0," +
-                        " \"enforceDefine\": true," +
-                        " \"nodeIdCompat\": true," +
-                        " \"baseUrl\": \"" + modulesPath + "\"" +
-                        "}'", context);
-                String code = Utils.readFileToString(new File(reqjsPath + "wilton-jni.js"));
-                ENGINE.eval(code, context);
+                String codeJni = Utils.readFileToString(new File(reqjsPath + "wilton-jni.js"));
+                ENGINE.eval(codeJni, context);
+                String codeReq = Utils.readFileToString(new File(reqjsPath + "wilton-require.js"));
+                ENGINE.eval(codeReq, context);
             } catch (Exception e) {
                 throw new WiltonException("Nashorn environment thread initialization error," +
                         " thread: [" + Thread.currentThread().getName() + "]", e);

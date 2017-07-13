@@ -6,7 +6,7 @@ import utils.TestGateway;
 
 import java.util.Map;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
 import static net.wiltontoolkit.WiltonJni.wiltoncall;
 import static org.junit.Assert.assertTrue;
@@ -21,7 +21,7 @@ public class CronJniTest {
     @BeforeClass
     public static void init() {
         // init, no logging by default, enable it when needed
-        initWiltonOnce(new TestGateway(), LOGGING_DISABLE);
+        initWiltonOnce(new TestGateway(), LOGGING_DISABLE, getJsDir().getAbsolutePath());
     }
 
     @Test

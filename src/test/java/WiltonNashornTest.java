@@ -19,10 +19,11 @@ public class WiltonNashornTest {
 
     @BeforeClass
     public static void init() {
+        String wiltonDirPath = getJsDir().getAbsolutePath();
         // init, no logging by default, enable it when needed
-        initWiltonOnce(new TestGateway(), LOGGING_DISABLE);
+        initWiltonOnce(new TestGateway(), LOGGING_DISABLE, wiltonDirPath);
         TestGateway tg = (TestGateway) TestUtils.GATEWAY;
-        WiltonNashornEnvironment.initialize(getJsDir().getAbsolutePath());
+        WiltonNashornEnvironment.initialize(wiltonDirPath);
         tg.setScriptGateway(WiltonNashornEnvironment.gateway());
     }
 
