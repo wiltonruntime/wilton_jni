@@ -56,17 +56,18 @@ public class TestUtils {
 
     public static void initWiltonOnce(WiltonGateway gateway, String loggingConf, String pathToWiltonDir) {
         if (INITTED.compareAndSet(false, true)) {
-            String reqjsPath = new File(pathToWiltonDir, "wilton-requirejs").getAbsolutePath() + File.separator;
             String modulesPath = new File(pathToWiltonDir, "modules").getAbsolutePath() + File.separator;
 
             String config = GSON.toJson(ImmutableMap.builder()
                     .put("defaultScriptEngine", "jni")
-                    .put("requireJsDirPath", reqjsPath)
                     .put("requireJsConfig", ImmutableMap.builder()
                             .put("waitSeconds", 0)
                             .put("enforceDefine", true)
                             .put("nodeIdCompat", true)
                             .put("baseUrl", modulesPath)
+                            .put("paths", ImmutableMap.builder()
+                                    .put("test/scripts", modulesPath + "../wilton_core/test/scripts")
+                                    .build())
                             .build())
                     .build());
 
