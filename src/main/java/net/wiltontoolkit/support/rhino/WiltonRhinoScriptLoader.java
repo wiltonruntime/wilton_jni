@@ -20,8 +20,7 @@ class WiltonRhinoScriptLoader {
         WiltonRhinoEnvironment.checkInitialized();
         for (Object arg : args) {
             String filePath = Context.toString(arg);
-            File file = new File(filePath);
-            String sourceCode = wiltoncall("fs_read_module_script", file.getAbsolutePath());
+            String sourceCode = wiltoncall("load_module_script", filePath);
             Script script = cx.compileString(sourceCode, filePath, 1, null);
             if (script != null) {
                 script.exec(cx, WiltonRhinoEnvironment.threadScope());

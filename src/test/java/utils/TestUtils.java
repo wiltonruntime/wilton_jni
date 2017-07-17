@@ -56,7 +56,7 @@ public class TestUtils {
 
     public static void initWiltonOnce(WiltonGateway gateway, String loggingConf, String pathToWiltonDir) {
         if (INITTED.compareAndSet(false, true)) {
-            String modulesPath = new File(pathToWiltonDir, "modules").getAbsolutePath() + File.separator;
+            String modulesPath = "file://" + new File(pathToWiltonDir, "modules").getAbsolutePath() + File.separator;
 
             String config = GSON.toJson(ImmutableMap.builder()
                     .put("defaultScriptEngine", "jni")
