@@ -46,7 +46,7 @@ public class WiltonRhinoEnvironment {
                 FunctionObject loadFunc = new FunctionObject("load", WiltonRhinoScriptLoader.getLoadMethod(), scope);
                 scope.put("WILTON_load", scope, loadFunc);
                 scope.setAttributes("WILTON_load", ScriptableObject.DONTENUM);
-                String reqjsPath = new File(PATH_TO_SCRIPTS_DIR, "modules/wilton-requirejs").getAbsolutePath() + File.separator;
+                String reqjsPath = new File(PATH_TO_SCRIPTS_DIR, "js/wilton-requirejs").getAbsolutePath() + File.separator;
                 String codeJni = Utils.readFileToString(new File(reqjsPath + "wilton-jni.js"));
                 cx.evaluateString(scope, codeJni, "WiltonRhinoEnvironment::initialize", -1, null);
                 String codeReq = Utils.readFileToString(new File(reqjsPath + "wilton-require.js"));
