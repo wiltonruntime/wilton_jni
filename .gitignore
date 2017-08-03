@@ -1,13 +1,8 @@
-/src/main/resources/lib
-/build
 /target
-/nbproject
-/jni/nbproject
-/js/nbproject
 /.idea
 /*.iml
 /pom.xml.releaseBackup
 /release.properties
-/js/wilton/nbproject/private/
-/jni/build/
 /test.db
+/httpClientTest.response
+/miscTest_out.txt

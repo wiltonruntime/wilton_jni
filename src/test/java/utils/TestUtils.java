@@ -67,7 +67,7 @@ public class TestUtils {
                             .put("nodeIdCompat", true)
                             .put("baseUrl", jsPath)
                             .put("paths", ImmutableMap.builder()
-                                    .put("test/scripts", jsPath + "../wilton_core/test/scripts")
+                                    .put("test/scripts", jsPath + "../core/test/scripts")
                                     .build())
                             .build())
                     .build());
