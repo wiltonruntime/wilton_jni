@@ -38,11 +38,21 @@ public class WiltonRhinoTest {
                 .put("module", "test/scripts/runWiltonTests")
                 .put("func", "main")
                 .build()));
-        // node modules tests
-        WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
-                .put("module", "test/scripts/runNodeTests")
-                .put("func", "")
-                .build()));
+        // node modules tests, overflows default stack on 32-bit
+        Thread th = new Thread(new ThreadGroup("js"), new Runnable() {
+            public void run() {
+                try {
+                    WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
+                            .put("module", "test/scripts/runNodeTests")
+                            .put("func", "")
+                            .build()));
+                } catch(Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }, "WiltonRhinoTest", 1024 * 1024 * 16);
+        th.start(); 
+        th.join();
     }
 
     @Test
@@ -53,7 +63,7 @@ public class WiltonRhinoTest {
         Object[] holder = new Object[1];
         ScriptableObject.putProperty(scope, "holder", Context.javaToJS(holder, scope));
         cx.evaluateString(scope, "try {throw new Error() } catch (e) {holder[0] = e.stack}", "some_file.js", 42, null);
-        assertEquals("\tat some_file.js:42\n", holder[0]);
+        assertEquals("\tat some_file.js:42" + System.lineSeparator(), holder[0]);
         Context.exit();
     }
 }

@@ -20,18 +20,24 @@ import static utils.TestUtils.*;
  */
 public class DBJniTest {
 
-    @Test
-    public void dummy() {
-        // I am dummy
-    }
-
-//    @BeforeClass
+    @BeforeClass
     public static void init() {
         // init, no logging by default, enable it when needed
         initWiltonOnce(new TestGateway(), LOGGING_DISABLE, getJsDir().getAbsolutePath());
+        try {
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("path", getJsDir() + "/build/bin/libwilton_db.so")
+                    .put("absolute", true)
+                    .build()));
+        } catch (Exception e) {
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("path", getJsDir() + "/build/bin/wilton_db.dll")
+                    .put("absolute", true)
+                    .build()));
+        }
     }
 
-//    @Test
+    @Test
     public void testDb() throws Exception {
         File dir = null;
         try {
@@ -94,7 +100,7 @@ public class DBJniTest {
         }
     }
 
-//    @Test
+    @Test
     public void testDbTran() throws Exception {
         File dir = null;
         try {
