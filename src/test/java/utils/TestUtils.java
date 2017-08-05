@@ -61,6 +61,7 @@ public class TestUtils {
             String config = GSON.toJson(ImmutableMap.builder()
                     .put("defaultScriptEngine", "jni")
                     .put("applicationDirectory", "UNSPECIFIED")
+                    .put("environmentVariables", System.getenv())
                     .put("requireJs", ImmutableMap.builder()
                             .put("waitSeconds", 0)
                             .put("enforceDefine", true)
