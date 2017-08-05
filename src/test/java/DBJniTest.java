@@ -24,17 +24,6 @@ public class DBJniTest {
     public static void init() {
         // init, no logging by default, enable it when needed
         initWiltonOnce(new TestGateway(), LOGGING_DISABLE, getJsDir().getAbsolutePath());
-        try {
-            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
-                    .put("path", getJsDir() + "/build/bin/libwilton_db.so")
-                    .put("absolute", true)
-                    .build()));
-        } catch (Exception e) {
-            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
-                    .put("path", getJsDir() + "/build/bin/wilton_db.dll")
-                    .put("absolute", true)
-                    .build()));
-        }
     }
 
     @Test

@@ -75,6 +75,18 @@ public class TestUtils {
             wiltoninit(gateway, config);
             wiltoncall("logging_initialize", loggingConf);
             GATEWAY = gateway;
+            // db lib load
+            try {
+                wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                        .put("path", getJsDir() + "/build/bin/libwilton_db.so")
+                        .put("absolute", true)
+                        .build()));
+            } catch (Exception e) {
+                wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                        .put("path", getJsDir() + "/build/bin/wilton_db.dll")
+                        .put("absolute", true)
+                        .build()));
+            }
         }
     }
 
