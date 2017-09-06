@@ -111,7 +111,7 @@ public class HttpClientJniTest {
         }
     }
 
-//    @Test
+    @Test
     public void testSendFile() throws Exception {
         long handle = 0;
         File dir = null;
@@ -126,9 +126,10 @@ public class HttpClientJniTest {
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
             assertTrue(file.exists());
-            String resp = wiltoncall("httpclient_send_temp_file", GSON.toJson(ImmutableMap.builder()
+            String resp = wiltoncall("httpclient_send_file", GSON.toJson(ImmutableMap.builder()
                     .put("url", ROOT_URL + "postmirror")
                     .put("filePath", file.getAbsolutePath())
+                    .put("remove", true)
                     .put("metadata", ImmutableMap.builder()
                             .put("forceHttp10", true)
                             .build())
@@ -146,7 +147,7 @@ public class HttpClientJniTest {
         }
     }
 
-//    @Test
+    @Test
     public void testHttps() throws Exception {
         long handle = 0;
         try {
