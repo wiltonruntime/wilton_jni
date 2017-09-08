@@ -51,7 +51,7 @@ public class WiltonRhinoTest {
                 }
             }
         }, "WiltonRhinoTest", 1024 * 1024 * 16);
-        th.start(); 
+        th.start();
         th.join();
     }
 
