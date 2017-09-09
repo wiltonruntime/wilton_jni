@@ -57,10 +57,10 @@ public class TestUtils {
     public static void initWiltonOnce(WiltonGateway gateway, String loggingConf, String pathToWiltonDir) {
         if (INITTED.compareAndSet(false, true)) {
             String jsPath = "file://" + new File(pathToWiltonDir, "js").getAbsolutePath() + File.separator;
-
+            String appdir = pathToWiltonDir + "/core/test/scripts/";
             String config = GSON.toJson(ImmutableMap.builder()
                     .put("defaultScriptEngine", "jni")
-                    .put("applicationDirectory", pathToWiltonDir + "/core/test/scripts/")
+                    .put("applicationDirectory", appdir)
                     .put("environmentVariables", System.getenv())
                     .put("requireJs", ImmutableMap.builder()
                             .put("waitSeconds", 0)
@@ -76,6 +76,11 @@ public class TestUtils {
             wiltoninit(gateway, config);
             wiltoncall("logging_initialize", loggingConf);
             GATEWAY = gateway;
+            // db lib load
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("name", "wilton_db")
+                    .put("directory", appdir + "../../../build/bin")
+                    .build()));
         }
     }
 
