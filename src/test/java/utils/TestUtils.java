@@ -76,10 +76,27 @@ public class TestUtils {
             wiltoninit(gateway, config);
             wiltoncall("logging_initialize", loggingConf);
             GATEWAY = gateway;
-            // db lib load
+            String libdir = appdir + "../../../build/bin";
+            // libs load
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("name", "wilton_cron")
+                    .put("directory", libdir)
+                    .build()));
             wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
                     .put("name", "wilton_db")
-                    .put("directory", appdir + "../../../build/bin")
+                    .put("directory", libdir)
+                    .build()));
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("name", "wilton_fs")
+                    .put("directory", libdir)
+                    .build()));
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("name", "wilton_shared")
+                    .put("directory", libdir)
+                    .build()));
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("name", "wilton_thread")
+                    .put("directory", libdir)
                     .build()));
         }
     }
