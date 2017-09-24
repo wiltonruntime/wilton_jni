@@ -79,6 +79,10 @@ public class TestUtils {
             String libdir = appdir + "../../../build/bin";
             // libs load
             wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("name", "wilton_channel")
+                    .put("directory", libdir)
+                    .build()));
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
                     .put("name", "wilton_cron")
                     .put("directory", libdir)
                     .build()));
