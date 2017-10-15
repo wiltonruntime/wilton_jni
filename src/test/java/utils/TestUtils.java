@@ -99,10 +99,6 @@ public class TestUtils {
                     .put("directory", libdir)
                     .build()));
             wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
-                    .put("name", "wilton_shared")
-                    .put("directory", libdir)
-                    .build()));
-            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
                     .put("name", "wilton_thread")
                     .put("directory", libdir)
                     .build()));
