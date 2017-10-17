@@ -48,7 +48,7 @@ public class MiscJniTest {
             Map<String, Long> shamap = GSON.fromJson(sout, LONG_MAP_TYPE);
             handle = shamap.get("serverHandle");
 
-            wiltoncall("tcp_wait_for_connection", GSON.toJson(ImmutableMap.builder()
+            wiltoncall("net_wait_for_tcp_connection", GSON.toJson(ImmutableMap.builder()
                     .put("ipAddress", "127.0.0.1")
                     .put("tcpPort", TCP_PORT)
                     .put("timeoutMillis", 100)
