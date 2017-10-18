@@ -59,7 +59,7 @@ public class TestUtils {
             String jsPath = "file://" + new File(pathToWiltonDir, "js").getAbsolutePath() + File.separator;
             String appdir = pathToWiltonDir + "/core/test/";
             String config = GSON.toJson(ImmutableMap.builder()
-                    .put("defaultScriptEngine", "jni")
+                    .put("defaultScriptEngine", "rhino")
                     .put("applicationDirectory", appdir)
                     .put("environmentVariables", System.getenv())
                     .put("requireJs", ImmutableMap.builder()

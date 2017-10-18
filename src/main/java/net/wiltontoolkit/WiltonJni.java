@@ -25,6 +25,7 @@ public class WiltonJni {
 
     static {
         System.loadLibrary("wilton_core");
+        System.loadLibrary("wilton_rhino");
     }
 
     public static String describeThrowable(Throwable throwable) {
