@@ -74,9 +74,14 @@ public class TestUtils {
                     .build());
 
             wiltoninit(gateway, config);
-            wiltoncall("logging_initialize", loggingConf);
             GATEWAY = gateway;
             String libdir = appdir + "../../build/bin";
+            // logging init
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("name", "wilton_logging")
+                    .put("directory", libdir)
+                    .build()));
+            wiltoncall("logging_initialize", loggingConf);
             // libs load
             wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
                     .put("name", "wilton_channel")
