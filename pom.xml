@@ -2,8 +2,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.wiltontoolkit</groupId>
-    <artifactId>wilton_jni</artifactId>
-    <version>0.7.1-SNAPSHOT</version>
+    <artifactId>wilton</artifactId>
+    <version>1.0</version>
     <packaging>jar</packaging>
     <name>Wilton JNI library</name>
 
@@ -144,7 +144,7 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>android</shadedClassifierName>
-                            <finalName>${project.artifactId}-android-${project.version}</finalName>
+                            <finalName>${project.artifactId}-android</finalName>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
@@ -161,12 +161,6 @@
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
-                            <artifactSet>
-                                <includes>
-                                    <include>${project.groupId}:${project.artifactId}:jar:android_armeabi.so:${project.version}</include>
-                                    <include>${project.groupId}:${project.artifactId}:jar:android_i386.so:${project.version}</include>
-                                </includes>
-                            </artifactSet>
                         </configuration>
                     </execution>
                 </executions>

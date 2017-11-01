@@ -10,6 +10,12 @@ import org.mozilla.javascript.ContextFactory;
  * Date: 10/17/16
  */
 class WiltonRhinoContextFactory extends ContextFactory {
+
+    static WiltonRhinoContextFactory INSTANCE = new WiltonRhinoContextFactory();
+
+    private WiltonRhinoContextFactory() {
+    }
+
     @Override
     protected boolean hasFeature(Context cx, int featureIndex) {
         if (Context.FEATURE_LOCATION_INFORMATION_IN_ERROR == featureIndex) {

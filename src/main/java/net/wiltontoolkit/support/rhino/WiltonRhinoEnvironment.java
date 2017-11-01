@@ -2,15 +2,11 @@ package net.wiltontoolkit.support.rhino;
 
 import net.wiltontoolkit.WiltonException;
 import net.wiltontoolkit.WiltonGateway;
-import net.wiltontoolkit.WiltonJni;
 import net.wiltontoolkit.support.common.Utils;
 import org.mozilla.javascript.*;
 
 import java.io.*;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static net.wiltontoolkit.WiltonJni.wiltoncall;
 
 /**
  * User: alexkasko
@@ -31,7 +27,7 @@ public class WiltonRhinoEnvironment {
         try {
             INIT_THREAD = Thread.currentThread().getName();
             PATH_TO_SCRIPTS_DIR = pathToScriptsDir;
-            ContextFactory.initGlobal(new WiltonRhinoContextFactory());
+            ContextFactory.initGlobal(WiltonRhinoContextFactory.INSTANCE);
         } catch (Exception e) {
             throw new WiltonException("Rhino environment initialization error", e);
         }

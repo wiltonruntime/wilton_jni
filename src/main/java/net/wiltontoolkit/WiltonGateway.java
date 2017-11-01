@@ -18,6 +18,7 @@ public interface WiltonGateway {
      *
      *
      * @param data script description
+     * @throws Exception on call fail
      * @return script output
      */
     String runScript(String data) throws Exception;

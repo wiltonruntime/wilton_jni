@@ -5,7 +5,6 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 
-import java.io.*;
 import java.lang.reflect.Method;
 
 import static net.wiltontoolkit.WiltonJni.wiltoncall;
