@@ -21,19 +21,6 @@
     </scm>
 
     <dependencies>
-        <!-- native lib -->
-        <!--<dependency>-->
-            <!--<groupId>${project.groupId}</groupId>-->
-            <!--<artifactId>${project.artifactId}</artifactId>-->
-            <!--<version>${project.version}</version>-->
-            <!--<classifier>android_armeabi.so</classifier>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>${project.groupId}</groupId>-->
-            <!--<artifactId>${project.artifactId}</artifactId>-->
-            <!--<version>${project.version}</version>-->
-            <!--<classifier>android_i386.so</classifier>-->
-        <!--</dependency>-->
         <!-- nashorn can be used instead -->
         <dependency>
             <groupId>org.mozilla</groupId>
@@ -161,6 +148,15 @@
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
+                            <artifactSet>
+                                <excludes>
+                                    <!-- JGit -->
+                                    <exclude>org.eclipse.jgit:org.eclipse.jgit</exclude>
+                                    <exclude>com.jcraft:jsch</exclude>
+                                    <exclude>com.googlecode.javaewah:JavaEWAH</exclude>
+                                    <exclude>org.slf4j:slf4j-api</exclude>
+                                </excludes>
+                            </artifactSet>
                         </configuration>
                     </execution>
                 </executions>

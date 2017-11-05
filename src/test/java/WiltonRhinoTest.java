@@ -1,10 +1,14 @@
 import com.google.common.collect.ImmutableMap;
+import net.wiltontoolkit.support.common.Utils;
 import net.wiltontoolkit.support.rhino.WiltonRhinoEnvironment;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mozilla.javascript.*;
 import utils.TestGateway;
 import utils.TestUtils;
+
+import java.io.File;
+import java.io.IOException;
 
 import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
 import static org.apache.commons.io.FileUtils.readFileToString;
@@ -22,11 +26,14 @@ import static utils.TestUtils.initWiltonOnce;
 public class WiltonRhinoTest {
 
     @BeforeClass
-    public static void init() {
+    public static void init() throws Exception {
         String wiltonDirPath = getJsDir().getAbsolutePath();
         // init, no logging by default, enable it when needed
         initWiltonOnce(new TestGateway(), LOGGING_DISABLE, wiltonDirPath);
-        WiltonRhinoEnvironment.initialize(wiltonDirPath);
+        String reqjsPath = new File(wiltonDirPath, "js/wilton-requirejs").getAbsolutePath() + File.separator;
+        String codeJni = Utils.readFileToString(new File(reqjsPath + "wilton-jni.js"));
+        String codeReq = Utils.readFileToString(new File(reqjsPath + "wilton-require.js"));
+        WiltonRhinoEnvironment.initialize(codeJni + codeReq);
         TestGateway tg = (TestGateway) TestUtils.GATEWAY;
         tg.setScriptGateway(WiltonRhinoEnvironment.gateway());
     }

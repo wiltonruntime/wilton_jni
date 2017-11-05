@@ -16,17 +16,15 @@ public class WiltonRhinoEnvironment {
 
     private static final WiltonGateway GATEWAY = new WiltonRhinoGateway();
     private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
-    private static ThreadLocal<ScriptableObject> RHINO_THREAD_SCOPE = new ThreadLocal<ScriptableObject>();
-    private static String INIT_THREAD = "";
-    private static String PATH_TO_SCRIPTS_DIR = "UNSPECIFIED";
+    private static final ThreadLocal<ScriptableObject> RHINO_THREAD_SCOPE = new ThreadLocal<ScriptableObject>();
+    private static String INIT_CODE = "UNSPECIFIED";
 
-    public static void initialize(String pathToScriptsDir) {
+    public static void initialize(String initCode) {
         if (!INITIALIZED.compareAndSet(false, true)) {
-            throw new WiltonException("Rhino environment is already initialized, init thread: [" + INIT_THREAD + "]");
+            throw new WiltonException("Rhino environment is already initialized");
         }
         try {
-            INIT_THREAD = Thread.currentThread().getName();
-            PATH_TO_SCRIPTS_DIR = pathToScriptsDir;
+            INIT_CODE = initCode;
             ContextFactory.initGlobal(WiltonRhinoContextFactory.INSTANCE);
         } catch (Exception e) {
             throw new WiltonException("Rhino environment initialization error", e);
@@ -42,11 +40,7 @@ public class WiltonRhinoEnvironment {
                 FunctionObject loadFunc = new FunctionObject("load", WiltonRhinoScriptLoader.getLoadMethod(), scope);
                 scope.put("WILTON_load", scope, loadFunc);
                 scope.setAttributes("WILTON_load", ScriptableObject.DONTENUM);
-                String reqjsPath = new File(PATH_TO_SCRIPTS_DIR, "js/wilton-requirejs").getAbsolutePath() + File.separator;
-                String codeJni = Utils.readFileToString(new File(reqjsPath + "wilton-jni.js"));
-                cx.evaluateString(scope, codeJni, "WiltonRhinoEnvironment::initialize", -1, null);
-                String codeReq = Utils.readFileToString(new File(reqjsPath + "wilton-require.js"));
-                cx.evaluateString(scope, codeReq, "WiltonRhinoEnvironment::initialize", -1, null);
+                cx.evaluateString(scope, INIT_CODE, "WiltonRhinoEnvironment::initialize", -1, null);
                 Context.exit();
             } catch (Exception e) {
                 throw new WiltonException("Rhino environment thread initialization error," +
