@@ -9,6 +9,7 @@ import utils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
 import static org.apache.commons.io.FileUtils.readFileToString;
@@ -45,6 +46,7 @@ public class WiltonRhinoTest {
                 .put("module", "../js/wilton/test")
                 .put("func", "main")
                 .build()));
+        final AtomicBoolean success = new AtomicBoolean(true);
         // node modules tests, overflows default stack on 32-bit
         Thread th = new Thread(new ThreadGroup("js"), new Runnable() {
             public void run() {
@@ -54,12 +56,16 @@ public class WiltonRhinoTest {
                             .put("func", "")
                             .build()));
                 } catch(Exception e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
+                    success.set(false);
                 }
             }
         }, "WiltonRhinoTest", 1024 * 1024 * 16);
         th.start();
         th.join();
+        if (!success.get()) {
+            throw new RuntimeException("Node tests failed");
+        }
     }
 
     @Test
