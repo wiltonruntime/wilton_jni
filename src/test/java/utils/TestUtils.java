@@ -88,6 +88,14 @@ public class TestUtils {
                     .put("directory", libdir)
                     .build()));
             wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("name", "wilton_crypto")
+                    .put("directory", libdir)
+                    .build()));
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("name", "wilton_zip")
+                    .put("directory", libdir)
+                    .build()));
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
                     .put("name", "wilton_channel")
                     .put("directory", libdir)
                     .build()));
@@ -117,6 +125,10 @@ public class TestUtils {
                     .build()));
             wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
                     .put("name", "wilton_process")
+                    .put("directory", libdir)
+                    .build()));
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("name", "wilton_server")
                     .put("directory", libdir)
                     .build()));
             wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
