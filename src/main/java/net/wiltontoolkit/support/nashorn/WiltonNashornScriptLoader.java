@@ -34,7 +34,7 @@ public class WiltonNashornScriptLoader extends AbstractJSObject {
         try {
             for (Object arg : args) {
                 String filePath = String.valueOf(arg);
-                String sourceCode = wiltoncall("load_module_script", filePath);
+                String sourceCode = wiltoncall("load_module_resource", filePath);
                 StringBuilder wrapper = new StringBuilder();
                 // todo: check why e.stack is undefined in WILTON_run
                 wrapper.append("try {")

@@ -19,7 +19,7 @@ class WiltonRhinoScriptLoader {
         WiltonRhinoEnvironment.checkInitialized();
         for (Object arg : args) {
             String filePath = Context.toString(arg);
-            String sourceCode = wiltoncall("load_module_script", filePath);
+            String sourceCode = wiltoncall("load_module_resource", filePath);
             Script script = cx.compileString(sourceCode, filePath, 1, null);
             if (script != null) {
                 script.exec(cx, WiltonRhinoEnvironment.threadScope());

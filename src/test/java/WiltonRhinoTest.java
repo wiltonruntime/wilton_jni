@@ -43,7 +43,7 @@ public class WiltonRhinoTest {
     public void test() throws Exception {
         // wilton test suite
         WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
-                .put("module", "../js/wilton/test")
+                .put("module", "../js/wilton/test/index")
                 .put("func", "main")
                 .build()));
         final AtomicBoolean success = new AtomicBoolean(true);

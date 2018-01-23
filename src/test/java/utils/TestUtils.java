@@ -24,10 +24,11 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import java.io.File;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static net.wiltontoolkit.WiltonJni.wiltoncall;
 import static net.wiltontoolkit.WiltonJni.wiltoninit;
 import static org.apache.commons.io.IOUtils.closeQuietly;
+import static org.apache.commons.io.IOUtils.toInputStream;
 
 /**
  * User: alexkasko
@@ -58,6 +60,7 @@ public class TestUtils {
         if (INITTED.compareAndSet(false, true)) {
             String jsPath = "file://" + new File(pathToWiltonDir, "js").getAbsolutePath() + File.separator;
             String appdir = pathToWiltonDir + "/core/test/";
+            ArrayList<LinkedHashMap<String, String>> packagesList = loadPackagesList(pathToWiltonDir);
             String config = GSON.toJson(ImmutableMap.builder()
                     .put("defaultScriptEngine", "rhino")
                     .put("applicationDirectory", appdir)
@@ -70,6 +73,7 @@ public class TestUtils {
                             .put("paths", ImmutableMap.builder()
                                     .put("test/scripts", jsPath + "../core/test/scripts")
                                     .build())
+                            .put("packages", packagesList)
                             .build())
                     .build());
 
@@ -248,6 +252,19 @@ public class TestUtils {
             return jarOrDir.isDirectory() ? jarOrDir : jarOrDir.getParentFile();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static ArrayList<LinkedHashMap<String, String>> loadPackagesList(String wiltonDir) {
+        InputStream is = null;
+        try {
+            is = new FileInputStream(new File(wiltonDir, "js/wilton-requirejs/wilton-packages.json"));
+            Reader re = new InputStreamReader(is, Charset.forName("UTF-8"));
+            return GSON.fromJson(re, LIST_MAP_TYPE);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            closeQuietly(is);
         }
     }
 
