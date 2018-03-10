@@ -82,6 +82,11 @@ public class WiltonRhinoTest {
         if (!success.get()) {
             throw new RuntimeException("Node tests failed");
         }
+        // sanity
+        WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
+                .put("module", "test/scripts/runSanityTests")
+                .put("func", "")
+                .build()));
     }
 
     @Test

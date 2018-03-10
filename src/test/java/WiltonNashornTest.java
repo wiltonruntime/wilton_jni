@@ -55,5 +55,10 @@ public class WiltonNashornTest {
                 .put("module", "test/scripts/runNodeTests")
                 .put("func", "")
                 .build()));
+        // sanity
+        WiltonNashornEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
+                .put("module", "test/scripts/runSanityTests")
+                .put("func", "")
+                .build()));
     }
 }
