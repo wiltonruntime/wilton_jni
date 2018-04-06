@@ -30,7 +30,6 @@ class WiltonRhinoGateway implements WiltonGateway {
 
     @Override
     public String runScript(String callbackScriptJson) throws Exception {
-        WiltonRhinoEnvironment.checkInitialized();
         Scriptable scope = WiltonRhinoEnvironment.threadScope();
         Context cx = Context.enter();
         try {

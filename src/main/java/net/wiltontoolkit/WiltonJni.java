@@ -21,9 +21,6 @@ import java.io.StringWriter;
 
 public class WiltonJni {
 
-    public static final String LOGGING_DISABLE = "{\"appenders\":[{\"appenderType\":\"NULL\"}]}";
-    public static final String LOGGING_CONSOLE = "{\"appenders\":[{\"appenderType\":\"CONSOLE\"}]}";
-
     static {
         System.loadLibrary("wilton_core");
         System.loadLibrary("wilton_rhino");
@@ -41,11 +38,10 @@ public class WiltonJni {
 
     // jni access points
 
-//    public static void wiltoninit(WiltonGateway gateway) throws WiltonException {
-//        wiltoninit(gateway, LOGGING_DISABLE);
-//    }
+    public static native void initialize(String config) throws WiltonException;
 
-    public static native void wiltoninit(WiltonGateway gateway, String config) throws WiltonException;
+    public static native void registerScriptGateway(WiltonGateway gateway, String engineName) throws WiltonException;
+
 
     public static String wiltoncall(String name) throws WiltonException {
         return wiltoncall(name, "{}");

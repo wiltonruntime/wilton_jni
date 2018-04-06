@@ -32,7 +32,6 @@ import static net.wiltontoolkit.WiltonJni.wiltoncall;
 class WiltonRhinoScriptLoader {
 
     public static void load(Context cx, Scriptable thisObj, Object[] args, Function funObj) throws Exception {
-        WiltonRhinoEnvironment.checkInitialized();
         for (Object arg : args) {
             String filePath = Context.toString(arg);
             String sourceCode = wiltoncall("load_module_resource", filePath);

@@ -20,12 +20,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import utils.TestGateway;
 
-import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
 import static net.wiltontoolkit.WiltonJni.wiltoncall;
 import static org.junit.Assert.assertTrue;
-import static utils.TestUtils.GSON;
-import static utils.TestUtils.getJsDir;
-import static utils.TestUtils.initWiltonOnce;
+import static utils.TestUtils.*;
 
 /**
  * User: alexkasko

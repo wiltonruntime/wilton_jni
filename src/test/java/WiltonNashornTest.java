@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.wiltontoolkit.support.nashorn.WiltonNashornEnvironment;
 import org.junit.BeforeClass;
@@ -22,10 +21,7 @@ import org.junit.Test;
 import utils.TestGateway;
 import utils.TestUtils;
 
-import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
-import static utils.TestUtils.GSON;
-import static utils.TestUtils.getJsDir;
-import static utils.TestUtils.initWiltonOnce;
+import static utils.TestUtils.*;
 
 /**
  * User: alexkasko

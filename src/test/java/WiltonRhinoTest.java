@@ -24,17 +24,10 @@ import utils.TestGateway;
 import utils.TestUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
-import static org.apache.commons.io.FileUtils.readFileToString;
-import static org.apache.commons.io.IOUtils.closeQuietly;
-import static org.apache.commons.io.IOUtils.toString;
 import static org.junit.Assert.assertEquals;
-import static utils.TestUtils.GSON;
-import static utils.TestUtils.getJsDir;
-import static utils.TestUtils.initWiltonOnce;
+import static utils.TestUtils.*;
 
 /**
  * User: alexkasko
@@ -64,6 +57,7 @@ public class WiltonRhinoTest {
                 .build()));
         final AtomicBoolean success = new AtomicBoolean(true);
         // node modules tests, overflows default stack on 32-bit
+        /*
         Thread th = new Thread(new ThreadGroup("js"), new Runnable() {
             public void run() {
                 try {
@@ -82,6 +76,7 @@ public class WiltonRhinoTest {
         if (!success.get()) {
             throw new RuntimeException("Node tests failed");
         }
+        */
         // sanity
         WiltonRhinoEnvironment.gateway().runScript(GSON.toJson(ImmutableMap.builder()
                 .put("module", "test/scripts/runSanityTests")

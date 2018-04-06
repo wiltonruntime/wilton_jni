@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import net.wiltontoolkit.WiltonGateway;
+import net.wiltontoolkit.WiltonJni;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -33,8 +34,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-
-//import java.lang.RuntimeExcetion;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
@@ -52,9 +51,7 @@ import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.wiltontoolkit.WiltonJni.wiltoncall;
-import static net.wiltontoolkit.WiltonJni.wiltoninit;
 import static org.apache.commons.io.IOUtils.closeQuietly;
-import static org.apache.commons.io.IOUtils.toInputStream;
 
 /**
  * User: alexkasko
@@ -64,6 +61,7 @@ public class TestUtils {
 
     private static final CloseableHttpClient HTTP = HttpClients.createDefault();
 
+    public static final String LOGGING_DISABLE = "{\"appenders\":[{\"appenderType\":\"NULL\"}]}";
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static final Type MAP_TYPE = new TypeToken<LinkedHashMap<String, Object>>() {}.getType();
     public static final Type STRING_MAP_TYPE = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
@@ -93,7 +91,8 @@ public class TestUtils {
                             .build())
                     .build());
 
-            wiltoninit(gateway, config);
+            WiltonJni.initialize(config);
+            WiltonJni.registerScriptGateway(gateway, "rhino");
             GATEWAY = gateway;
             String libdir = appdir + "../../build/bin";
             // logging init

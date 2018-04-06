@@ -23,7 +23,6 @@ import utils.TestGateway;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
-import static net.wiltontoolkit.WiltonJni.LOGGING_DISABLE;
 import static net.wiltontoolkit.WiltonJni.wiltoncall;
 import static org.junit.Assert.assertTrue;
 import static utils.TestUtils.*;
