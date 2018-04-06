@@ -39,7 +39,7 @@ public class DBJniTest {
     @BeforeClass
     public static void init() {
         // init, no logging by default, enable it when needed
-        initWiltonOnce(new TestGateway(), LOGGING_DISABLE, getJsDir().getAbsolutePath());
+        initWiltonOnce(new TestGateway(), LOGGING_DISABLE);
     }
 
     @Test

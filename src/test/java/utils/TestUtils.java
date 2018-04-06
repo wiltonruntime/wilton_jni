@@ -70,13 +70,14 @@ public class TestUtils {
     public static final AtomicBoolean INITTED = new AtomicBoolean(false);
     public static WiltonGateway GATEWAY;
 
-    public static void initWiltonOnce(WiltonGateway gateway, String loggingConf, String pathToWiltonDir) {
+    public static void initWiltonOnce(WiltonGateway gateway, String loggingConf) {
         if (INITTED.compareAndSet(false, true)) {
+            String pathToWiltonDir = getJsDir().getAbsolutePath();
             String jsPath = "file://" + new File(pathToWiltonDir, "js").getAbsolutePath() + File.separator;
             String appdir = pathToWiltonDir + "/core/test/";
             ArrayList<LinkedHashMap<String, String>> packagesList = loadPackagesList(pathToWiltonDir);
             String config = GSON.toJson(ImmutableMap.builder()
-                    .put("defaultScriptEngine", "rhino")
+                    .put("defaultScriptEngine", "javatest")
                     .put("applicationDirectory", appdir)
                     .put("environmentVariables", System.getenv())
                     .put("requireJs", ImmutableMap.builder()
@@ -92,7 +93,7 @@ public class TestUtils {
                     .build());
 
             WiltonJni.initialize(config);
-            WiltonJni.registerScriptGateway(gateway, "rhino");
+            WiltonJni.registerScriptGateway(gateway, "javatest");
             GATEWAY = gateway;
             String libdir = appdir + "../../build/bin";
             // logging init

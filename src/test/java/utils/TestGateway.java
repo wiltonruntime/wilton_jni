@@ -63,8 +63,6 @@ public class TestGateway implements WiltonGateway {
     // cron/test
     public static final AtomicInteger cronCounter = new AtomicInteger(0);
 
-    private WiltonGateway scriptGateway;
-
     @SuppressWarnings("unchecked") // headers access
     @Override
     public String runScript(String callbackScriptJson) throws Exception {
@@ -198,16 +196,8 @@ public class TestGateway implements WiltonGateway {
                 return null;
             } else throw new WiltonException("Unknown 'cron/test' func: [" + func + "]");
         } else {
-            // actual script call
-            if (null != scriptGateway) {
-                return scriptGateway.runScript(callbackScriptJson);
-            }
-            return null;
+            throw new WiltonException("Unexpected call: [" + callbackScriptJson + "]");
         }
-    }
-
-    public void setScriptGateway(WiltonGateway scriptGateway) {
-        this.scriptGateway = scriptGateway;
     }
 
     public static ImmutableList<ImmutableMap<String, Object>> views() {
@@ -216,7 +206,7 @@ public class TestGateway implements WiltonGateway {
                         .put("method", "GET")
                         .put("path", "/hello")
                         .put("callbackScript", ImmutableMap.builder()
-                                .put("engine", "rhino")
+                                .put("engine", "javatest")
                                 .put("module", MOCK_MODULE_PREFIX + "/hello")
                                 .put("func", MOCK_FUNC)
                                 .put("args", ImmutableList.of())
@@ -226,7 +216,7 @@ public class TestGateway implements WiltonGateway {
                         .put("method", "GET")
                         .put("path", "/headers")
                         .put("callbackScript", ImmutableMap.builder()
-                                .put("engine", "rhino")
+                                .put("engine", "javatest")
                                 .put("module", MOCK_MODULE_PREFIX + "/headers")
                                 .put("func", MOCK_FUNC)
                                 .put("args", ImmutableList.of())
@@ -236,7 +226,7 @@ public class TestGateway implements WiltonGateway {
                         .put("method", "POST")
                         .put("path", "/postmirror")
                         .put("callbackScript", ImmutableMap.builder()
-                                .put("engine", "rhino")
+                                .put("engine", "javatest")
                                 .put("module", MOCK_MODULE_PREFIX + "/postmirror")
                                 .put("func", MOCK_FUNC)
                                 .put("args", ImmutableList.of())
@@ -246,7 +236,7 @@ public class TestGateway implements WiltonGateway {
                         .put("method", "GET")
                         .put("path", "/querymirror")
                         .put("callbackScript", ImmutableMap.builder()
-                                .put("engine", "rhino")
+                                .put("engine", "javatest")
                                 .put("module", MOCK_MODULE_PREFIX + "/querymirror")
                                 .put("func", MOCK_FUNC)
                                 .put("args", ImmutableList.of())
@@ -261,7 +251,7 @@ public class TestGateway implements WiltonGateway {
                         .put("method", "POST")
                         .put("path", "/sendfile")
                         .put("callbackScript", ImmutableMap.builder()
-                                .put("engine", "rhino")
+                                .put("engine", "javatest")
                                 .put("module", MOCK_MODULE_PREFIX + "/sendfile")
                                 .put("func", MOCK_FUNC)
                                 .put("args", ImmutableList.of())
@@ -271,7 +261,7 @@ public class TestGateway implements WiltonGateway {
                         .put("method", "POST")
                         .put("path", "/mustache")
                         .put("callbackScript", ImmutableMap.builder()
-                                .put("engine", "rhino")
+                                .put("engine", "javatest")
                                 .put("module", MOCK_MODULE_PREFIX + "/mustache")
                                 .put("func", MOCK_FUNC)
                                 .put("args", ImmutableList.of())
@@ -281,7 +271,7 @@ public class TestGateway implements WiltonGateway {
                         .put("method", "GET")
                         .put("path", "/async")
                         .put("callbackScript", ImmutableMap.builder()
-                                .put("engine", "rhino")
+                                .put("engine", "javatest")
                                 .put("module", MOCK_MODULE_PREFIX + "/async")
                                 .put("func", MOCK_FUNC)
                                 .put("args", ImmutableList.of())
@@ -291,7 +281,7 @@ public class TestGateway implements WiltonGateway {
                         .put("method", "POST")
                         .put("path", "/reqfilename")
                         .put("callbackScript", ImmutableMap.builder()
-                                .put("engine", "rhino")
+                                .put("engine", "javatest")
                                 .put("module", MOCK_MODULE_PREFIX + "/reqfilename")
                                 .put("func", MOCK_FUNC)
                                 .put("args", ImmutableList.of())
