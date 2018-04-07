@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.wiltontoolkit.support.jgit;
+package wilton.support.jgit;
 
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;

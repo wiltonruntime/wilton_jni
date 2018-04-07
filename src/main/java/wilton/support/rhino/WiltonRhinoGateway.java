@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package net.wiltontoolkit.support.rhino;
+package wilton.support.rhino;
 
-import net.wiltontoolkit.WiltonException;
-import net.wiltontoolkit.WiltonGateway;
+import wilton.WiltonException;
+import wilton.WiltonGateway;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;

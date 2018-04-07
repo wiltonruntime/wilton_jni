@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import net.wiltontoolkit.support.rhino.WiltonRhinoEnvironment;
+import wilton.support.rhino.WiltonRhinoEnvironment;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mozilla.javascript.*;

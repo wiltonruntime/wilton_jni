@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.wiltontoolkit.support.rhino;
+package wilton.support.rhino;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;

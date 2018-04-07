@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, alex at staticlibs.net
+ * Copyright 2016, alex at staticlibs.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,28 @@
  * limitations under the License.
  */
 
-package net.wiltontoolkit.support.rhino;
-
-import net.wiltontoolkit.WiltonJni;
+package wilton;
 
 /**
  * User: alexkasko
- * Date: 4/6/18
+ * Date: 1/12/17
  */
-public class WiltonRhinoInitializer {
+public interface WiltonGateway {
 
-    public static void initialize(String threadInitCode) {
-        WiltonRhinoEnvironment.initialize(threadInitCode);
-        WiltonJni.registerScriptGateway(WiltonRhinoEnvironment.gateway(), "rhino");
-    }
+    /**
+     * Implementation should run the script specified in the provided description:
+     * {@code
+     *     {
+     *         "module": "some/module/name",
+     *         "func": "someFunction",
+     *         "args": [...]
+     *     }
+     * }
+     *
+     *
+     * @param data script description
+     * @throws Exception on call fail
+     * @return script output
+     */
+    String runScript(String data) throws Exception;
 }

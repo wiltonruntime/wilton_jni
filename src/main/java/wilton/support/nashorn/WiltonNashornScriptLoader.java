@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package net.wiltontoolkit.support.nashorn;
+package wilton.support.nashorn;
 
 import jdk.nashorn.api.scripting.AbstractJSObject;
-import net.wiltontoolkit.WiltonException;
+import wilton.WiltonException;
 
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import java.util.Arrays;
 
-import static net.wiltontoolkit.WiltonJni.wiltoncall;
+import static wilton.WiltonJni.wiltoncall;
 
 /**
  * User: alexkasko

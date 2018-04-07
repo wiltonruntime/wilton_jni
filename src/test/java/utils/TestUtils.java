@@ -20,8 +20,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import net.wiltontoolkit.WiltonGateway;
-import net.wiltontoolkit.WiltonJni;
+import wilton.WiltonGateway;
+import wilton.WiltonJni;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -50,7 +50,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static net.wiltontoolkit.WiltonJni.wiltoncall;
+import static wilton.WiltonJni.wiltoncall;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
 /**

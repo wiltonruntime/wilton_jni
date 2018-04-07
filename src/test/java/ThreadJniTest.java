@@ -20,7 +20,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import utils.TestGateway;
 
-import static net.wiltontoolkit.WiltonJni.wiltoncall;
+import static wilton.WiltonJni.wiltoncall;
 import static org.junit.Assert.assertTrue;
 import static utils.TestUtils.*;
 

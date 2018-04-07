@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package net.wiltontoolkit.support.nashorn;
+package wilton.support.nashorn;
 
-import net.wiltontoolkit.WiltonException;
-import net.wiltontoolkit.WiltonGateway;
+import wilton.WiltonException;
+import wilton.WiltonGateway;
 
 import javax.script.*;
 

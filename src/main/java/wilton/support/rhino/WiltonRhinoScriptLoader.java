@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.wiltontoolkit.support.rhino;
+package wilton.support.rhino;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
@@ -23,7 +23,7 @@ import org.mozilla.javascript.Scriptable;
 
 import java.lang.reflect.Method;
 
-import static net.wiltontoolkit.WiltonJni.wiltoncall;
+import static wilton.WiltonJni.wiltoncall;
 
 /**
  * User: alexkasko

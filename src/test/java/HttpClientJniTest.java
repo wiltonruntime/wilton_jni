@@ -25,7 +25,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.util.Map;
 
-import static net.wiltontoolkit.WiltonJni.wiltoncall;
+import static wilton.WiltonJni.wiltoncall;
 import static org.junit.Assert.*;
 import static utils.TestGateway.*;
 import static utils.TestUtils.*;

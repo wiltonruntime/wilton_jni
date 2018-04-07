@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, alex at staticlibs.net
+ * Copyright 2018, alex at staticlibs.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,17 @@
  * limitations under the License.
  */
 
-package net.wiltontoolkit;
+package wilton.support.nashorn;
+
+import wilton.WiltonJni;
 
 /**
  * User: alexkasko
- * Date: 1/12/17
+ * Date: 4/6/18
  */
-public interface WiltonGateway {
-
-    /**
-     * Implementation should run the script specified in the provided description:
-     * {@code
-     *     {
-     *         "module": "some/module/name",
-     *         "func": "someFunction",
-     *         "args": [...]
-     *     }
-     * }
-     *
-     *
-     * @param data script description
-     * @throws Exception on call fail
-     * @return script output
-     */
-    String runScript(String data) throws Exception;
+public class WiltonNashornInitializer {
+    public static void initialize(String threadInitCode) {
+        WiltonNashornEnvironment.initialize(threadInitCode);
+        WiltonJni.registerScriptGateway(WiltonNashornEnvironment.gateway(), "nashorn");
+    }
 }

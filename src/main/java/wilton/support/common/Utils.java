@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.wiltontoolkit.support.common;
+package wilton.support.common;
 
 import java.io.*;
 

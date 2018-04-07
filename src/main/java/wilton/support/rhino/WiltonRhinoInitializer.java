@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package net.wiltontoolkit.support.nashorn;
+package wilton.support.rhino;
 
-import net.wiltontoolkit.WiltonJni;
+import wilton.WiltonJni;
 
 /**
  * User: alexkasko
  * Date: 4/6/18
  */
-public class WiltonNashornInitializer {
+public class WiltonRhinoInitializer {
+
     public static void initialize(String threadInitCode) {
-        WiltonNashornEnvironment.initialize(threadInitCode);
-        WiltonJni.registerScriptGateway(WiltonNashornEnvironment.gateway(), "nashorn");
+        WiltonRhinoEnvironment.initialize(threadInitCode);
+        WiltonJni.registerScriptGateway(WiltonRhinoEnvironment.gateway(), "rhino");
     }
 }

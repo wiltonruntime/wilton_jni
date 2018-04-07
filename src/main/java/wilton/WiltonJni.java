@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.wiltontoolkit;
+package wilton;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

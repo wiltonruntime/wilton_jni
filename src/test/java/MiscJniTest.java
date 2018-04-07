@@ -15,14 +15,14 @@
  */
 
 import com.google.common.collect.ImmutableMap;
-import net.wiltontoolkit.WiltonException;
+import wilton.WiltonException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import utils.TestGateway;
 
 import java.util.Map;
 
-import static net.wiltontoolkit.WiltonJni.*;
+import static wilton.WiltonJni.*;
 import static org.junit.Assert.assertTrue;
 import static utils.TestGateway.*;
 import static utils.TestUtils.*;

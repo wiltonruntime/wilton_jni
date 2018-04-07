@@ -18,8 +18,8 @@ package utils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import net.wiltontoolkit.WiltonException;
-import net.wiltontoolkit.WiltonGateway;
+import wilton.WiltonException;
+import wilton.WiltonGateway;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static net.wiltontoolkit.WiltonJni.wiltoncall;
+import static wilton.WiltonJni.wiltoncall;
 import static utils.TestUtils.*;
 
 /**

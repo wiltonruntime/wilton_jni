@@ -26,7 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static net.wiltontoolkit.WiltonJni.*;
+import static wilton.WiltonJni.*;
 import static org.junit.Assert.assertEquals;
 import static utils.TestUtils.*;
 
