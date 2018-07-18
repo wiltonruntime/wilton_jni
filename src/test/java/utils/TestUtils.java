@@ -104,6 +104,10 @@ public class TestUtils {
             wiltoncall("logging_initialize", loggingConf);
             // libs load
             wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
+                    .put("name", "wilton_service")
+                    .put("directory", libdir)
+                    .build()));
+            wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
                     .put("name", "wilton_crypto")
                     .put("directory", libdir)
                     .build()));
