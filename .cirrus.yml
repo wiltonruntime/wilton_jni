@@ -32,8 +32,6 @@ task:
       memory: 1G
 
   script: |
-    apt-get update
-    apt-get upgrade -y
     cd ..
     git clone --quiet https://github.com/wilton-iot/wilton
     cd wilton
