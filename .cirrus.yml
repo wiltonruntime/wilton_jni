@@ -40,6 +40,6 @@ task:
     bash ./resources/ci/cirrus-checkout.sh
     echo "Replacing repo to test PR"
     rm -r jni
-    mv ../wilton_jni jni
+    cp -a /tmp/cirrus-ci-build jni
     pushd jni && git rev-parse HEAD && popd
     bash ./resources/ci/cirrus.sh

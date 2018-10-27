@@ -33,7 +33,7 @@ jobs:
             bash ./resources/ci/circle-checkout.sh
             echo "Replacing repo to test PR"
             rm -r jni
-            mv ../wilton_jni jni
+            cp -a /root/project jni
             pushd jni && git rev-parse HEAD && popd
             bash ./resources/ci/circle.sh
 
@@ -54,7 +54,7 @@ jobs:
             bash ./resources/ci/circle-checkout.sh
             echo "Replacing repo to test PR"
             rm -r jni
-            mv ../wilton_jni jni
+            cp -a /root/project jni
             pushd jni && git rev-parse HEAD && popd
             bash ./resources/ci/circle.sh
 
