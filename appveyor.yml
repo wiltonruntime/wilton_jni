@@ -25,6 +25,8 @@ install:
   - cmd /c resources\ci\appveyor-checkout.bat
 
 build_script:
+  - echo "Updading modules to master"
+  - resources\ci\master-modules.bat
   - echo "Replacing repo to test PR"
   - rd /s /q jni
   - if exist jni exit /b 1
