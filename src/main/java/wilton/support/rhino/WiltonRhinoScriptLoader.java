@@ -34,7 +34,7 @@ class WiltonRhinoScriptLoader {
     public static void load(Context cx, Scriptable thisObj, Object[] args, Function funObj) throws Exception {
         for (Object arg : args) {
             String filePath = Context.toString(arg);
-            String sourceCode = wiltoncall("load_module_resource", filePath);
+            String sourceCode = wiltoncall("load_module_resource", "{ \"url\": \"" + filePath + "\"}");
             Script script = cx.compileString(sourceCode, filePath, 1, null);
             if (script != null) {
                 script.exec(cx, WiltonRhinoEnvironment.threadScope());
