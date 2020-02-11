@@ -74,11 +74,9 @@ public class TestUtils {
         if (INITTED.compareAndSet(false, true)) {
             String pathToWiltonDir = getJsDir().getAbsolutePath();
             String jsPath = "file://" + new File(pathToWiltonDir, "js").getAbsolutePath() + File.separator;
-            String appdir = pathToWiltonDir + "/core/test/";
             ArrayList<LinkedHashMap<String, String>> packagesList = loadPackagesList(pathToWiltonDir);
             String config = GSON.toJson(ImmutableMap.builder()
                     .put("defaultScriptEngine", "javatest")
-                    .put("applicationDirectory", appdir)
                     .put("environmentVariables", System.getenv())
                     .put("requireJs", ImmutableMap.builder()
                             .put("waitSeconds", 0)
@@ -95,7 +93,7 @@ public class TestUtils {
             WiltonJni.initialize(config);
             WiltonJni.registerScriptGateway(gateway, "javatest");
             GATEWAY = gateway;
-            String libdir = appdir + "../../build/bin";
+            String libdir = pathToWiltonDir + "/build/bin";
             // logging init
             wiltoncall("dyload_shared_library", GSON.toJson(ImmutableMap.builder()
                     .put("name", "wilton_logging")
