@@ -44,6 +44,7 @@ public class ThreadJniTest {
                         .put("func", "testRun")
                         .put("args", ImmutableList.of())
                         .build())
+                .put("shutdownChannelOffer", "dummy")
                 .build()));
         TestGateway.threadTestLatch.await();
         assertTrue(Thread.currentThread().getId() != TestGateway.threadTestId.get());
