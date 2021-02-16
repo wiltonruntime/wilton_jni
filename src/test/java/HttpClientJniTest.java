@@ -21,7 +21,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import utils.TestGateway;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.util.Map;
 
@@ -59,8 +58,7 @@ public class HttpClientJniTest {
                             .build())
                     .build()));
             Map<String, Object> map = GSON.fromJson(resp, MAP_TYPE);
-            byte[] bytes = DatatypeConverter.parseHexBinary((String) map.get("dataHex"));
-            assertEquals(HELLO_RESP, new String(bytes, "UTF-8"));
+            assertEquals(HELLO_RESP, (String) map.get("data"));
         } finally {
             wiltoncall("server_stop", GSON.toJson(ImmutableMap.builder()
                     .put("serverHandle", handle)
@@ -117,8 +115,7 @@ public class HttpClientJniTest {
                             .build())
                     .build()));
             Map<String, Object> map = GSON.fromJson(resp, MAP_TYPE);
-            byte[] bytes = DatatypeConverter.parseHexBinary((String) map.get("dataHex"));
-            assertEquals("foo", new String(bytes, "UTF-8"));
+            assertEquals("foo", (String) map.get("data"));
         } finally {
             wiltoncall("server_stop", GSON.toJson(ImmutableMap.builder()
                     .put("serverHandle", handle)
@@ -150,8 +147,7 @@ public class HttpClientJniTest {
                             .build())
                     .build()));
             Map<String, Object> map = GSON.fromJson(resp, MAP_TYPE);
-            byte[] bytes = DatatypeConverter.parseHexBinary((String) map.get("dataHex"));
-            assertEquals(STATIC_FILE_DATA, new String(bytes, "UTF-8"));
+            assertEquals(STATIC_FILE_DATA, (String) map.get("data"));
 //            not stable on windows
 //            Thread.sleep(200);
 //            assertFalse(file.exists());
@@ -194,8 +190,7 @@ public class HttpClientJniTest {
                             .build())
                     .build()));
             Map<String, Object> map = GSON.fromJson(resp, MAP_TYPE);
-            byte[] bytes = DatatypeConverter.parseHexBinary((String) map.get("dataHex"));
-            assertEquals(HELLO_RESP, new String(bytes, "UTF-8"));
+            assertEquals(HELLO_RESP, (String) map.get("data"));
         } finally {
             wiltoncall("server_stop", GSON.toJson(ImmutableMap.builder()
                     .put("serverHandle", handle)
